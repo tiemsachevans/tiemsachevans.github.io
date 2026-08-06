@@ -11,11 +11,22 @@ var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 let _supabaseClient = null;
 function getSupabase() {
   if (_supabaseClient) return _supabaseClient;
-  if (window.supabase && typeof window.supabase.createClient === "function") {
+
+  if (
+    typeof supabase !== "undefined" &&
+    typeof supabase.createClient === "function"
+  ) {
+    _supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else if (
+    window.supabase &&
+    typeof window.supabase.createClient === "function"
+  ) {
     _supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY,
     );
+  } else {
+    console.warn("Supabase SDK chưa sẵn sàng!");
   }
   return _supabaseClient;
 }
