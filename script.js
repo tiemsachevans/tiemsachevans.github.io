@@ -13,7 +13,7 @@ function getSupabase() {
   if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
     _supabaseInstance = window.supabase.createClient(
       SUPABASE_URL,
-      SUPABASE_KEY,
+      SUPABASE_ANON_KEY,
     );
     return _supabaseInstance;
   }
