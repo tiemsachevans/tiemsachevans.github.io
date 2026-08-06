@@ -1,36 +1,26 @@
-window.SUPABASE_URL =
+const SUPABASE_URL =
   window.SUPABASE_URL || "https://yvngwbeprfcesjdnjwzh.supabase.co";
-window.SUPABASE_ANON_KEY =
+const SUPABASE_ANON_KEY =
   window.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2bmd3YmVwcmZjZXNqZG5qd3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDIzOTgsImV4cCI6MjEwMDcxODM5OH0.hEiP2gTcg0yU4HFBlUpmzcXQ3sydx0HxvG3ZbByjiUQ";
 
-var SUPABASE_URL = window.SUPABASE_URL;
-var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
-
-// Hàm lấy client Supabase động
 let _supabaseClient = null;
+
 function getSupabase() {
   if (_supabaseClient) return _supabaseClient;
 
-  if (
-    typeof supabase !== "undefined" &&
-    typeof supabase.createClient === "function"
-  ) {
-    _supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } else if (
-    window.supabase &&
-    typeof window.supabase.createClient === "function"
-  ) {
-    _supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-    );
-  } else {
-    console.warn("Supabase SDK chưa sẵn sàng!");
-  }
-  return _supabaseClient;
-}
+  // Lấy thư viện Supabase từ window hoặc global
+  const supabaseLib =
+    window.supabase || (typeof supabase !== "undefined" ? supabase : null);
 
+  if (supabaseLib && typeof supabaseLib.createClient === "function") {
+    _supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return _supabaseClient;
+  }
+
+  console.warn("Supabase SDK chưa sẵn sàng!");
+  return null;
+}
 document.addEventListener("DOMContentLoaded", () => {
   loadTopRanking();
   initSearchAndFilter();
