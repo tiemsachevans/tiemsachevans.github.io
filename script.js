@@ -1,8 +1,13 @@
-const SUPABASE_URL = "https://yvngwbeprfcesjdnjwzh.supabase.co";
-const SUPABASE_ANON_KEY =
+window.SUPABASE_URL =
+  window.SUPABASE_URL || "https://yvngwbeprfcesjdnjwzh.supabase.co";
+window.SUPABASE_ANON_KEY =
+  window.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2bmd3YmVwcmZjZXNqZG5qd3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDIzOTgsImV4cCI6MjEwMDcxODM5OH0.hEiP2gTcg0yU4HFBlUpmzcXQ3sydx0HxvG3ZbByjiUQ";
 
-// Hàm lấy client Supabase động (tự động khởi tạo khi CDN đã tải xong)
+var SUPABASE_URL = window.SUPABASE_URL;
+var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+
+// Hàm lấy client Supabase động
 let _supabaseClient = null;
 function getSupabase() {
   if (_supabaseClient) return _supabaseClient;
