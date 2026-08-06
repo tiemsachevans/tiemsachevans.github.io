@@ -4,21 +4,23 @@ const SUPABASE_ANON_KEY =
   window.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2bmd3YmVwcmZjZXNqZG5qd3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDIzOTgsImV4cCI6MjEwMDcxODM5OH0.hEiP2gTcg0yU4HFBlUpmzcXQ3sydx0HxvG3ZbByjiUQ";
 
-let _supabaseClient = null;
+let _supabaseInstance = null;
 
 function getSupabase() {
-  if (_supabaseClient) return _supabaseClient;
+  if (_supabaseInstance) return _supabaseInstance;
 
-  // Lấy thư viện Supabase từ window hoặc global
-  const supabaseLib =
-    window.supabase || (typeof supabase !== "undefined" ? supabase : null);
-
-  if (supabaseLib && typeof supabaseLib.createClient === "function") {
-    _supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    return _supabaseClient;
+  // Kiểm tra an toàn xem thư viện CDN đã sẵn sàng trên window chưa
+  if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
+    _supabaseInstance = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY,
+    );
+    return _supabaseInstance;
   }
 
-  console.warn("Supabase SDK chưa sẵn sàng!");
+  console.warn(
+    "⚠️ Thư viện Supabase CDN chưa được tải thành công trong file HTML.",
+  );
   return null;
 }
 
