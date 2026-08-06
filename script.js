@@ -54,36 +54,106 @@ window.addEventListener("scroll", () => {
   lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
 });
 
-async function loadRandomDailyQuote() {
-  const supabase = getSupabase();
-  if (!supabase) return;
+function parseQuotesData(rawQuotes) {
+  if (!rawQuotes) return [];
 
-  try {
-    const { data: characters, error } = await supabase
-      .from("characters")
-      .select("name, quotes")
-      .not("quotes", "is", null);
-
-    if (error || !characters || characters.length === 0) return;
-
-    const validChars = characters.filter(
-      (c) => c.quotes && c.quotes.length > 0,
-    );
-    if (validChars.length === 0) return;
-
-    const randomChar =
-      validChars[Math.floor(Math.random() * validChars.length)];
-    const randomQuote =
-      randomChar.quotes[Math.floor(Math.random() * randomChar.quotes.length)];
-
-    const quoteTextEl = document.getElementById("dailyQuoteText");
-    const quoteAuthorEl = document.getElementById("dailyQuoteAuthor");
-
-    if (quoteTextEl) quoteTextEl.textContent = `"${randomQuote}"`;
-    if (quoteAuthorEl) quoteAuthorEl.textContent = `— ${randomChar.name}`;
-  } catch (err) {
-    console.error("Lỗi lấy quote ngẫu nhiên:", err);
+  if (Array.isArray(rawQuotes)) {
+    return rawQuotes;
   }
+
+  if (typeof rawQuotes === "string") {
+    const trimmed = rawQuotes.trim();
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      // Bóc tách thủ công nếu JSON.parse lỗi do chứa ký tự ngoặc kép
+      const clean = trimmed.replace(/^\[\s*|\s*\]$/g, "");
+      return clean
+        .split(/",\s*"/)
+        .map((item) => item.replace(/^"|"$/g, "").trim())
+        .filter((item) => item.length > 0);
+    }
+  }
+
+  return [];
+}
+
+async function loadRandomDailyQuote() {
+  let allQuotes = [];
+  const supabase = getSupabase();
+
+  if (supabase) {
+    try {
+      const { data: characters, error } = await supabase
+        .from("characters")
+        .select("name, quotes");
+
+      if (error) {
+        console.error("Lỗi truy vấn Supabase:", error);
+      }
+
+      if (!error && characters && characters.length > 0) {
+        console.log("Danh sách nhân vật từ Supabase:", characters);
+
+        characters.forEach((char) => {
+          const quotesList = parseQuotesData(char.quotes);
+
+          if (quotesList.length > 0) {
+            quotesList.forEach((quote) => {
+              if (quote && typeof quote === "string" && quote.trim() !== "") {
+                allQuotes.push({
+                  text: quote.trim(),
+                  author: char.name,
+                });
+              }
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("Lỗi lấy quote từ Supabase:", err);
+    }
+  }
+
+  // DỰ PHÒNG: Nếu Supabase không có dữ liệu/lỗi/chưa có quote của nhân vật khác,
+  // dùng danh sách dự phòng đa dạng nhân vật để giao diện luôn luôn xoay tua
+  if (allQuotes.length === 0) {
+    console.warn(
+      "Không tìm thấy quote từ Supabase, chuyển sang danh sách dự phòng.",
+    );
+    allQuotes = [
+      {
+        text: "Hôm nay nếu có mệt mỏi quá, cứ nghỉ ngơi đi nhé. Mọi chuyện rồi sẽ ổn thôi.",
+        author: "Khương Tịch Ngôn",
+      },
+      {
+        text: "Tiệm sách nhỏ này được dựng nên từ những mảnh ký ức và những câu chuyện chưa kể.",
+        author: "Evans",
+      },
+      {
+        text: "Sự bình yên đôi khi bắt đầu từ một cái chạm vô tình.",
+        author: "Mimi",
+      },
+      {
+        text: "Đừng quên đọc một chương sách trước khi ngủ nhé.",
+        author: "Mèo Tiệm Sách",
+      },
+    ];
+  }
+
+  console.log("Tổng số câu trích dẫn khả dụng:", allQuotes.length, allQuotes);
+
+  // Bốc ngẫu nhiên 1 câu
+  const randomIndex = Math.floor(Math.random() * allQuotes.length);
+  const selected = allQuotes[randomIndex];
+
+  const quoteTextEl = document.getElementById("dailyQuoteText");
+  const quoteAuthorEl = document.getElementById("dailyQuoteAuthor");
+
+  if (quoteTextEl) quoteTextEl.textContent = `"${selected.text}"`;
+  if (quoteAuthorEl) quoteAuthorEl.textContent = `— ${selected.author}`;
 }
 
 document.addEventListener("DOMContentLoaded", loadRandomDailyQuote);
@@ -607,15 +677,54 @@ function initModal() {
   });
 }
 
-window.openBotModalByName = function (name) {
+// ==================== XỬ LÝ MỞ MODAL CHI TIẾT NHÂN VẬT ====================
+window.openBotModalByName = async function (name) {
   const cards = document.querySelectorAll(".bot-card");
-  for (const card of cards) {
-    const cardName = card.querySelector(".bot-name")?.textContent.trim();
-    if (cardName === name) {
-      card.click();
-      break;
+
+  // Trường hợp 1: Nếu đang ở characters.html (tìm thấy thẻ .bot-card trực tiếp)
+  if (cards.length > 0) {
+    for (const card of cards) {
+      const cardName = card.querySelector(".bot-name")?.textContent.trim();
+      if (cardName === name) {
+        card.click();
+        return;
+      }
     }
   }
+
+  // Trường hợp 2: Nếu đang ở index.html (không có thẻ .bot-card trên DOM)
+  const characters = await getAllCharacters();
+  const char = characters.find((c) => c.name === name);
+  if (!char) return;
+
+  const modal = document.getElementById("botModal");
+  if (!modal) return;
+
+  const modalTitle = document.getElementById("modalTitle");
+  const modalSubtitle = document.getElementById("modalSubtitle");
+  const modalToc = document.getElementById("modalToc");
+  const modalOpeningScenes = document.getElementById("modalOpeningScenes");
+  const openingSectionBox = document.getElementById("openingSectionBox");
+  const modalChipsContainer = document.getElementById("modalChipsContainer");
+  const modalVoteCount = document.getElementById("modalVoteCount");
+
+  if (modalTitle) modalTitle.textContent = char.name;
+  if (modalSubtitle) modalSubtitle.textContent = char.title || "";
+  if (modalToc) modalToc.innerHTML = char.toc || "Chưa có thông tin mục lục.";
+
+  if (openingSectionBox && modalOpeningScenes) {
+    if (char.opening) {
+      openingSectionBox.style.display = "block";
+      modalOpeningScenes.innerHTML = char.opening;
+    } else {
+      openingSectionBox.style.display = "none";
+    }
+  }
+
+  if (modalChipsContainer) modalChipsContainer.innerHTML = char.chipsHTML || "";
+  if (modalVoteCount) modalVoteCount.textContent = char.votes || 0;
+
+  modal.classList.add("show");
 };
 
 window.toggleLike = async function (btn) {
@@ -752,35 +861,81 @@ function toggleDonateQR() {
   }
 }
 
+// ==================== HÀM LẤY DỮ LIỆU TỔNG HỢP (SUPABASE + FALLBACK HTML) ====================
+async function getAllCharacters() {
+  // 1. Thử lấy dữ liệu từ Supabase
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from("characters").select("*");
+      if (!error && data && data.length > 0) {
+        return data;
+      }
+    } catch (err) {
+      console.warn(
+        "Không thể lấy dữ liệu từ Supabase, chuyển sang dự phòng HTML:",
+        err,
+      );
+    }
+  }
+
+  // 2. Dự phòng: Đọc và bóc tách dữ liệu từ characters.html nếu Supabase chưa có dữ liệu
+  try {
+    const res = await fetch("characters.html");
+    if (!res.ok) return [];
+    const htmlText = await res.text();
+    const doc = new DOMParser().parseFromString(htmlText, "text/html");
+    const cards = doc.querySelectorAll(".bot-card");
+
+    const list = [];
+    cards.forEach((card) => {
+      const name = card.querySelector(".bot-name")?.textContent.trim() || "";
+      const title =
+        card.querySelector(".bot-tags")?.textContent.trim() || "Nhân vật";
+      const votesText =
+        card.querySelector(".like-count")?.textContent.trim() || "0";
+      const votes = parseInt(votesText, 10) || 0;
+      const toc = card.getAttribute("data-toc") || "";
+      const opening = card.getAttribute("data-opening") || "";
+      const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
+
+      if (name) {
+        list.push({ name, title, votes, toc, opening, chipsHTML });
+      }
+    });
+    return list;
+  } catch (err) {
+    console.error("Lỗi đọc dữ liệu dự phòng từ characters.html:", err);
+    return [];
+  }
+}
+
+// ==================== BẢNG XẾP HẠNG TOP 3 ====================
 async function loadTopRanking() {
   const container = document.getElementById("topRankingContainer");
   if (!container) return;
 
-  const supabase = getSupabase();
-  if (!supabase) {
-    container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Chưa kết nối cơ sở dữ liệu.</span>`;
+  container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Đang tải xếp hạng...</span>`;
+
+  const characters = await getAllCharacters();
+
+  if (!characters || characters.length === 0) {
+    container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Chưa có dữ liệu xếp hạng.</span>`;
     return;
   }
 
-  try {
-    const { data, error } = await supabase
-      .from("characters")
-      .select("*")
-      .order("votes", { ascending: false })
-      .limit(3);
+  // Sắp xếp theo số lượt thích giảm dần và lấy 3 nhân vật đầu tiên
+  const sorted = [...characters]
+    .sort((a, b) => (b.votes || 0) - (a.votes || 0))
+    .slice(0, 3);
 
-    if (error || !data || data.length === 0) {
-      container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Chưa có dữ liệu xếp hạng.</span>`;
-      return;
-    }
+  container.innerHTML = sorted
+    .map((char, index) => {
+      const rank = index + 1;
+      let badgeHTML = `<i class="bi bi-award-fill"></i> Top ${rank}`;
+      if (rank === 1) badgeHTML = `<i class="bi bi-trophy-fill"></i> Top 1`;
 
-    container.innerHTML = data
-      .map((char, index) => {
-        const rank = index + 1;
-        let badgeHTML = `<i class="bi bi-award-fill"></i> Top ${rank}`;
-        if (rank === 1) badgeHTML = `<i class="bi bi-trophy-fill"></i> Top 1`;
-
-        return `
+      return `
         <div class="ranking-card rank-${rank}" style="cursor: pointer;" onclick="openBotModalByName('${escapeHTML(char.name)}')">
           <span class="rank-badge">${badgeHTML}</span>
           <div class="rank-info">
@@ -790,13 +945,11 @@ async function loadTopRanking() {
           </div>
         </div>
       `;
-      })
-      .join("");
-  } catch (err) {
-    console.error("Lỗi khi tải bảng xếp hạng:", err);
-  }
+    })
+    .join("");
 }
 
+// ==================== HIỂN THỊ NHÂN VẬT NGẪU NHIÊN ====================
 async function displayRandomCharacter() {
   const container = document.getElementById("randomCharCard");
   if (!container) return;
@@ -804,39 +957,26 @@ async function displayRandomCharacter() {
   container.innerHTML = `<span class="random-placeholder-text">Đang tìm tri kỷ...</span>`;
   container.classList.add("fade-out");
 
-  const supabase = getSupabase();
-  if (!supabase) {
-    setTimeout(() => {
-      container.innerHTML = `<span class="random-placeholder-text">Chưa kết nối database.</span>`;
-      container.classList.remove("fade-out");
-    }, 300);
-    return;
-  }
+  const characters = await getAllCharacters();
 
-  try {
-    const { data, error } = await supabase.from("characters").select("*");
-
-    setTimeout(() => {
-      if (error || !data || data.length === 0) {
-        container.innerHTML = `<span class="random-placeholder-text">Không tìm thấy dữ liệu.</span>`;
-      } else {
-        const randomChar = data[Math.floor(Math.random() * data.length)];
-        container.innerHTML = `
-          <div class="random-card-content" style="cursor: pointer;" onclick="openBotModalByName('${escapeHTML(randomChar.name)}')">
-            <h4 class="random-char-name">${escapeHTML(randomChar.name)}</h4>
-            <div class="random-char-stats">
-              <span class="random-likes"><i class="bi bi-heart-fill"></i> ${randomChar.votes || 0} lượt thích</span>
-              <span class="random-feedbacks"><i class="bi bi-chat-quote-fill"></i> ${escapeHTML(randomChar.title || "Nhân vật")}</span>
-            </div>
+  setTimeout(() => {
+    if (!characters || characters.length === 0) {
+      container.innerHTML = `<span class="random-placeholder-text">Không tìm thấy dữ liệu.</span>`;
+    } else {
+      const randomChar =
+        characters[Math.floor(Math.random() * characters.length)];
+      container.innerHTML = `
+        <div class="random-card-content" style="cursor: pointer;" onclick="openBotModalByName('${escapeHTML(randomChar.name)}')">
+          <h4 class="random-char-name">${escapeHTML(randomChar.name)}</h4>
+          <div class="random-char-stats">
+            <span class="random-likes"><i class="bi bi-heart-fill"></i> ${randomChar.votes || 0} lượt thích</span>
+            <span class="random-feedbacks"><i class="bi bi-chat-quote-fill"></i> ${escapeHTML(randomChar.title || "Nhân vật")}</span>
           </div>
-        `;
-      }
-      container.classList.remove("fade-out");
-    }, 300);
-  } catch (err) {
-    console.error("Lỗi random nhân vật:", err);
+        </div>
+      `;
+    }
     container.classList.remove("fade-out");
-  }
+  }, 300);
 }
 
 document
