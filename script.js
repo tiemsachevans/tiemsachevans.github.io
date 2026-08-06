@@ -740,6 +740,9 @@ window.toggleLike = async function (btn) {
   }
   if (!charName) return;
 
+  const votesCount = characterData.votes || 0;
+  cardElement.querySelector(".like-count").textContent = votesCount;
+
   const countSpan =
     btn.querySelector(".like-count") ||
     document.getElementById("modalVoteCount");
@@ -768,6 +771,23 @@ window.toggleLike = async function (btn) {
     loadTopRanking();
   }
 };
+
+async function handleLikeClick(characterId, currentVotes) {
+  const newVotes = currentVotes + 1;
+
+  // Update lên Supabase
+  const { data, error } = await getSupabase()
+    .from("characters")
+    .update({ votes: newVotes })
+    .eq("id", characterId);
+
+  if (error) {
+    console.error("Lỗi cập nhật tim:", error.message);
+  } else {
+    document.querySelector(`#char-${characterId} .like-count`).textContent =
+      newVotes;
+  }
+}
 
 window.toggleFeedback = function (btn) {
   const card = btn.closest(".bot-card");
