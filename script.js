@@ -6,21 +6,28 @@ const SUPABASE_ANON_KEY =
 
 let _supabaseInstance = null;
 
-function getSupabase() {
+// Hàm kiểm tra và chờ thư viện Supabase CDN nạp hoàn tất (chờ tối đa 3 giây)
+async function getSupabase() {
   if (_supabaseInstance) return _supabaseInstance;
 
-  // Kiểm tra an toàn xem thư viện CDN đã sẵn sàng trên window chưa
+  let retries = 30; // Chờ tối đa 30 lần x 100ms = 3 giây
+  while (
+    retries > 0 &&
+    (typeof window.supabase === "undefined" || !window.supabase.createClient)
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    retries--;
+  }
+
   if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
     _supabaseInstance = window.supabase.createClient(
       SUPABASE_URL,
-      SUPABASE_ANON_KEY,
+      SUPABASE_KEY,
     );
     return _supabaseInstance;
   }
 
-  console.warn(
-    "⚠️ Thư viện Supabase CDN chưa được tải thành công trong file HTML.",
-  );
+  console.warn("⚠️ Thư viện Supabase CDN chưa nạp kịp sau 3 giây.");
   return null;
 }
 
@@ -766,7 +773,7 @@ window.toggleLike = async function (btn) {
     showToast(`Bạn không còn yêu thích ${charName} nữa rồi`, "error");
   }
 
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   if (supabase) {
     // Gọi Supabase update và yêu cầu trả về dữ liệu vừa sửa (.select())
     const { data, error } = await supabase
@@ -902,7 +909,7 @@ function toggleDonateQR() {
 
 // ==================== HÀM LẤY DỮ LIỆU TỔNG HỢP (SUPABASE + FALLBACK HTML) ====================
 async function getAllCharacters() {
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   if (supabase) {
     try {
       const { data, error } = await supabase.from("characters").select("*");
