@@ -740,9 +740,6 @@ window.toggleLike = async function (btn) {
   }
   if (!charName) return;
 
-  const votesCount = characterData.votes || 0;
-  cardElement.querySelector(".like-count").textContent = votesCount;
-
   const countSpan =
     btn.querySelector(".like-count") ||
     document.getElementById("modalVoteCount");
