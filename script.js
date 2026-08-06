@@ -21,7 +21,14 @@ function getSupabase() {
   console.warn("Supabase SDK chưa sẵn sàng!");
   return null;
 }
-document.addEventListener("DOMContentLoaded", () => {
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const supabase = getSupabase();
+  if (supabase) {
+    console.log("Supabase đã sẵn sàng!");
+  }
+
+  loadRandomDailyQuote();
   loadTopRanking();
   initSearchAndFilter();
   initModal();
@@ -31,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initAjaxNavigation();
   initMusicPlayer();
   initMenuToggle();
+  initCatMascot();
 });
 
 // Hàm escape HTML chống XSS
@@ -156,8 +164,6 @@ async function loadRandomDailyQuote() {
   if (quoteTextEl) quoteTextEl.textContent = `"${selected.text}"`;
   if (quoteAuthorEl) quoteAuthorEl.textContent = `— ${selected.author}`;
 }
-
-document.addEventListener("DOMContentLoaded", loadRandomDailyQuote);
 
 // ==================== TOAST NOTIFICATION SYSTEM ====================
 function showToast(message, type = "success") {
@@ -772,8 +778,10 @@ window.toggleLike = async function (btn) {
 async function handleLikeClick(characterId, currentVotes) {
   const newVotes = currentVotes + 1;
 
-  // Update lên Supabase
-  const { data, error } = await getSupabase()
+  const supabase = getSupabase();
+  if (!supabase) return; // Bảo vệ code không bị crash nếu mất mạng / lỗi SDK
+
+  const { data, error } = await supabase
     .from("characters")
     .update({ votes: newVotes })
     .eq("id", characterId);
@@ -781,8 +789,8 @@ async function handleLikeClick(characterId, currentVotes) {
   if (error) {
     console.error("Lỗi cập nhật tim:", error.message);
   } else {
-    document.querySelector(`#char-${characterId} .like-count`).textContent =
-      newVotes;
+    const el = document.querySelector(`#char-${characterId} .like-count`);
+    if (el) el.textContent = newVotes;
   }
 }
 
@@ -1119,5 +1127,3 @@ function initCatMascot() {
     }, 3000);
   });
 }
-
-document.addEventListener("DOMContentLoaded", initCatMascot);
