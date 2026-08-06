@@ -1,9 +1,19 @@
 const SUPABASE_URL = "https://yvngwbeprfcesjdnjwzh.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2bmd3YmVwcmZjZXNqZG5qd3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDIzOTgsImV4cCI6MjEwMDcxODM5OH0.hEiP2gTcg0yU4HFBlUpmzcXQ3sydx0HxvG3ZbByjiUQ";
-const supabase = window.supabase
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+
+// Hàm lấy client Supabase động (tự động khởi tạo khi CDN đã tải xong)
+let _supabaseClient = null;
+function getSupabase() {
+  if (_supabaseClient) return _supabaseClient;
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    _supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+    );
+  }
+  return _supabaseClient;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTopRanking();
@@ -32,20 +42,18 @@ window.addEventListener("scroll", () => {
 
   let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
   if (currentScroll > lastScrollTop && currentScroll > 60) {
-    // Cuộn xuống -> Thu nhỏ và ra chính giữa
     musicPlayer.classList.add("minimized-scroll");
   } else {
-    // Cuộn lên -> Hiển thị lại đầy đủ ở vị trí ban đầu
     musicPlayer.classList.remove("minimized-scroll");
   }
   lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
 });
 
 async function loadRandomDailyQuote() {
+  const supabase = getSupabase();
   if (!supabase) return;
 
   try {
-    // Lấy danh sách nhân vật có chứa quote từ Supabase
     const { data: characters, error } = await supabase
       .from("characters")
       .select("name, quotes")
@@ -53,13 +61,11 @@ async function loadRandomDailyQuote() {
 
     if (error || !characters || characters.length === 0) return;
 
-    // Lọc ra các nhân vật thực sự có ít nhất 1 quote
     const validChars = characters.filter(
       (c) => c.quotes && c.quotes.length > 0,
     );
     if (validChars.length === 0) return;
 
-    // Chọn ngẫu nhiên nhân vật và câu quote
     const randomChar =
       validChars[Math.floor(Math.random() * validChars.length)];
     const randomQuote =
@@ -75,13 +81,10 @@ async function loadRandomDailyQuote() {
   }
 }
 
-// Chạy hàm khi trang được tải xong (hoặc đặt trong hàm khởi tạo sự kiện chung của bạn)
 document.addEventListener("DOMContentLoaded", loadRandomDailyQuote);
 
 // ==================== TOAST NOTIFICATION SYSTEM ====================
 function showToast(message, type = "success") {
-  console.log("Đang gọi showToast với nội dung:", message);
-
   let toastContainer = document.getElementById("toastContainer");
   if (!toastContainer) {
     toastContainer = document.createElement("div");
@@ -104,7 +107,6 @@ function showToast(message, type = "success") {
   const toast = document.createElement("div");
   const isError = type === "error";
 
-  // 1. Thiết lập trạng thái BAN ĐẦU (chưa trượt lên, ẩn mờ)
   toast.style.cssText = `
     background: ${isError ? "#fee2e2" : "#f0fdf4"};
     color: ${isError ? "#991b1b" : "#166534"};
@@ -130,19 +132,18 @@ function showToast(message, type = "success") {
   toast.innerHTML = `${icon} <span>${escapeHTML(message)}</span>`;
   toastContainer.appendChild(toast);
 
-  // 2. Kích hoạt hiệu ứng trượt lên bằng cách đổi về trạng thái cuối sau một nhịp render nhỏ
   requestAnimationFrame(() => {
     toast.style.opacity = "1";
     toast.style.transform = "translateY(0)";
   });
 
-  // Tự động thu hồi và xóa sau 3.2 giây
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "translateY(20px)";
-    setTimeout(() => toast.remove(), 300); // Chờ hiệu ứng ẩn kết thúc rồi mới xóa DOM
+    setTimeout(() => toast.remove(), 300);
   }, 3200);
 }
+
 function initGlobalListeners() {
   document.addEventListener("click", (e) => {
     const likeBtn =
@@ -157,7 +158,7 @@ function initGlobalListeners() {
   });
 }
 
-// ==================== MUSIC PLAYER LOGIC (PERSISTENT) ====================
+// ==================== MUSIC PLAYER LOGIC ====================
 const playlist = [
   { title: "60%_的遐想静谧", src: "bgm/60-的遐想静谧.mp3" },
   { title: "60%_的日常自由", src: "bgm/60-的日常自由.mp3" },
@@ -334,7 +335,6 @@ function initMusicPlayer() {
     }
   });
 
-  // Lắng nghe sự kiện audio để tự động cập nhật trạng thái soundwave
   audio.addEventListener("play", updateSoundWaveState);
   audio.addEventListener("pause", updateSoundWaveState);
 
@@ -348,15 +348,13 @@ function formatTime(seconds) {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
-// ==================== 2. AJAX NAVIGATION SYSTEM ====================
+// ==================== AJAX NAVIGATION SYSTEM ====================
 function initAjaxNavigation() {
-  // Bắt sự kiện click trên các đường dẫn menu điều hướng
   document.addEventListener("click", (e) => {
     const link = e.target.closest("a.nav-link, .nav-logo");
     if (!link) return;
 
     const href = link.getAttribute("href");
-    // Chỉ xử lý các file HTML nội bộ (bỏ qua liên kết ngoài, neo trang #, mailto)
     if (
       !href ||
       href.startsWith("http") ||
@@ -369,7 +367,6 @@ function initAjaxNavigation() {
 
     e.preventDefault();
 
-    // 👉 BỔ SUNG: Tự động đóng menu mobile và hiện lại player khi chọn link
     const navMenu = document.getElementById("navMenu");
     const menuToggle = document.getElementById("menuToggle");
     const musicPlayer = document.getElementById("musicPlayer");
@@ -385,7 +382,6 @@ function initAjaxNavigation() {
     loadPageViaAjax(href);
   });
 
-  // Hỗ trợ nút Back / Forward trên trình duyệt
   window.addEventListener("popstate", () => {
     const path = window.location.pathname.split("/").pop() || "index.html";
     loadPageViaAjax(path, false);
@@ -395,12 +391,11 @@ function initAjaxNavigation() {
 async function loadPageViaAjax(url, pushHistory = true) {
   const mainContent = document.getElementById("main-content");
   if (!mainContent) {
-    window.location.href = url; // Fallback an toàn nếu thiếu layout
+    window.location.href = url;
     return;
   }
 
   try {
-    // Hiệu ứng mờ dần nội dung cũ trước khi fetch
     mainContent.style.opacity = "0";
     mainContent.style.transition = "opacity 0.2s ease-in-out";
 
@@ -419,7 +414,6 @@ async function loadPageViaAjax(url, pushHistory = true) {
     }
 
     setTimeout(() => {
-      // Thay thế phần thân nội dung chính
       mainContent.innerHTML = newMain.innerHTML;
       if (newTitle) document.title = newTitle.textContent;
 
@@ -427,16 +421,14 @@ async function loadPageViaAjax(url, pushHistory = true) {
         window.history.pushState({ path: url }, "", url);
       }
 
-      // Kích hoạt lại các thành phần script cho trang mới vừa load
       reinitializePageScripts();
 
-      // Hiện lại nội dung mới với hiệu ứng mượt
       mainContent.style.opacity = "1";
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, 200);
   } catch (error) {
     console.error("Lỗi chuyển trang AJAX:", error);
-    window.location.href = url; // Fallback tải lại trang truyền thống nếu có lỗi mạng
+    window.location.href = url;
   }
 }
 
@@ -449,7 +441,7 @@ function reinitializePageScripts() {
   loadRandomDailyQuote();
 }
 
-// ==================== 3. SEARCH & FILTER LOGIC ====================
+// ==================== SEARCH & FILTER LOGIC ====================
 function initSearchAndFilter() {
   const searchInput = document.getElementById("searchInput");
   const genreContainer = document.getElementById("genreContainer");
@@ -525,7 +517,7 @@ function initSearchAndFilter() {
   });
 }
 
-// ==================== 4. MODAL CARD SYSTEM LOGIC ====================
+// ==================== MODAL CARD SYSTEM LOGIC ====================
 let activeCardElement = null;
 
 function initModal() {
@@ -587,7 +579,7 @@ function initModal() {
         const parentBtn =
           modalVoteCount.closest("button") || modalVoteCount.parentElement;
         if (parentBtn) {
-          parentBtn.classList.add("like-btn", "like-btn");
+          parentBtn.classList.add("like-btn");
           parentBtn.style.cursor = "pointer";
           parentBtn.classList.toggle("liked", isLiked);
         }
@@ -641,7 +633,6 @@ window.toggleLike = async function (btn) {
   let count = parseInt(countSpan.textContent) || 0;
   const willBeLiked = !btn.classList.contains("liked");
 
-  // Cập nhật giao diện trước cho mượt
   btn.classList.toggle("liked", willBeLiked);
   count = willBeLiked ? count + 1 : Math.max(0, count - 1);
   countSpan.textContent = count;
@@ -652,14 +643,13 @@ window.toggleLike = async function (btn) {
     showToast(`Bạn không còn yêu thích ${charName} nữa rồi`, "error");
   }
 
-  // Cập nhật số lượt thích thật vào Supabase
+  const supabase = getSupabase();
   if (supabase) {
     await supabase
       .from("characters")
       .update({ votes: count })
       .eq("name", charName);
 
-    // Tải lại bảng xếp hạng sau khi thả tim thành công
     loadTopRanking();
   }
 };
@@ -699,7 +689,7 @@ window.sendFeedback = function (btn) {
   showToast("Gửi đánh giá thành công!", "success");
 };
 
-// ==================== 5. GENERAL UTILITIES ====================
+// ==================== GENERAL UTILITIES ====================
 function initMenuToggle() {
   const menuToggle = document.getElementById("menuToggle");
   const navMenu = document.getElementById("navMenu");
@@ -719,7 +709,6 @@ function initMenuToggle() {
     }
   });
 
-  // Click ra ngoài thì đóng menu và hiện lại player
   document.addEventListener("click", (e) => {
     if (
       navMenu &&
@@ -762,6 +751,7 @@ async function loadTopRanking() {
   const container = document.getElementById("topRankingContainer");
   if (!container) return;
 
+  const supabase = getSupabase();
   if (!supabase) {
     container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Chưa kết nối cơ sở dữ liệu.</span>`;
     return;
@@ -809,6 +799,7 @@ async function displayRandomCharacter() {
   container.innerHTML = `<span class="random-placeholder-text">Đang tìm tri kỷ...</span>`;
   container.classList.add("fade-out");
 
+  const supabase = getSupabase();
   if (!supabase) {
     setTimeout(() => {
       container.innerHTML = `<span class="random-placeholder-text">Chưa kết nối database.</span>`;
@@ -847,7 +838,7 @@ document
   .getElementById("randomBtn")
   ?.addEventListener("click", displayRandomCharacter);
 
-// ==================== CFS SUBMISSION & THANK YOU LETTER ====================
+// ==================== CFS SUBMISSION ====================
 window.submitCfsNote = async function () {
   const authorInput = document.getElementById("cfsAuthorInput");
   const contentInput = document.getElementById("cfsContentInput");
@@ -863,7 +854,7 @@ window.submitCfsNote = async function () {
     return;
   }
 
-  // Lưu vào Supabase
+  const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase
       .from("cfs_notes")
@@ -875,7 +866,6 @@ window.submitCfsNote = async function () {
     }
   }
 
-  // Hiển thị ra màn hình tạm thời
   const noteEl = document.createElement("div");
   noteEl.className = "cfs-note-item";
   noteEl.style.backgroundColor = color;
@@ -923,13 +913,11 @@ window.closeThankYouModal = function () {
   if (modal) modal.classList.remove("show");
 };
 
-// Mascot mèo
 function initCatMascot() {
   const catBtn = document.getElementById("catMascotBtn");
   const catBubble = document.getElementById("catBubble");
   if (!catBtn || !catBubble) return;
 
-  // Kiểm tra nếu đã gán sự kiện rồi thì không gán lại
   if (catBtn.dataset.initialized === "true") return;
   catBtn.dataset.initialized = "true";
 
@@ -944,9 +932,8 @@ function initCatMascot() {
   ];
 
   catBtn.addEventListener("click", () => {
-    // Hiệu ứng nhún nhảy
     catBtn.classList.remove("purr");
-    void catBtn.offsetWidth; // Trigger reflow
+    void catBtn.offsetWidth;
     catBtn.classList.add("purr");
 
     petCount++;
@@ -961,10 +948,8 @@ function initCatMascot() {
       catBubble.innerHTML = randomQuote;
     }
 
-    // Hiện bong bóng thoại
     catBubble.classList.add("show");
 
-    // Tự ẩn bong bóng thoại sau 3.5 giây
     clearTimeout(window.catTimer);
     window.catTimer = setTimeout(() => {
       catBubble.classList.remove("show");
@@ -972,5 +957,4 @@ function initCatMascot() {
   });
 }
 
-// Gọi khởi tạo chú mèo
 document.addEventListener("DOMContentLoaded", initCatMascot);
