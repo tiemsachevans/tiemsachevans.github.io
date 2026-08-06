@@ -766,12 +766,23 @@ window.toggleLike = async function (btn) {
 
   const supabase = getSupabase();
   if (supabase) {
-    await supabase
+    // Gọi Supabase update và yêu cầu trả về dữ liệu vừa sửa (.select())
+    const { data, error } = await supabase
       .from("characters")
       .update({ votes: count })
-      .eq("name", charName);
+      .eq("name", charName)
+      .select();
 
-    loadTopRanking();
+    if (error) {
+      console.error("❌ Lỗi Supabase khi lưu tim:", error);
+    } else if (!data || data.length === 0) {
+      console.warn(
+        `⚠️ Supabase KHÔNG tìm thấy nhân vật có tên exact là "${charName}"! Hãy kiểm tra lại cột 'name' trong bảng Supabase.`,
+      );
+    } else {
+      console.log("✅ Đã cập nhật tim thành công trên Supabase:", data);
+      loadTopRanking();
+    }
   }
 };
 
@@ -889,23 +900,27 @@ function toggleDonateQR() {
 
 // ==================== HÀM LẤY DỮ LIỆU TỔNG HỢP (SUPABASE + FALLBACK HTML) ====================
 async function getAllCharacters() {
-  // 1. Thử lấy dữ liệu từ Supabase
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { data, error } = await supabase.from("characters").select("*");
-      if (!error && data && data.length > 0) {
+
+      if (error) {
+        console.error("❌ Lỗi SELECT Supabase:", error);
+      } else if (data && data.length > 0) {
+        console.log("✅ Đã lấy thành công danh sách từ Supabase:", data);
         return data;
+      } else {
+        console.warn(
+          "⚠️ Bảng 'characters' trên Supabase đang trống (chưa có hàng nào).",
+        );
       }
     } catch (err) {
-      console.warn(
-        "Không thể lấy dữ liệu từ Supabase, chuyển sang dự phòng HTML:",
-        err,
-      );
+      console.warn("Lỗi kết nối Supabase:", err);
     }
   }
 
-  // 2. Dự phòng: Đọc và bóc tách dữ liệu từ characters.html nếu Supabase chưa có dữ liệu
+  // Dự phòng: Đọc từ characters.html nếu Supabase lỗi hoặc chưa có dữ liệu
   try {
     const res = await fetch("characters.html");
     if (!res.ok) return [];
