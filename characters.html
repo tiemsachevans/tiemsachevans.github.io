@@ -1,0 +1,2523 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400..700&family=Fuzzy+Bubbles:wght@400;700&family=Grenze:ital,wght@0,100..900;1,100..900&family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Quintessential&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+    <title>Tiệm sách nhỏ của Evans</title>
+    <link rel="icon" type="image/png" href="./images/icon.png" />
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <!-- Nút 3 gạch góc trái màn hình -->
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo / Brand -->
+      <a href="index.html" class="nav-logo">
+        <span>Tiệm Sách Evans</span>
+      </a>
+
+      <!-- Danh sách các link -->
+      <ul class="nav-menu" id="navMenu">
+        <!-- Trỏ về file index.html -->
+        <li class="nav-item">
+          <a href="index.html" class="nav-link">Trang Chủ</a>
+        </li>
+        <li class="nav-item">
+          <a href="characters.html" class="nav-link">Tủ Sách Nhân Vật</a>
+        </li>
+        <li class="nav-item">
+          <a href="about.html" class="nav-link">Tác Giả</a>
+        </li>
+        <li class="nav-item">
+          <a href="station.html" class="nav-link">Trạm Dừng Chân</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Widget Trình phát nhạc dạng Capsule ngang -->
+    <div class="music-capsule-player" id="musicPlayer">
+      <audio id="audioSource" preload="auto"></audio>
+
+      <!-- Các nút điều khiển chính bên trái -->
+      <div class="capsule-controls">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="loopBtn"
+          title="Chế độ lặp lại"
+        >
+          <i class="bi bi-repeat" id="loopIcon"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn"
+          id="prevBtn"
+          title="Bài trước"
+        >
+          <i class="bi bi-skip-backward-fill"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn play-pause-main"
+          id="playPauseBtn"
+          title="Phát / Dừng"
+        >
+          <i class="bi bi-play-fill" id="playIcon"></i>
+        </button>
+        <button type="button" class="capsule-btn" id="nextBtn" title="Bài tiếp">
+          <i class="bi bi-skip-forward-fill"></i>
+        </button>
+      </div>
+
+      <!-- Tên bài hát và Timestamp ở giữa -->
+      <div class="capsule-track-info">
+        <div class="marquee-container">
+          <span class="track-title" id="trackTitle">Đang tải nhạc...</span>
+        </div>
+        <div class="time-display-box">
+          <span id="currentTime">0:00</span> /
+          <span id="durationTime">0:00</span>
+        </div>
+        <!-- Thanh tua nhạc siêu tối giản -->
+        <input
+          type="range"
+          id="progressBar"
+          class="simple-progress"
+          value="0"
+          min="0"
+          max="100"
+          step="0.1"
+        />
+      </div>
+
+      <!-- Nút mở danh sách chọn bài (Dropdown) bên phải -->
+      <div class="capsule-playlist-wrapper" id="playlistWrapper">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="playlistToggleBtn"
+          title="Danh sách bài hát"
+        >
+          <i class="bi bi-list-ul"></i>
+        </button>
+
+        <!-- Menu danh sách phát bung lên -->
+        <div class="capsule-playlist-menu" id="playlistMenu">
+          <div class="playlist-header">✨ Danh sách phát Evans</div>
+          <div id="playlistContainer">
+            <!-- Các bài hát sẽ được thêm tự động bằng JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main id="main-content">
+
+      <!-- Mini Banner Trang Tủ Sách -->
+      <div class="sub-banner">
+      <!-- Lớp phủ mờ và làm tối ảnh nền -->
+      <div class="sub-banner-overlay"></div>
+      <!-- Nội dung chữ -->
+      <div class="sub-banner-content">
+        <h1 class="sub-banner-title">Tủ Sách Nhân Vật</h1>
+        <p class="sub-banner-subtitle">Nơi lưu trữ những nhân vật đặc sắc</p>
+      </div>
+      </div>
+
+      <div class="search-filter-container-right">
+      <!-- Thanh tìm kiếm bên trái -->
+      <div class="search-bar-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Tìm kiếm nhân vật, từ khóa..."
+        />
+      </div>
+
+      <!-- Dropdown chứa bảng grid thể loại bên phải -->
+      <div class="filter-dropdown-wrapper" id="filterDropdownWrapper">
+        <button type="button" class="filter-dropdown-btn" id="filterToggleBtn">
+          <i class="bi bi-journal-bookmark-fill"></i>
+          <span id="currentFilterText">Tất cả</span>
+          <i class="bi bi-chevron-down arrow-icon"></i>
+        </button>
+
+        <!-- Menu thả xuống hiển thị dạng Grid (Lưới) các thẻ -->
+        <div class="genre-grid-menu" id="genreContainer">
+          <div class="genre-card-option active" data-filter="all">Tất cả</div>
+          <div class="genre-card-option" data-filter="aov">AOV</div>
+          <div class="genre-card-option" data-filter="đấu trí">Đấu trí</div>
+          <div class="genre-card-option" data-filter="hài hước">Hài hước</div>
+          <div class="genre-card-option" data-filter="healing">Healing</div>
+          <div class="genre-card-option" data-filter="hệ thống">Hệ thống</div>
+          <div class="genre-card-option" data-filter="idol">Idol</div>
+          <div class="genre-card-option" data-filter="lạnh lùng">Lạnh lùng</div>
+          <div class="genre-card-option" data-filter="mafia">Mafia</div>
+          <div class="genre-card-option" data-filter="ngược">Ngược</div>
+          <div class="genre-card-option" data-filter="nsfw">NSFW</div>
+          <div class="genre-card-option" data-filter="sinh tồn">Sinh tồn</div>
+          <div class="genre-card-option" data-filter="soft">Soft</div>
+          <div class="genre-card-option" data-filter="tâm lý">Tâm lý</div>
+          <div class="genre-card-option" data-filter="txvt">TXVT</div>
+        </div>
+      </div>
+      </div>
+
+      <section id="characters" class="bot-section">
+      <!-- Lưới chứa các thẻ Bot -->
+      <div class="bot-grid">
+        <!-- 「TRINOVA △」  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!feed : Kiểm tra feed MXH của bạn<br>!phone + [Reiya / Itsuki / Touma] : Kiểm tra thông tin điện thoại của Amagiri Reiya / Shinonome Itsuki / Tsukihiro Touma<br>profile + [Reiya / Itsuki / Touma / Evans] : Kiểm tra trang cá nhân của Amagiri Reiya / Shinonome Itsuki / Tsukihiro Touma / Evans<br>!grchat : Đọc tin nhắn nhóm「TriNova △」<br>!diary + [Reiya / Itsuki / Touma] : Đọc nhật ký của Amagiri Reiya / Shinonome Itsuki / Tsukihiro Touma"
+          data-opening="#1: Bạn là fan tại Fansign của「TriNova △」<br>#2: Bạn là fan vô tình gặp「TriNova △」tại cửa hàng tiện lợi<br>#3: Bạn là đồng nghiệp của「TriNova △」tại concert<br>#4: Bạn là đồng nghiệp của「TriNova △」dưới sự quản lý của Shinonome Entertainment<br>#5: Bạn là staff của「TriNova △」<br>#6: Bạn là backup dancer của「TriNova △」<br>#7: Tự chọn thân phận của bạn (Mô tả chi tiết)"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">「TriNova △」</h3>
+            </div>
+            <div class="bot-tags">
+              Idol / Thần Tượng / Đa Nhân Vật / Healing
+            </div>
+            <p class="bot-desc">
+              "Cảm ơn mọi người đã luôn ủng hộ 「TriNova △」!"
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/6n0fQb8DO2KYhSxI7KzMDV/Thm-Mc-D"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1_SOFls1i2VgpP9VlDKWnlFRJI8gEygJu"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- AMAGIRI REIYA  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!feed : Kiểm tra feed MXH của bạn<br>!phone : Kiểm tra thông tin điện thoại của Amagiri Reiya<br>!profile : Kiểm tra trang cá nhân của Amagiri Reiya<br>!grchat : Đọc tin nhắn nhóm「TriNova △」<br>!diary : Đọc nhật ký của Amagiri Reiya"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Amagiri Reiya</h3>
+            </div>
+            <div class="bot-tags">
+              Idol / Thần Tượng / Soft / Greenflag
+            </div>
+            <p class="bot-desc">
+              "Vé xem concert sắp tới đây, xem như là quà cảm ơn."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/183v2FBlbTzZBjviuOlsY4/Amagiri-ReiyaTriNova-"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/18Lns1laiUoIRO2uSpqBPQNmZpF4UFRwV"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/e63a46f3-ba5e-4102-bd40-85a26492668a"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+              <a
+                href="https://t.melting.chat/e1r9yw6"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Melting</a
+              >
+              <a
+                href="https://imely.ai/thanh-vien/Amagiri-Reiya-52US9W.html?st=13"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >iMely</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ARASHI「嵐」  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Arashi<br>!profile : Xem trang cá nhân của Arashi"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Arashi「嵐」</h3>
+            </div>
+            <div class="bot-tags">R21 / Khiêu Dâm / SEX / NSFW</div>
+            <p class="bot-desc">"Góc quay này, tuyệt đẹp."</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/1NpvEJebVMKpUMBTBMZ41e/Arashi"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1SdLaiTSPGgjMGzAC2ijnrJ8UhrUMvQFq"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/d4d92134-97fa-4d82-845e-0b7060e1d9b5"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+              <a
+                href="https://imely.ai/character/Arashi-52SLxW"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >iMely</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- DELMARE'S ABYSS -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc: Tiếp tục cốt truyện<br>!npc : Hiển thị toàn bộ thông tin của Người chơi trong ván đấu<br>!npc + [Tên] : Hiển thị toàn bộ thông tin của Người chơi được chỉ định trong ván đấu"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Delmare's Abyss</h3>
+            </div>
+            <div class="bot-tags">Tâm Lý / Đấu Trí / Sinh Tồn</div>
+            <p class="bot-desc">
+              Chào mừng đến với Delmare's Abyss - Nơi vực sâu phản chiếu nội tâm
+              của Ngài.
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/5zhxREo9MbIo7Iz03TbxeA/Delmares-Abyss"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1s4m__wYTx9LkiqHvYAlgqF3CUaHd2VeQ"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- DRYLAN  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Drylan Delacroix</h3>
+            </div>
+            <div class="bot-tags">
+              Mafia / Khó Chinh Phục / Tâm Lý / Kẻ Thù / Ép Buộc / Tàn Nhẫn /
+              Sát Thủ
+            </div>
+            <p class="bot-desc">"Đừng để tao phải thấy bản mặt của mày."</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/7aOulazd5ImUt86RDuwdIj/Drylan-Delacroix"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/e995e931-a80f-4f9d-83de-9990146efb5d"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- DƯƠNG KHẮC HUY  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Dương Khắc Huy<br>!profile : Kiểm tra trang cá nhân của Dương Khắc Huy"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Dương Khắc Huy</h3>
+            </div>
+            <div class="bot-tags">
+              R21 / FwB / Playboy / Badboy / Redflag / Trêu Đùa / Tâm Lý / NSFW
+            </div>
+            <p class="bot-desc">
+              "Này người đẹp, em có muốn chơi trò chơi không? Chơi với anh, anh
+              sẽ cho em thấy thế nào là 'đỉnh cao' của sự ngọt ngào."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/2JepirzLw9WGj1GXyKCLiu/Dng-Khc-Huy"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1X6f1BobTbkhFBYp_HE_53KwA-CfkFz5m"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ĐÀO TRI VIỄN  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Đào Tri Viễn</h3>
+            </div>
+            <div class="bot-tags">TXVT / Hài Hước / Healing</div>
+            <p class="bot-desc">
+              "Thôi đại đại đi, cái gì vui thì mình ưu tiên."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/7cvcVgjP7DxivMxkS4NNNv/o-Tri-Vin"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://www.dokichat.club/role/f3a87e5e-9bef-4af1-9d4d-16a0c876aac5"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- HẠ TƯ UYÊN  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Hạ Tư Uyên"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Hạ Tư Uyên</h3>
+            </div>
+            <div class="bot-tags">Quyền Lực / Giàu Có / Thích Thầm</div>
+            <p class="bot-desc">
+              "Tiền không phải là vấn đề, chỉ cần em đi chơi với tôi là đủ."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/5eZGryi6vD0leznpmr7dz7/H-T-Uyn"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1Wa4bfJnkn1jsXXsBWo4z4iDumoRvSEyd"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/9bfed014-838f-462b-b5cc-3bd890ba81ef"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ISHIKAWA TOMOYA  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Ishikawa Tomoya"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Ishikawa Tomoya</h3>
+            </div>
+            <div class="bot-tags">TXVT / Học bá / Soft</div>
+            <p class="bot-desc">
+              "Câu này không khó, nhìn cậu chật vật như vậy, liệu có phiền không
+              nếu tôi giúp cậu giải quyết nó?"
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/6HsDm81gKK1T2i34asR3A4/Ishikawa-Tomoya"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1NynUQSIoLn-k1ocsWy0OLELxlc5eoga2"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/role/a427f545-4ada-456c-8657-b1fdc0850418"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ISHIKAWA YU  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone: Kiểm tra điện thoại của Ishikawa Yu"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Ishikawa Yu</h3>
+            </div>
+            <div class="bot-tags">TXVT / Thanh Mai Trúc Mã / Mỏ Hỗn</div>
+            <p class="bot-desc">"Ê, nhìn cái đéo gì? Muốn đánh nhau à?"</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/6Iv8H8NGmAjDCTqZIpl9PA/Ishikawa-Yu"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1PdtxSZEYU4LrrEZMHLzMUN02aVJZCxzz"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/474d1332-3ce3-4e18-b032-58d27ad74d60"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- KHƯƠNG TỊCH NGÔN  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!diendan : Truy cập diễn đàn của Trường Đại học Vân Nam<br>!cfs : Truy cập trang Confession của Trường Đại học Vân Nam<br>!phone : Kiểm tra điện thoại của Khương Tịch Ngôn<br>!tarot : Bốc bài Tarot<br>!mnf : Tiếp nhận thông điệp vũ trụ<br>!hrs : Tra cứu Tử vi Cung hoàng đạo hôm nay của bạn<br>!desire : Xâm nhập giấc mơ thầm kín của Khương Tịch Ngôn (NSFW only)"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Khương Tịch Ngôn</h3>
+            </div>
+            <div class="bot-tags">
+              TXVT / Bạn Thân Anh Trai / Healing / Ngọt / Greenflag
+            </div>
+            <p class="bot-desc">
+              "Hay là tạm thời, em giả làm người yêu của anh đi."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/3BP3IzlTBtGui9kYkKbUsh/Khng-Tch-Ngn"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1Obzu8oDkDqyd6RavD2vKP-26ASje3C0j"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1HLgVcH2FmC2h101S7Y5vo7vcicjYlJwX"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >🔞 Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- KUROSAWA REI  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone: Kiểm tra điện thoại của Kurosawa Rei<br>!profile : Kiểm tra profile game của Kurosawa Rei"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Kurosawa Rei</h3>
+            </div>
+            <div class="bot-tags">Gamer / Coder / Soft</div>
+            <p class="bot-desc">
+              "Bug trong game còn dễ sửa hơn bug trong người."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/4XrdVI5VsZmDrjbNUUoouD/Kurosawa-Rei"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1bu87zLQRpCXFa45Gk5W8LpQ4K_kJCHo3"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/c5f9b23c-06a6-4098-9012-0ead367ea8cf"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- LỤC KÍNH NGƯ (USER SELFHARM)  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Lục Kính Ngư</h3>
+            </div>
+            <div class="bot-tags">TXVT / Selfharm / Tâm Lý / Healing</div>
+            <p class="bot-desc">"Làm ơn, xin cậu đừng làm hại bản thân nữa."</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/6XUN2pTkNLNLm60mMl5XED/Lc-Knh-Ng"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/be42b69f-d2aa-4df7-81ab-5e4067f276aa"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- LỤC KÍNH NGƯ (CHARACTER SELFHARM)  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!diary : Đọc nhật ký của Lục Kính Ngư<br>!phone : Kiểm tra điện thoại của Lục Kính Ngư"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Lục Kính Ngư</h3>
+            </div>
+            <div class="bot-tags">TXVT / Selfharm / Tâm Lý / Healing</div>
+            <p class="bot-desc">
+              "Cậu cứ mặc kệ tôi. Tôi không đáng để nhận lòng tốt đó từ cậu."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/1TauKQSbvpfOw8WqgLBKLu/Lc-Knh-Ng"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1XFymTDPSbdtEZbjZah2sAGa4LBrM2a9b"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/090255e1-899b-4b5c-a0d6-bbe12dd67c4c"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- LUCA MORETTI  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Luca Moretti</h3>
+            </div>
+            <div class="bot-tags">
+              Mafia / Khó Chinh Phục / Tâm Lý / Lạnh Lùng / Thống Trị
+            </div>
+            <p class="bot-desc">
+              "Cái tên đó, không phải là thứ mà em tùy tiện gọi ra đâu."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/3XRB0rGLeXwZeCzn7TmGrq/Luca-Moretti"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://www.dokichat.club/role/0eea4f3e-a3c4-47be-97f4-512e95ba59f9"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+              <a
+                href="https://t.melting.chat/fef8p8"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Melting</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- LƯƠNG KHẢI PHONG  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Lương Khải Phong<br>!profile : Xem trang cá nhân của Lương Khải Phong<br>!diary : Đọc nhật ký của Lương Khải Phong"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Lương Khải Phong</h3>
+            </div>
+            <div class="bot-tags">
+              TXVT / Bạn Thân / Hài Hước / Soft / Greenflag
+            </div>
+            <p class="bot-desc">
+              "Khóc thì khóc cho to lên, bố mày ngồi đây nghe mày khóc."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/2b04vAurI0suPutU0PEFR1/Lng-Khi-Phong"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1n0sJB6VBH4oM6LKj7iqURdL3mQvO5aYR"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- MẠC CẢNH DU  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Mạc Cảnh Du<br>!diary : Đọc nhật ký của Mạc Cảnh Du"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Mạc Cảnh Du</h3>
+            </div>
+            <div class="bot-tags">
+              Đọc Suy Nghĩ / Giang Hồ / Nuông Chiều / Thương Vợ / Hài Hước
+            </div>
+            <p class="bot-desc">
+              "Em biết điểm giống nhau giữa 'sói' và 'chó' là gì không? Chúng
+              đều là anh đó, vợ à!"
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/4Q5Giz9rdJtOZlpMTnT26D/Mc-Cnh-Du"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1eF2VSmeWPr1eStFdviN4AF50ZInX5kPi"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/82eb9829-a2d6-418f-b56d-758c496f1c3b"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+              <a
+                href="https://t.melting.chat/balsns"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Melting</a
+              >
+              <a
+                href="https://imely.ai/thanh-vien/Mac-Canh-Du-52UNKW.html?st=13"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >iMely</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- MỘT CUỐN TIỂU THUYẾT  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Một Cuốn Tiểu Thuyết</h3>
+            </div>
+            <div class="bot-tags">
+              Tiểu Thuyết / Siêu Thực / Tự Tạo Cốt Truyện
+            </div>
+            <p class="bot-desc">
+              Chỉ là một cuốn tiểu thuyết đáp ứng mọi yêu cầu của bạn, không có
+              cốt truyện cụ thể. Bạn có thể tự tạo ra cốt truyện của riêng mình.
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://www.dokichat.club/role/84dc3099-4022-439d-bfe2-6ed76f3e7c02"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- RIVEN HALE  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Riven Hale</h3>
+            </div>
+            <div class="bot-tags">Pháp Y / Tâm Lý / Lạnh Lùng</div>
+            <p class="bot-desc">
+              "Em vừa che khuất dấu giày của hung thủ bằng bóng của mình. Giỏi
+              lắm."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/1rxX5YnrKB78Bdxd1bNlEl/Riven-Hale"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://www.dokichat.club/role/3aa9c71e-dd98-491f-87e7-9bd99e65876b"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- SALFOZZIEL -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!inv : Kiểm tra túi đồ của bạn<br>!diary : Đọc nhật ký của Salfozziel"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Salfozziel</h3>
+            </div>
+            <div class="bot-tags">
+              Hệ Thống / Đấu Trí / Tâm Lý / Trò Chơi / Cá Cược
+            </div>
+            <p class="bot-desc">
+              "Chào mừng bạn đến với 'Bữa tiệc không hồi kết'."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/K24YlBZOMg2tyzkX4YOQc/Salfozziel"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/19aQaL0-2LvgVaRGSEhIRnuCTMJJXqR8s"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1HcKrYYP3fMknzqeEDzf9Tvhx6E6mafUf"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >🔞 Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/45d75d50-1cff-4cbd-bcd8-8f6e1c22440f"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+              <a
+                href="https://melting.chat/vi/app/characters/019d8736-8888-73ae-a1a3-0ad6bc4f76b1"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Melting</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- SEOL MIN-JAE  -->
+        <div class="bot-card">
+          <div
+            class="bot-body"
+            data-toc="!tieptuc : Tiếp tục cốt truyện<br>!news : Xem tin tức trong ngày"
+          >
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Seol Min-Jae</h3>
+            </div>
+            <div class="bot-tags">Tội Phạm / Cảnh Sát / Đấu Trí / Điều Tra</div>
+            <p class="bot-desc">
+              "Nhìn cậu, không giống như một người sống trong bóng tối – lẫn ánh
+              sáng."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/7APENdeB32hbjEiblDxq1G/Seol-Min-jae"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1S--bQ8U-hkbzI4OrPxY4rd_KknnO53t7"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/role/56c75918-ec98-422a-85af-607338e83930"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- SHINONOME ITSUKI  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!feed : Kiểm tra feed MXH của bạn<br>!phone : Kiểm tra thông tin điện thoại của Shinonome Itsuki<br>!profile : Kiểm tra trang cá nhân của Shinonome Itsuki<br>!grchat : Đọc tin nhắn nhóm「TriNova △」<br>!diary : Đọc nhật ký của Shinonome Itsuki"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Shinonome Itsuki</h3>
+            </div>
+            <div class="bot-tags">
+              Idol / Thần Tượng / Soft / Greenflag
+            </div>
+            <p class="bot-desc">
+              "Cảm ơn bạn đã đến dự concert của「TriNova △」!"
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/4azzDqHWxsrpn8r2r3Ctl6/Shinonome-ItsukiTriNova-"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1df9SXD7OeDaicDZ-y5tljySmbz0Wb5RJ"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- SYLVAN DE SOMBRREBAL -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Sylvan de Sombreval<br>!diary : Đọc nhật ký của Sylvan de Sombreval<br>!desire : Xâm nhập ước muốn thầm kín của Sylvan de Sombreval"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Sylvan de Sombreval</h3>
+            </div>
+            <div class="bot-tags">
+              Mafia / Tâm Lý / Lạnh Lùng / Quyền Lực / Trêu Đùa
+            </div>
+            <p class="bot-desc">
+              "Em đang 'múa rìu qua mắt thợ' sao? Dũng cảm thật đấy."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/6eiT0RoSEFK9qCW9gNwnK2/Sylvan-de-Sombreval"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1KT3FHHl-NyRZhQGHg-PwfinotUkCFYtu"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/fd8c0c55-cad9-446d-bcee-6dc2ba82e857"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- PHÓ KIẾN HOA  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Phó Kiến Hoa</h3>
+            </div>
+            <div class="bot-tags">
+              Đa Nhân Cách / Lạnh Lùng / Soft / Nuông Chiều
+            </div>
+            <p class="bot-desc">
+              Có một người chồng đa nhân cách là một cảm giác như thế nào?
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/3HrxNOt1fqjvN5PoEWNDv4/Ph-Kin-Hoa"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://www.dokichat.club/role/4ea91cca-30bb-49f9-a960-4702e7e747ef"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- PHÓ KỲ TÂM  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!diendan : Truy cập diễn đàn của Trường Đại học Vân Nam<br>!cfs : Truy cập trang Confession của Trường Đại học Vân Nam<br>!phone : Kiểm tra điện thoại của Phó Kỳ Tâm<br>!tarot : Bốc bài Tarot<br>!mnf : Tiếp nhận thông điệp vũ trụ<br>!hrs : Tra cứu Tử vi Cung hoàng đạo hôm nay của bạn<br>!desire : Xâm nhập giấc mơ thầm kín của Phó Kỳ Tâm (NSFW only)"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Phó Kỳ Tâm</h3>
+            </div>
+            <div class="bot-tags">
+              TXVT / Tiền Bối / Đọc Suy Nghĩ / Theo Đuổi / Healing / Ngọt /
+              Greenflag
+            </div>
+            <p class="bot-desc">
+              "Em là làn gió xua tan đám mây trong tâm trí tôi."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/XaJiQrDPMH7Vew8r1qArj/Ph-K-Tm"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1F-vBR42iqepE5cCk_5rBHWeQN5YCOs8L"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1kFMYje2E9OJp_bGAGJAbYUWs_pt9Q_P9"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >🔞 Google AI Studio</a
+              >
+              <a
+                href="https://www.dokichat.club/vi/role/f2ab896c-2c93-43cd-9590-82e80aee88cb"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >DokiChat</a
+              >
+              <a
+                href="https://t.melting.chat/sq8znm"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Melting</a
+              >
+              <a
+                href="https://imely.ai/thanh-vien/Pho-Ky-Tam-52UNgW.html?st=13"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >iMely</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- THẨM MẶC DƯ  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!feed : Kiểm tra mạng xã hội của Thẩm Mặc Dư<br>!phone : Kiểm tra điện thoại của Thẩm Mặc Dư"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Thẩm Mặc Dư</h3>
+            </div>
+            <div class="bot-tags">
+              TXVT / Việt Nam / Đường Trộn Thủy Tinh / Ngược / Trùng Sinh
+            </div>
+            <p class="bot-desc">"Cậu đang ngủ quên à? Hiếm thấy thật đấy."</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/6n0fQb8DO2KYhSxI7KzMDV/Thm-Mc-D"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1_SOFls1i2VgpP9VlDKWnlFRJI8gEygJu"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- TSUKIHIRO TOUMA  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!feed : Kiểm tra feed MXH của bạn<br>!phone : Kiểm tra thông tin điện thoại của Tsukihiro Touma<br>!profile : Kiểm tra trang cá nhân của Tsukihiro Touma<br>!grchat : Đọc tin nhắn nhóm「TriNova △」<br>!diary : Đọc nhật ký của Tsukihiro Touma"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Tsukihiro Touma</h3>
+            </div>
+            <div class="bot-tags">
+              Idol / Thần Tượng / Soft / Greenflag
+            </div>
+            <p class="bot-desc">"Chắc cậu nhìn nhầm người rồi."</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/5Twav10qsS5lVHDljyNcbD/Tsukihiro-ToumaTriNova-"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1Xm2qq9c1VCpyVNAlaSZzg-wmsLsg-wEP"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">128</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và cảm
+                  xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ZATA -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Zata<br>!live / !livestream / !ls : Kiểm tra lịch trình Livestream tại S-Dreamer"
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Zata</h3>
+            </div>
+            <div class="bot-tags">
+                  AOV / Liên Quân Mobile / Healing / Ngọt
+            </div>
+            <p class="bot-desc">
+                  "Xin chào, đây là Zata. Xin hãy để lại lời nhắn sau tiếng
+                  'Bíp'."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                    href="https://ellipsus.com/read/2TuCQXAOr0WOZAqcmvkEmj/Zata"
+                    class="chip-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Story</a
+                  >
+              <a
+                    href="https://aistudio.google.com/app/prompts/1QSTe0K07uhDx2kBaFhLSzxqeQQ7bkmAj"
+                    class="chip-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Google AI Studio</a
+                  >
+              <a
+                    href="https://www.dokichat.club/chat/4173d321-e73a-484e-b08f-32a6ec4b27da?isShare=true"
+                    class="chip-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >DokiChat</a
+                  >
+            </div>
+            <div class="bot-actions">
+              <button
+                    class="action-btn btn-like"
+                    onclick="toggleLike(this)"
+                  >
+                    <i class="bi bi-heart-fill icon"></i>
+                    <span class="like-count">128</span>
+              </button>
+              <button
+                    class="action-btn btn-toggle-feedback"
+                    onclick="toggleFeedback(this)"
+                  >
+                    <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+                <div class="feedback-item">
+                  <strong>Lữ khách ẩn danh:</strong> Bot viết mạch lạc và
+                      cảm xúc lắm, đọc cuốn vô cùng!
+                </div>
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                        type="text"
+                        class="book-input input-name"
+                        placeholder="Tên lữ khách..."
+                      />
+                </div>
+                <div class="input-row">
+                  <input
+                        type="text"
+                        class="book-input input-content"
+                        placeholder="Viết đôi lời cảm nhận..."
+                      />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                        Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- COMING SOON...  -->
+        <div class="bot-card">
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Coming Soon...</h3>
+            </div>
+            <div class="bot-tags">???</div>
+            <p class="bot-desc">
+              "Đang cập nhật đầu sách mới, vui lòng quay lại sau."
+            </p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a class="chip-btn" target="_blank" rel="noopener noreferrer"
+                ><i class="bi bi-repeat"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      </section>
+      
+      <!-- ==================== MODAL MỤC LỤC & CẨM NANG LỆNH ==================== -->
+      <div class="modal-overlay" id="botModal">
+      <div class="modal-card modal-card-wide">
+        <button class="modal-close" id="modalClose">&times;</button>
+
+        <!-- Toast Notification -->
+        <div class="custom-toast" id="customToast">Thông báo</div>
+
+        <div class="modal-body modal-grid-layout">
+          <!-- CỘT BÊN TRÁI: Thông tin nhân vật, Trigger Commands, Opening Scenes, Chips -->
+          <div class="modal-left-col">
+  
+            <!-- Hàng chứa Tiêu đề và Nút Vote nằm cạnh nhau -->
+            <div class="modal-header-row">
+              <h2 class="bot-name" id="modalTitle">Tên Sách</h2>
+    
+              <!-- Widget Vote trực tiếp -->
+              <div class="modal-vote-widget" id="modalVoteBtn" title="Thả tim / Vote nhân vật">
+                <span class="modal-heart-icon">&#x2764;</span>
+                <span id="modalVoteCount">0</span>
+              </div>
+            </div>
+
+            <div class="bot-subtitle" id="modalSubtitle">Thể loại</div>
+
+            <div class="modal-scroll-area">
+              <!-- Box 1: Trigger Commands -->
+              <div class="modal-section-box">
+                <h4 class="modal-section-heading">Trigger Commands</h4>
+                <div id="modalToc" class="modal-text-content"></div>
+              </div>
+
+              <!-- Box 2: Opening Scenes -->
+              <div class="modal-section-box" id="openingSectionBox">
+                <h4 class="modal-section-heading">Opening Scenes</h4>
+                <div id="modalOpeningScenes" class="modal-text-content"></div>
+              </div>
+            </div>
+
+            <div class="bot-chips" id="modalChipsContainer"></div>
+          </div>
+
+          <!-- CỘT BÊN PHẢI: Gửi Thư / Feedback & Danh sách từ Database -->
+          <div class="modal-right-col" id="modalFeedbackContainer">
+            <h4 class="modal-section-heading">Lời nhắn & Cảm nhận</h4>
+  
+            <!-- Khu vực hiển thị danh sách feedback (Sẽ fetch từ Database lên đây) -->
+            <div class="dynamic-feedback-list" id="dynamicFeedbackList">
+              <p class="no-feedback-text">Chưa có lời nhắn nào cho nhân vật này. Hãy là người đầu tiên gửi feedback!</p>
+            </div>
+
+            <!-- Form gửi feedback mới -->
+            <div class="feedback-form-box">
+              <input type="text" id="feedbackAuthor" class="feedback-input" placeholder="Tên lữ khách..." />
+              <textarea id="feedbackContent" class="feedback-textarea" placeholder="Viết đôi lời cảm nhận..."></textarea>
+              <button type="button" id="submitFeedbackBtn" class="feedback-submit-btn">Gửi</button>
+            </div>
+          </div>
+            <!-- Phần feedback của card sẽ được clone tự động vào đây -->
+          </div>
+        </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Nút lên đầu trang -->
+    <button id="backToTopBtn" class="back-to-top-btn" title="Lên đầu trang">
+      <i class="bi bi-arrow-up"></i>
+    </button> 
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p>© 2026 Character Catalog & Reading Space. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <span>•</span>
+          <a href="#">Terms of Service</a>
+          <span>•</span>
+          <a href="#">Contact Feedback</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>

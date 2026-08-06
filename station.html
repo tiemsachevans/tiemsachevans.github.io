@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400..700&family=Fuzzy+Bubbles:wght@400;700&family=Grenze:ital,wght@0,100..900;1,100..900&family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Quintessential&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <title>Tiệm sách nhỏ của Evans</title>
+  </head>
+  <body>
+    <nav class="navbar">
+      <!-- Nút 3 gạch góc trái màn hình -->
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo / Brand -->
+      <a href="index.html" class="nav-logo">
+        <span>Tiệm Sách Evans</span>
+      </a>
+
+      <!-- Danh sách các link -->
+      <ul class="nav-menu" id="navMenu">
+        <!-- Trỏ về file index.html -->
+        <li class="nav-item">
+          <a href="index.html" class="nav-link">Trang Chủ</a>
+        </li>
+        <li class="nav-item">
+          <a href="characters.html" class="nav-link">Tủ Sách Nhân Vật</a>
+        </li>
+        <li class="nav-item">
+          <a href="about.html" class="nav-link">Tác Giả</a>
+        </li>
+        <li class="nav-item">
+          <a href="station.html" class="nav-link">Trạm Dừng Chân</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Widget Trình phát nhạc dạng Capsule ngang -->
+    <div class="music-capsule-player" id="musicPlayer">
+      <audio id="audioSource" preload="auto"></audio>
+
+      <!-- Các nút điều khiển chính bên trái -->
+      <div class="capsule-controls">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="loopBtn"
+          title="Chế độ lặp lại"
+        >
+          <i class="bi bi-repeat" id="loopIcon"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn"
+          id="prevBtn"
+          title="Bài trước"
+        >
+          <i class="bi bi-skip-backward-fill"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn play-pause-main"
+          id="playPauseBtn"
+          title="Phát / Dừng"
+        >
+          <i class="bi bi-play-fill" id="playIcon"></i>
+        </button>
+        <button type="button" class="capsule-btn" id="nextBtn" title="Bài tiếp">
+          <i class="bi bi-skip-forward-fill"></i>
+        </button>
+      </div>
+
+      <!-- Tên bài hát và Timestamp ở giữa -->
+      <div class="capsule-track-info">
+        <div class="marquee-container">
+          <span class="track-title" id="trackTitle">Đang tải nhạc...</span>
+        </div>
+        <div class="time-display-box">
+          <span id="currentTime">0:00</span> /
+          <span id="durationTime">0:00</span>
+        </div>
+        <!-- Thanh tua nhạc siêu tối giản -->
+        <input
+          type="range"
+          id="progressBar"
+          class="simple-progress"
+          value="0"
+          min="0"
+          max="100"
+          step="0.1"
+        />
+      </div>
+
+      <!-- Nút mở danh sách chọn bài (Dropdown) bên phải -->
+      <div class="capsule-playlist-wrapper" id="playlistWrapper">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="playlistToggleBtn"
+          title="Danh sách bài hát"
+        >
+          <i class="bi bi-list-ul"></i>
+        </button>
+
+        <!-- Menu danh sách phát bung lên -->
+        <div class="capsule-playlist-menu" id="playlistMenu">
+          <div class="playlist-header">✨ Danh sách phát Evans</div>
+          <div id="playlistContainer">
+            <!-- Các bài hát sẽ được thêm tự động bằng JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main id="main-content">
+      <!-- Mini Banner Trang Liên Hệ -->
+      <div class="sub-banner">
+        <!-- Lớp phủ mờ và làm tối ảnh nền -->
+        <div class="sub-banner-overlay"></div>
+        <!-- Nội dung chữ -->
+        <div class="sub-banner-content">
+          <h1 class="sub-banner-title">Trạm Dừng Chân</h1>
+          <p class="sub-banner-subtitle">
+            Nơi lưu giữ những ký ức, nét vẽ và khoảnh khắc đồng hành cùng các lữ
+            khách trên chặng đường ghé thăm tiệm sách
+          </p>
+        </div>
+      </div>
+
+      <section>
+        <div class="fanart-gallery-section">
+          <div class="gallery-header">
+            <h2>Góc Triển Lãm Fanart</h2>
+            <button
+              onclick="
+                window.open('https://forms.gle/QodhteMqywgpC8r76', '_blank')
+              "
+              class="btn-submit-art"
+            >
+              + Gửi tranh về tiệm
+            </button>
+          </div>
+
+          <!-- <div class="gallery-grid">
+            <div class="art-card">
+              <div class="art-image-wrapper">
+                <div
+                  class="art-bg-blur"
+                  style="
+                    background-image: url(&quot;https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c&quot;);
+                  "
+                ></div>
+                <img
+                  src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c"
+                  alt="Khoảnh khắc đọc sách"
+                />
+              </div>
+              <div class="art-info">
+                <h3 class="art-title">Góc Nhỏ Bình Yên</h3>
+                <p class="art-author">
+                  Tác giả: <span class="art-author-name">Minh An</span>
+                </p>
+              </div>
+            </div>
+          </div> -->
+        </div>
+      </section>
+
+      <!-- <div class="lightbox" id="artLightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+          <button class="close-lightbox" onclick="forceCloseLightbox()">
+            &times;
+          </button>
+          <img class="lightbox-img" id="lbImg" src="" alt="" />
+          <div class="lightbox-details">
+            <h3 class="serif-font" id="lbTitle"></h3>
+            <div class="lightbox-author" id="lbAuthor"></div>
+            <p class="lightbox-desc" id="lbDesc"></p>
+          </div>
+        </div>
+      </div> -->
+    </main>
+
+    <!-- Nút lên đầu trang -->
+    <button id="backToTopBtn" class="back-to-top-btn" title="Lên đầu trang">
+      <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p>© 2026 Character Catalog & Reading Space. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <span>•</span>
+          <a href="#">Terms of Service</a>
+          <span>•</span>
+          <a href="#">Contact Feedback</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>

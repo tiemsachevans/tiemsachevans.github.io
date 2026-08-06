@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400..700&family=Fuzzy+Bubbles:wght@400;700&family=Grenze:ital,wght@0,100..900;1,100..900&family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Quintessential&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <title>Tiệm sách nhỏ của Evans</title>
+    <link rel="icon" type="image/png" href="./images/icon.png" />
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <!-- Nút 3 gạch góc trái màn hình -->
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo / Brand -->
+      <a href="index.html" class="nav-logo">
+        <span>Tiệm Sách Evans</span>
+      </a>
+
+      <!-- Danh sách các link -->
+      <ul class="nav-menu" id="navMenu">
+        <!-- Trỏ về file index.html -->
+        <li class="nav-item">
+          <a href="index.html" class="nav-link">Trang Chủ</a>
+        </li>
+        <li class="nav-item">
+          <a href="characters.html" class="nav-link">Tủ Sách Nhân Vật</a>
+        </li>
+        <li class="nav-item">
+          <a href="about.html" class="nav-link">Tác Giả</a>
+        </li>
+        <li class="nav-item">
+          <a href="station.html" class="nav-link">Trạm Dừng Chân</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Widget Trình phát nhạc dạng Capsule ngang -->
+    <div class="music-capsule-player" id="musicPlayer">
+      <audio id="audioSource" preload="auto"></audio>
+
+      <!-- Các nút điều khiển chính bên trái -->
+      <div class="capsule-controls">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="loopBtn"
+          title="Chế độ lặp lại"
+        >
+          <i class="bi bi-repeat" id="loopIcon"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn"
+          id="prevBtn"
+          title="Bài trước"
+        >
+          <i class="bi bi-skip-backward-fill"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn play-pause-main"
+          id="playPauseBtn"
+          title="Phát / Dừng"
+        >
+          <i class="bi bi-play-fill" id="playIcon"></i>
+        </button>
+        <button type="button" class="capsule-btn" id="nextBtn" title="Bài tiếp">
+          <i class="bi bi-skip-forward-fill"></i>
+        </button>
+      </div>
+
+      <!-- Tên bài hát và Timestamp ở giữa -->
+      <div class="capsule-track-info">
+        <div class="marquee-container">
+          <span class="track-title" id="trackTitle">Đang tải nhạc...</span>
+        </div>
+        <div class="time-display-box">
+          <span id="currentTime">0:00</span> /
+          <span id="durationTime">0:00</span>
+        </div>
+        <!-- Thanh tua nhạc siêu tối giản -->
+        <input
+          type="range"
+          id="progressBar"
+          class="simple-progress"
+          value="0"
+          min="0"
+          max="100"
+          step="0.1"
+        />
+      </div>
+
+      <!-- Nút mở danh sách chọn bài (Dropdown) bên phải -->
+      <div class="capsule-playlist-wrapper" id="playlistWrapper">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="playlistToggleBtn"
+          title="Danh sách bài hát"
+        >
+          <i class="bi bi-list-ul"></i>
+        </button>
+
+        <!-- Menu danh sách phát bung lên -->
+        <div class="capsule-playlist-menu" id="playlistMenu">
+          <div class="playlist-header">✨ Danh sách phát Evans</div>
+          <div id="playlistContainer">
+            <!-- Các bài hát sẽ được thêm tự động bằng JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main id="main-content">
+      <div class="banner">
+        <img class="banner-bg" src="./images/banner.jpg" alt="Background" />
+        <div class="banner-content">
+          <img class="banner-avatar" src="./images/avatar.jpeg" alt="Avatar" />
+          <h1 class="banner-title">
+            Chào mừng bạn đến với<br />Tiệm Sách Nhỏ Của Evans ✨
+          </h1>
+        </div>
+      </div>
+
+      <section class="daily-quote-section">
+        <div class="quote-content-box">
+          <p id="dailyQuoteText">
+            "Hôm nay nếu có mệt mỏi quá, cứ nghỉ ngơi đi nhé. Mọi chuyện rồi sẽ
+            ổn thôi."
+          </p>
+          <span id="dailyQuoteAuthor" class="quote-author"
+            >— Khương Tịch Ngôn</span
+          >
+        </div>
+      </section>
+
+      <!-- 📌 BỐ CỤC NỔI BẬT 3 CỘT: TÂM THƯ CHỦ TIỆM - RANKING (GIỮA) - RANDOM -->
+      <div class="ranking-layout-wrapper">
+        <!-- 1. BÊN TRÁI: TÂM THƯ TỪ CHỦ TIỆM EVANS -->
+        <div class="owner-letter-col">
+          <div class="letter-header">
+            <i class="bi bi-feather"></i>
+            <h3>Tâm Thư Chủ Tiệm</h3>
+          </div>
+
+          <div class="letter-scroll-paper">
+            <div class="letter-stamp">
+              <i class="bi bi-bookmark-heart-fill"></i> Evans
+            </div>
+            <span class="letter-date">Ngày 24 tháng 07, 2026</span>
+
+            <div class="letter-body">
+              <p class="letter-greeting">Gửi những vị khách ghé qua tiệm,</p>
+              <p>
+                Tiệm sách nhỏ này được dựng nên từ những mảnh ký ức và những câu
+                chuyện chưa kể. Cảm ơn bạn đã ghé thăm và dành một chút thời
+                gian dừng chân tại đây giữa thế giới vội vã ngoài kia.
+              </p>
+              <p>
+                Mong rằng mỗi nhân vật, mỗi dòng chữ trong tủ sách này sẽ mang
+                lại cho bạn chút ấm áp hoặc sự đồng điệu. Nếu thấy mệt mỏi, hãy
+                cứ ngồi lại uống tách trà và đọc vài chương sách nhé!
+              </p>
+            </div>
+
+            <div class="letter-signature">
+              <span>Thân ái,</span>
+              <strong class="signature-name">Chủ tiệm Evans ✨</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Ở GIỮA (NỔI BẬT): TOP 3 RANKING -->
+        <div class="ranking-center-highlight">
+          <h3><span class="flame-anim">🔥</span> Top 3 Nhân Vật Nổi Bật</h3>
+          <div id="topRankingContainer"></div>
+        </div>
+
+        <!-- 3. BÊN PHẢI: KHÁM PHÁ NGẪU NHIÊN -->
+        <div class="ranking-right">
+          <h3>🎲 Khám Phá Ngẫu Nhiên</h3>
+          <div id="randomCharCard" class="random-card-box">
+            <span class="random-placeholder-text"
+              >Chọn nhân vật ngẫu nhiên tại đây</span
+            >
+          </div>
+
+          <button id="randomBtn" class="capsule-btn">
+            Nhân vật khác <i class="bi bi-shuffle"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 📌 BẢNG CẦU NGUYỆN / TÂM THƯ TIỆM SÁCH -->
+      <section class="cfs-section">
+        <div class="cfs-container">
+          <h2 class="cfs-title">
+            <i class="bi bi-chat-left-heart-fill"></i> Góc Nhắn Gửi Tiệm Sách
+            <i class="bi bi-envelope-paper-heart-fill"></i>
+          </h2>
+          <p class="cfs-subtitle">
+            Góc nhỏ ghim lại những cảm nhận, lời nhắn hay tâm tư của lữ khách
+            ghé thăm.
+          </p>
+
+          <!-- Form nhập tâm thư -->
+          <div class="cfs-form-box">
+            <input
+              type="text"
+              id="cfsAuthorInput"
+              placeholder="Tên / Biệt danh của bạn..."
+              maxlength="25"
+            />
+            <textarea
+              id="cfsContentInput"
+              placeholder="Hôm nay của bạn thế nào? Để lại vài dòng chia sẻ nhé."
+              rows="3"
+              maxlength="200"
+            ></textarea>
+
+            <div class="color-picker-wrapper">
+              <span class="color-picker-label">Màu giấy:</span>
+              <div class="color-options">
+                <label class="color-btn color-yellow active" title="Vàng Nắng">
+                  <input
+                    type="radio"
+                    name="noteColor"
+                    value="#fff2b2"
+                    checked
+                  />
+                </label>
+                <label class="color-btn color-pink" title="Hồng Nhạt">
+                  <input type="radio" name="noteColor" value="#ffccd5" />
+                </label>
+                <label class="color-btn color-blue" title="Xanh Mây">
+                  <input type="radio" name="noteColor" value="#bae6fd" />
+                </label>
+                <label class="color-btn color-green" title="Xanh Bạc Hà">
+                  <input type="radio" name="noteColor" value="#c7f9cc" />
+                </label>
+                <label class="color-btn color-purple" title="Tím Mộng Mơ">
+                  <input type="radio" name="noteColor" value="#e8d5ff" />
+                </label>
+                <label class="color-btn color-orange" title="Cam Ấm">
+                  <input type="radio" name="noteColor" value="#ffd7ba" />
+                </label>
+              </div>
+            </div>
+
+            <button id="cfsSubmitBtn" onclick="submitCfsNote()">
+              <i class="bi bi-send-fill"></i> Dán Lên Bảng
+            </button>
+          </div>
+
+          <!-- Bảng dán ghi chú -->
+          <div class="cfs-board" id="cfsBoard">
+            <!-- Các tờ giấy note sẽ được render động vào đây -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Nút lên đầu trang -->
+    <button id="backToTopBtn" class="back-to-top-btn" title="Lên đầu trang">
+      <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="site-footer">
+      <!--  THẺ NHÂN VIÊN MÈO VINTAGE  -->
+      <div class="cat-id-card-wrapper">
+        <div class="cat-id-card">
+          <!-- Kẹp ghim mạ vàng đồng Vintage -->
+          <div class="card-clip brass-clip" title="Kẹp giấy tiệm sách">
+            <svg
+              viewBox="0 0 32 60"
+              width="26"
+              height="50"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 12V42C12 45.3137 14.6863 48 18 48C21.3137 48 24 45.3137 24 42V12C24 6.47715 19.5228 2 14 2C8.47715 2 4 6.47715 4 12V48"
+                stroke="url(#brass-grad)"
+                stroke-width="3.8"
+                stroke-linecap="round"
+              />
+              <defs>
+                <linearGradient
+                  id="brass-grad"
+                  x1="0"
+                  y1="0"
+                  x2="32"
+                  y2="60"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stop-color="#fff2c2" />
+                  <stop offset="40%" stop-color="#d4af37" />
+                  <stop offset="100%" stop-color="#7a5a18" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <!-- Con dấu sáp đỏ đè lên thẻ -->
+          <div class="card-stamp">
+            ĐÃ DUYỆT <i class="bi bi-patch-check-fill"></i>
+          </div>
+
+          <div class="card-body">
+            <!-- Cột trái: Ảnh đại diện & Mã thẻ -->
+            <div class="card-photo-col">
+              <div class="cat-photo-frame">
+                <img
+                  src="/images/cat_icon.jpg"
+                  alt="cat-avatar"
+                  class="cat-avatar-img"
+                />
+                <span class="status-dot" title="Đang trực ca"></span>
+              </div>
+              <div class="badge-tag">THẺ NHÂN VIÊN</div>
+              <div class="badge-number">ID: MEOW-01</div>
+            </div>
+
+            <!-- Cột phải: Thông tin sơ yếu lý lịch -->
+            <div class="card-info-col">
+              <h4 class="cat-name">Mimi <small>(Mèo Tiệm Sách)</small></h4>
+              <div class="cat-role">Trưởng Ban Đón Khách & Giấc Ngủ</div>
+
+              <ul class="cat-details">
+                <li>
+                  <strong
+                    ><i class="fa-solid fa-scroll"></i> Kinh nghiệm:</strong
+                  >
+                  3 năm sưởi nắng & đọc cọp
+                </li>
+                <li>
+                  <strong><i class="bi bi-stars"></i> Kỹ năng:</strong> Lắng
+                  nghe, purr purr chuẩn nhịp
+                </li>
+                <li>
+                  <strong><i class="bi bi-coin"></i> Mức lương:</strong> 3
+                  hạt/ngày + 5 lượt xoa đầu/giờ
+                </li>
+                <li>
+                  <strong
+                    ><i class="bi bi-moon-stars-fill"></i> Trạng thái:</strong
+                  >
+                  <em class="status-text">Đang cuộn tròn trên kệ sách</em>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Dòng ghi chú chân thẻ -->
+          <div class="card-footer-note">
+            <i class="bi bi-cup-hot-fill"></i>
+            <i>Sự bình yên đôi khi bắt đầu từ một cái chạm vô tình.</i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mascott Chú Mèo Tiệm Sách ở Footer -->
+      <div class="footer-cat-wrapper">
+        <div class="cat-speech-bubble" id="catBubble">
+          Gừ gừ... (Nhấp vào tớ đi!)
+        </div>
+        <button
+          type="button"
+          class="cat-mascot-btn cat-bubble"
+          id="catMascotBtn"
+        >
+          <img src="./images/cat.jpg" alt="Cat Mascot" id="catIcon" />
+        </button>
+      </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </body>
+</html>
