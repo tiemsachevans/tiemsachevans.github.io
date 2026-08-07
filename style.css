@@ -3414,7 +3414,7 @@ body.modal-open {
   }
 
   .back-to-top-btn {
-    bottom: 85px !important;
+    bottom: 66px !important;
     right: 15px !important;
     z-index: 999 !important;
   }
