@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Supabase đã sẵn sàng!");
   }
 
+  await syncCharacterVotes();
   loadRandomDailyQuote();
   loadTopRanking();
   loadCfsNotes();
@@ -528,6 +529,7 @@ async function loadPageViaAjax(url, pushHistory = true) {
 }
 
 function reinitializePageScripts() {
+  syncCharacterVotes();
   loadTopRanking();
   loadCfsNotes();
   initSearchAndFilter();
@@ -766,11 +768,28 @@ window.toggleLike = async function (btn) {
   if (!countSpan) return;
 
   let count = parseInt(countSpan.textContent) || 0;
+
+  // Xác định trạng thái mới dựa trên việc nút đang được like hay chưa
   const willBeLiked = !btn.classList.contains("liked");
 
+  // 1. Lưu trạng thái vào thiết bị người dùng (localStorage)
+  saveLocalLikeState(charName, willBeLiked);
+
+  // 2. Cập nhật số đếm và class trên UI
   btn.classList.toggle("liked", willBeLiked);
   count = willBeLiked ? count + 1 : Math.max(0, count - 1);
   countSpan.textContent = count;
+
+  // 3. Đồng bộ giao diện giữa tất cả các thẻ và Modal
+  document.querySelectorAll(".bot-card").forEach((card) => {
+    const name = card.querySelector(".bot-name")?.textContent.trim();
+    if (name === charName) {
+      const cardCount = card.querySelector(".like-count");
+      if (cardCount) cardCount.textContent = count;
+      const cardLikeBtn = card.querySelector(".btn-like");
+      if (cardLikeBtn) cardLikeBtn.classList.toggle("liked", willBeLiked);
+    }
+  });
 
   if (willBeLiked) {
     showToast(`Đã gửi tình yêu của bạn đến ${charName}!`, "success");
@@ -778,9 +797,9 @@ window.toggleLike = async function (btn) {
     showToast(`Bạn không còn yêu thích ${charName} nữa rồi`, "error");
   }
 
+  // 4. Lưu tổng lượt vote mới lên Supabase
   const supabase = await getSupabase();
   if (supabase) {
-    // Gọi Supabase update và yêu cầu trả về dữ liệu vừa sửa (.select())
     const { data, error } = await supabase
       .from("characters")
       .update({ votes: count })
@@ -789,12 +808,7 @@ window.toggleLike = async function (btn) {
 
     if (error) {
       console.error("❌ Lỗi Supabase khi lưu tim:", error);
-    } else if (!data || data.length === 0) {
-      console.warn(
-        `⚠️ Supabase KHÔNG tìm thấy nhân vật có tên exact là "${charName}"! Hãy kiểm tra lại cột 'name' trong bảng Supabase.`,
-      );
     } else {
-      console.log("✅ Đã cập nhật tim thành công trên Supabase:", data);
       loadTopRanking();
     }
   }
@@ -1054,6 +1068,44 @@ async function getAllCharacters() {
   }
 }
 
+// ==================== ĐỒNG BỘ LƯỢT VOTE TỪ SUPABASE VÀO THẺ NHÂN VẬT ====================
+async function syncCharacterVotes() {
+  const cards = document.querySelectorAll(".bot-card");
+  if (cards.length === 0) return;
+
+  const characters = await getAllCharacters();
+  if (!characters || characters.length === 0) return;
+
+  const voteMap = new Map();
+  characters.forEach((char) => {
+    if (char.name) voteMap.set(char.name.trim(), char.votes || 0);
+  });
+
+  // Lấy danh sách các nhân vật người dùng đã bấm thích trên thiết bị này
+  const userLikedList = getLocalLikedCharacters();
+
+  cards.forEach((card) => {
+    const nameEl = card.querySelector(".bot-name");
+    const countEl = card.querySelector(".like-count");
+    const likeBtn = card.querySelector(".btn-like");
+
+    if (nameEl) {
+      const charName = nameEl.textContent.trim();
+
+      // Cập nhật số lượt vote tổng từ Supabase
+      if (countEl && voteMap.has(charName)) {
+        countEl.textContent = voteMap.get(charName);
+      }
+
+      // Khôi phục màu đỏ cho nút tim nếu thiết bị này đã từng vote
+      if (likeBtn) {
+        const isLikedOnDevice = userLikedList.includes(charName);
+        likeBtn.classList.toggle("liked", isLikedOnDevice);
+      }
+    }
+  });
+}
+
 // ==================== BẢNG XẾP HẠNG TOP 3 ====================
 async function loadTopRanking() {
   const container = document.getElementById("topRankingContainer");
@@ -1305,4 +1357,23 @@ function initCatMascot() {
       catBubble.classList.remove("show");
     }, 3000);
   });
+}
+
+// ==================== QUẢN LÝ THẢ TIM TRÊN THIẾT BỊ (LOCALSTORAGE) ====================
+function getLocalLikedCharacters() {
+  try {
+    return JSON.parse(localStorage.getItem("liked_characters") || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveLocalLikeState(charName, isLiked) {
+  let likedList = getLocalLikedCharacters();
+  if (isLiked) {
+    if (!likedList.includes(charName)) likedList.push(charName);
+  } else {
+    likedList = likedList.filter((name) => name !== charName);
+  }
+  localStorage.setItem("liked_characters", JSON.stringify(likedList));
 }
