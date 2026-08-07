@@ -3404,19 +3404,38 @@ body.modal-open {
     font-size: 22px;
     font-weight: 500;
   }
+
   .sub-banner {
     height: 140px;
   }
+
   .sub-banner-title {
     font-size: 26px;
   }
+
+  .back-to-top-btn {
+    bottom: 85px !important;
+    right: 15px !important;
+    z-index: 999 !important;
+  }
+
+  .music-capsule-player.hidden-by-menu {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(100px) !important;
+    transition: all 0.3s ease !important;
+  }
+
   .chip-btn {
     font-size: 11px;
   }
+
   .modal-grid-layout {
     grid-template-columns: 1fr;
     gap: 15px;
   }
+
   .modal-right-col {
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
@@ -3424,11 +3443,13 @@ body.modal-open {
     padding-top: 15px;
     max-height: none;
   }
+
   .modal-card.modal-card-wide {
     width: 95%;
     margin: 10px;
     max-height: 90vh;
   }
+
   .ranking-layout-wrapper {
     grid-template-columns: 1fr;
   }
@@ -3442,9 +3463,11 @@ body.modal-open {
     order: 1;
     transform: none;
   }
+
   .ranking-right {
     order: 2;
   }
+
   .owner-letter-col {
     order: 3;
   } /* Tâm thư chuyển xuống dưới trên mobile */

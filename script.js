@@ -32,7 +32,7 @@ async function getSupabase() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   if (supabase) {
     console.log("Supabase đã sẵn sàng!");
   }
@@ -61,8 +61,11 @@ function escapeHTML(str) {
 
 let lastScrollTop = 0;
 window.addEventListener("scroll", () => {
+  const musicPlayer = document.getElementById("musicPlayer");
+  const navMenu = document.getElementById("navMenu");
+
   if (!musicPlayer) return;
-  if (navMenu && navMenu.classList.contains("active")) return;
+  if (navMenu && navMenu.classList.contains("show")) return;
 
   let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
   if (currentScroll > lastScrollTop && currentScroll > 60) {
@@ -101,7 +104,7 @@ function parseQuotesData(rawQuotes) {
 
 async function loadRandomDailyQuote() {
   let allQuotes = [];
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
 
   if (supabase) {
     try {
@@ -800,7 +803,7 @@ window.toggleLike = async function (btn) {
 async function handleLikeClick(characterId, currentVotes) {
   const newVotes = currentVotes + 1;
 
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   if (!supabase) return; // Bảo vệ code không bị crash nếu mất mạng / lỗi SDK
 
   const { data, error } = await supabase
