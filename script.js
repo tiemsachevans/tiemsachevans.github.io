@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   loadRandomDailyQuote();
   loadTopRanking();
+  loadCfsNotes();
   initSearchAndFilter();
   initModal();
   initBackToTop();
@@ -525,6 +526,7 @@ async function loadPageViaAjax(url, pushHistory = true) {
 
 function reinitializePageScripts() {
   loadTopRanking();
+  loadCfsNotes();
   initSearchAndFilter();
   initModal();
   displayRandomCharacter();
@@ -814,22 +816,38 @@ async function handleLikeClick(characterId, currentVotes) {
   }
 }
 
-window.toggleFeedback = function (btn) {
+// FEEDBACK SUBMISSION LOGIC
+
+window.toggleFeedback = async function (btn) {
   const card = btn.closest(".bot-card");
   const feedbackSec = card?.querySelector(".feedback-section");
+  const charName = card?.querySelector(".bot-name")?.textContent.trim();
+
   if (feedbackSec) {
-    feedbackSec.style.display =
-      feedbackSec.style.display === "block" ? "none" : "block";
+    const isHidden =
+      feedbackSec.style.display === "none" || !feedbackSec.style.display;
+    feedbackSec.style.display = isHidden ? "block" : "none";
+
+    // Nếu mở ô feedback ra thì tải dữ liệu từ Supabase về
+    if (isHidden && charName) {
+      await loadFeedbacks(charName, feedbackSec);
+    }
   }
 };
 
-window.sendFeedback = function (btn) {
+window.sendFeedback = async function (btn) {
   const box = btn.closest(".feedback-input-box");
   const nameInput = box?.querySelector(".input-name");
   const contentInput = box?.querySelector(".input-content");
-  const feedbackList = box
-    ?.closest(".feedback-section")
-    ?.querySelector(".feedback-list");
+  const feedbackSec = box?.closest(".feedback-section");
+  const feedbackList = feedbackSec?.querySelector(".feedback-list");
+
+  // Tìm tên nhân vật
+  const card = btn.closest(".bot-card");
+  let charName = card?.querySelector(".bot-name")?.textContent.trim();
+  if (!charName) {
+    charName = document.getElementById("modalTitle")?.textContent.trim();
+  }
 
   const name = nameInput?.value.trim() || "Lữ khách ẩn danh";
   const content = contentInput?.value.trim();
@@ -839,6 +857,38 @@ window.sendFeedback = function (btn) {
     return;
   }
 
+  if (!charName) {
+    showToast("Không xác định được tên nhân vật!", "error");
+    return;
+  }
+
+  btn.disabled = true;
+
+  const supabase = await getSupabase();
+  if (supabase) {
+    // Đẩy dữ liệu lên bảng 'feedbacks' của Supabase
+    const { error } = await supabase.from("feedbacks").insert([
+      {
+        char_name: charName,
+        author_name: name,
+        content: content,
+      },
+    ]);
+
+    if (error) {
+      console.error("❌ Lỗi gửi feedback lên Supabase:", error);
+      showToast("Gửi đánh giá thất bại, vui lòng thử lại!", "error");
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  // Nếu trong danh sách đang hiện thông báo "Chưa có lời cảm nhận..." thì xóa dòng đó đi
+  if (feedbackList?.querySelector("em")) {
+    feedbackList.innerHTML = "";
+  }
+
+  // Thêm ngay dòng vừa gửi vào giao diện
   const newItem = document.createElement("div");
   newItem.className = "feedback-item";
   newItem.innerHTML = `<strong>${escapeHTML(name)}:</strong> ${escapeHTML(content)}`;
@@ -847,7 +897,48 @@ window.sendFeedback = function (btn) {
   if (nameInput) nameInput.value = "";
   if (contentInput) contentInput.value = "";
   showToast("Gửi đánh giá thành công!", "success");
+
+  btn.disabled = false;
 };
+
+// ==================== TẢI FEEDBACK TỪ SUPABASE ====================
+async function loadFeedbacks(charName, feedbackSection) {
+  if (!charName || !feedbackSection) return;
+
+  const feedbackList = feedbackSection.querySelector(".feedback-list");
+  if (!feedbackList) return;
+
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  // Lấy dữ liệu từ bảng 'feedbacks' trên Supabase
+  const { data, error } = await supabase
+    .from("feedbacks")
+    .select("*")
+    .eq("char_name", charName)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("❌ Lỗi lấy feedback từ Supabase:", error);
+    return;
+  }
+
+  // Xóa danh sách cũ/mẫu
+  feedbackList.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    feedbackList.innerHTML = `<div class="feedback-item"><em>Chưa có lời cảm nhận nào. Hãy là người đầu tiên!</em></div>`;
+    return;
+  }
+
+  // Đổ dữ liệu từ Supabase ra giao diện
+  data.forEach((item) => {
+    const newItem = document.createElement("div");
+    newItem.className = "feedback-item";
+    newItem.innerHTML = `<strong>${escapeHTML(item.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(item.content)}`;
+    feedbackList.appendChild(newItem);
+  });
+}
 
 // ==================== GENERAL UTILITIES ====================
 function initMenuToggle() {
@@ -1038,6 +1129,7 @@ window.submitCfsNote = async function () {
   const authorInput = document.getElementById("cfsAuthorInput");
   const contentInput = document.getElementById("cfsContentInput");
   const colorInput = document.querySelector('input[name="noteColor"]:checked');
+  const submitBtn = document.getElementById("cfsSubmitBtn");
 
   const author = authorInput?.value.trim() || "Lữ khách ẩn danh";
   const content = contentInput?.value.trim();
@@ -1049,18 +1141,34 @@ window.submitCfsNote = async function () {
     return;
   }
 
-  const supabase = getSupabase();
+  if (submitBtn) submitBtn.disabled = true;
+
+  const supabase = await getSupabase();
   if (supabase) {
-    const { error } = await supabase
-      .from("cfs_notes")
-      .insert([{ author, content, bg_color: color }]);
+    // Đẩy dữ liệu vào bảng 'cfs_notes' trên Supabase
+    const { error } = await supabase.from("cfs_notes").insert([
+      {
+        author: author,
+        content: content,
+        bg_color: color,
+      },
+    ]);
 
     if (error) {
+      console.error("❌ Lỗi gửi CFS lên Supabase:", error);
       showToast("Không thể gửi CFS, vui lòng thử lại!", "error");
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
   }
 
+  const cfsBoard = document.getElementById("cfsBoard");
+  // Nếu đang hiển thị dòng thông báo trống thì xóa đi
+  if (cfsBoard && cfsBoard.querySelector("div[style*='italic']")) {
+    cfsBoard.innerHTML = "";
+  }
+
+  // Thêm ngay tờ giấy note mới lên đầu bảng
   const noteEl = document.createElement("div");
   noteEl.className = "cfs-note-item";
   noteEl.style.backgroundColor = color;
@@ -1068,10 +1176,11 @@ window.submitCfsNote = async function () {
     <p class="note-content">"${escapeHTML(content)}"</p>
     <span class="note-author">— ${escapeHTML(author)}</span>
   `;
-  document.getElementById("cfsBoard")?.prepend(noteEl);
+  cfsBoard?.prepend(noteEl);
 
   if (authorInput) authorInput.value = "";
   if (contentInput) contentInput.value = "";
+  if (submitBtn) submitBtn.disabled = false;
 
   showThankYouLetterModal(author);
 };
@@ -1108,6 +1217,49 @@ window.closeThankYouModal = function () {
   if (modal) modal.classList.remove("show");
 };
 
+async function loadCfsNotes() {
+  const cfsBoard = document.getElementById("cfsBoard");
+  if (!cfsBoard) return;
+
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  // Lấy danh sách tâm thư từ bảng 'cfs_notes' sắp xếp mới nhất lên đầu
+  const { data, error } = await supabase
+    .from("cfs_notes")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("❌ Lỗi lấy danh sách CFS từ Supabase:", error);
+    return;
+  }
+
+  cfsBoard.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    cfsBoard.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 20px; opacity: 0.7; font-style: italic;">
+        Chưa có dòng tâm thư nào trên bảng. Hãy là người đầu tiên dán ghi chú nhé!
+      </div>
+    `;
+    return;
+  }
+
+  // Đổ danh sách note ra bảng dán ghi chú
+  data.forEach((note) => {
+    const noteEl = document.createElement("div");
+    noteEl.className = "cfs-note-item";
+    noteEl.style.backgroundColor = note.bg_color || "#fff2b2";
+    noteEl.innerHTML = `
+      <p class="note-content">"${escapeHTML(note.content)}"</p>
+      <span class="note-author">— ${escapeHTML(note.author || "Lữ khách ẩn danh")}</span>
+    `;
+    cfsBoard.appendChild(noteEl);
+  });
+}
+
+// CAT MASCOT INTERACTION
 function initCatMascot() {
   const catBtn = document.getElementById("catMascotBtn");
   const catBubble = document.getElementById("catBubble");
