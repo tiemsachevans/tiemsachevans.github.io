@@ -1154,7 +1154,7 @@ header nav a:not(.nav-logo):hover,
 
 .signature-name {
   display: block;
-  font-family: "Charm", cursive; /* Kiểu chữ viết tay nghệ thuật */
+  font-family: "Charm", cursive;
   font-size: 1.1rem;
   color: #8b3a3a;
   margin-top: 2px;
@@ -2217,66 +2217,6 @@ body.modal-open {
   transform: translateY(-3px);
 }
 
-/* 🎵 Biểu tượng Sóng Âm (Equalizer) */
-.sound-wave {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 12px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.sound-wave span {
-  display: block;
-  width: 2px;
-  height: 100%;
-  background-color: #d4af37;
-  border-radius: 1px;
-  transform-origin: bottom;
-  animation: bounce 0.8s ease-in-out infinite alternate;
-  transition: all 0.3s ease;
-}
-
-/* Độ trễ nhịp cho từng cột sóng để tạo cảm giác tự nhiên */
-.sound-wave span:nth-child(1) {
-  animation-delay: 0.1s;
-  height: 60%;
-}
-.sound-wave span:nth-child(2) {
-  animation-delay: 0.4s;
-  height: 100%;
-}
-.sound-wave span:nth-child(3) {
-  animation-delay: 0.2s;
-  height: 40%;
-}
-.sound-wave span:nth-child(4) {
-  animation-delay: 0.5s;
-  height: 80%;
-}
-
-/* Khi tạm dừng nhạc: Sóng âm đứng yên ở mức thấp */
-.sound-wave.paused span {
-  animation: none;
-  height: 1px !important;
-  transform: scaleY(1);
-}
-
-.sound-wave.active span {
-  animation: waveAnimation 0.8s infinite ease-in-out;
-}
-
-/* Keyframes chuyển động nâng lên hạ xuống */
-@keyframes bounce {
-  0% {
-    transform: scaleY(0.2);
-  }
-  100% {
-    transform: scaleY(1);
-  }
-}
-
 /* BẢNG CFS & STICKY NOTES */
 .cfs-section {
   padding: 40px 20px;
@@ -2287,7 +2227,7 @@ body.modal-open {
 .cfs-title {
   text-align: center;
   color: #c29b38;
-  font-family: serif;
+  font-family: "Charm", serif;
   font-size: 1.8rem;
   margin-bottom: 8px;
 }
@@ -2295,7 +2235,9 @@ body.modal-open {
 .cfs-subtitle {
   text-align: center;
   color: #a0a0a0;
-  font-size: 0.95rem;
+  font-family: "Merriweather", serif;
+  font-style: italic;
+  font-size: 0.9rem;
   margin-bottom: 24px;
 }
 
@@ -2323,7 +2265,8 @@ body.modal-open {
   color: #f0e6d2;
   padding: 10px 14px;
   border-radius: 8px;
-  font-family: inherit;
+  font-family: "Merriweather", serif;
+  font-size: 0.9rem;
   outline: none;
   transition: all 0.3s ease;
 }
@@ -2347,7 +2290,7 @@ body.modal-open {
   color: #1a1410;
   border: none;
   padding: 10px 20px;
-  font-weight: bold;
+  font-family: "Courier Prime", serif;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;

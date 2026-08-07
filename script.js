@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadRandomDailyQuote();
   loadTopRanking();
   loadCfsNotes();
+  initColorPicker();
   initSearchAndFilter();
   initModal();
   initBackToTop();
@@ -532,6 +533,7 @@ function reinitializePageScripts() {
   syncCharacterVotes();
   loadTopRanking();
   loadCfsNotes();
+  initColorPicker();
   initSearchAndFilter();
   initModal();
   displayRandomCharacter();
@@ -1180,6 +1182,22 @@ document
   ?.addEventListener("click", displayRandomCharacter);
 
 // ==================== CFS SUBMISSION ====================
+function initColorPicker() {
+  const colorBtns = document.querySelectorAll(".color-options .color-btn");
+  if (colorBtns.length === 0) return;
+
+  colorBtns.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      colorBtns.forEach((b) => b.classList.remove("active"));
+      this.classList.add("active");
+      const radio = this.querySelector('input[type="radio"]');
+      if (radio) {
+        radio.checked = true;
+      }
+    });
+  });
+}
+
 window.submitCfsNote = async function () {
   const authorInput = document.getElementById("cfsAuthorInput");
   const contentInput = document.getElementById("cfsContentInput");
@@ -1200,7 +1218,6 @@ window.submitCfsNote = async function () {
 
   const supabase = await getSupabase();
   if (supabase) {
-    // Đẩy dữ liệu vào bảng 'cfs_notes' trên Supabase
     const { error } = await supabase.from("cfs_notes").insert([
       {
         author: author,
@@ -1218,7 +1235,6 @@ window.submitCfsNote = async function () {
   }
 
   const cfsBoard = document.getElementById("cfsBoard");
-  // Nếu đang hiển thị dòng thông báo trống thì xóa đi
   if (cfsBoard && cfsBoard.querySelector("div[style*='italic']")) {
     cfsBoard.innerHTML = "";
   }
