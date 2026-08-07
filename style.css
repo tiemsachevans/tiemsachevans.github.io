@@ -2423,8 +2423,8 @@ body.modal-open {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Hiệu ứng nghiêng nhẹ ngẫu nhiên khi di chuột vào */
 .note-author {
+  font-family: "Charm", "Dancing Script", cursive, serif !important;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -2442,8 +2442,8 @@ body.modal-open {
 }
 
 .note-content {
-  font-family: "Times New Roman", sans-serif;
-  font-size: 1.2rem;
+  font-family: "Merriweather", serif !important;
+  font-size: 0.95rem;
   font-weight: 400;
   color: #2c221e;
   line-height: 1.5;
@@ -2460,6 +2460,31 @@ body.modal-open {
   padding-top: 6px;
   font-family: "Grenze", sans-serif;
   font-style: italic;
+}
+
+/* CSS hiển thị Modal Thư cảm ơn */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999; /* Đảm bảo nổi lên trên cùng */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* --- GIAO DIỆN TRANG TÁC GIẢ (HỒ SƠ CÁ NHÂN) --- */

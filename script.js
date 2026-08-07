@@ -1216,32 +1216,14 @@ window.submitCfsNote = async function () {
 
   if (submitBtn) submitBtn.disabled = true;
 
-  const supabase = await getSupabase();
-  if (supabase) {
-    const { error } = await supabase.from("cfs_notes").insert([
-      {
-        author: author,
-        content: content,
-        bg_color: color,
-      },
-    ]);
-
-    if (error) {
-      console.error("❌ Lỗi gửi CFS lên Supabase:", error);
-      showToast("Không thể gửi CFS, vui lòng thử lại!", "error");
-      if (submitBtn) submitBtn.disabled = false;
-      return;
-    }
-  }
-
+  // 1. Dán tờ note lên bảng ngay lập tức trên giao diện
   const cfsBoard = document.getElementById("cfsBoard");
   if (cfsBoard && cfsBoard.querySelector("div[style*='italic']")) {
     cfsBoard.innerHTML = "";
   }
 
-  // Thêm ngay tờ giấy note mới lên đầu bảng
   const noteEl = document.createElement("div");
-  noteEl.className = "cfs-note-item";
+  noteEl.className = "cfs-note-item sticky-note";
   noteEl.style.backgroundColor = color;
   noteEl.innerHTML = `
     <p class="note-content">"${escapeHTML(content)}"</p>
@@ -1249,11 +1231,21 @@ window.submitCfsNote = async function () {
   `;
   cfsBoard?.prepend(noteEl);
 
+  // 2. Thử lưu vào Supabase (nếu lỗi chỉ thông báo console, không chặn Modal)
+  const supabase = await getSupabase();
+  if (supabase) {
+    const { error } = await supabase
+      .from("cfs_notes")
+      .insert([{ author: author, content: content, bg_color: color }]);
+    if (error) console.error("❌ Lỗi lưu Supabase:", error);
+  }
+
+  // 3. Reset input và hiển thị Modal Cảm Ơn
   if (authorInput) authorInput.value = "";
   if (contentInput) contentInput.value = "";
   if (submitBtn) submitBtn.disabled = false;
 
-  showThankYouLetterModal(author);
+  showThankYouLetterModal(author); // Gọi hiển thị Modal
 };
 
 function showThankYouLetterModal(author) {
@@ -1320,7 +1312,7 @@ async function loadCfsNotes() {
   // Đổ danh sách note ra bảng dán ghi chú
   data.forEach((note) => {
     const noteEl = document.createElement("div");
-    noteEl.className = "cfs-note-item";
+    noteEl.className = "cfs-note-item sticky-note";
     noteEl.style.backgroundColor = note.bg_color || "#fff2b2";
     noteEl.innerHTML = `
       <p class="note-content">"${escapeHTML(note.content)}"</p>
