@@ -845,6 +845,135 @@ header nav a:not(.nav-logo):hover,
   gap: 8px;
 }
 
+/* ================================================================= */
+/* STYLES DÀNH RIÊNG CHO SECRET CARD TÁCH BIỆT                          */
+/* ================================================================= */
+
+.custom-secret-theme {
+  position: relative;
+  background: linear-gradient(145deg, #1e1b2e 0%, #2d243f 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  border-radius: 16px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(212, 175, 55, 0.15);
+  overflow: hidden;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.custom-secret-theme:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    0 0 25px rgba(212, 175, 55, 0.25);
+}
+
+.secret-card-inner {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #f3f4f6;
+}
+
+/* Header Badge & Titles */
+.secret-card-header {
+  text-align: center;
+  position: relative;
+}
+
+.secret-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #d4af37 0%, #f3e5ab 100%);
+  color: #1a1a1a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.secret-title {
+  font-family: "Playfair", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.secret-subtitle {
+  font-size: 0.85rem;
+  color: #a78bfa;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Quote Box */
+.secret-quote-box {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid #d4af37;
+  border-radius: 8px;
+  /* Tăng padding trái/phải để chữ không bị sát icon */
+  padding: 16px 36px;
+  margin: 8px 0;
+}
+
+.secret-quote-text {
+  font-family: "Merriweather", serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  margin: 0;
+  font-style: italic;
+}
+
+.quote-icon-left,
+.quote-icon-right {
+  position: absolute;
+  color: #fff8e7;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Icon góc trên trái */
+.quote-icon-left {
+  left: 14px;
+  transform: translateY(-50%);
+}
+
+/* Icon phải: Dấu ngoặc đóng ” (Xoay 180 độ icon gốc) */
+.quote-icon-right {
+  right: 14px;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Hint Box */
+.secret-clue-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px dashed rgba(167, 139, 250, 0.3);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #c4b5fd;
+}
+
+.secret-clue-hint i {
+  font-size: 1rem;
+  color: #d4af37;
+}
+
 .book-input {
   width: 100%;
   background: #faf6f0;
@@ -1218,9 +1347,11 @@ header nav a:not(.nav-logo):hover,
 
 .random-char-stats {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 15px;
-  font-size: 0.8rem;
+  gap: 8px;
+  font-size: 0.9rem;
   color: #8b3a3a;
   margin-bottom: 10px;
   font-weight: 600;
@@ -1542,6 +1673,7 @@ body.modal-open {
   transition: opacity 0.25s ease;
   pointer-events: none !important;
 }
+
 #botModal.show {
   display: flex !important;
   opacity: 1 !important;
@@ -2148,36 +2280,6 @@ body.modal-open {
   box-sizing: border-box;
 }
 
-.footer-content p {
-  margin: 0;
-  font-weight: 500;
-  color: #f5f0eb;
-}
-
-.footer-links {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  font-size: 0.85rem;
-  justify-content: center;
-}
-
-.footer-links a {
-  color: rgba(245, 240, 235, 0.7);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.footer-links a:hover {
-  color: #d4af37;
-  text-decoration: underline;
-}
-
-.footer-links span {
-  color: #d4af37;
-}
-
 /* --- NÚT LÊN ĐẦU TRANG --- */
 .back-to-top-btn {
   position: fixed;
@@ -2751,7 +2853,7 @@ body.modal-open {
   font-size: 0.85rem;
   color: #6b5b52;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   gap: 8px;
   border-top: 1px solid #efe5d5;
@@ -2762,12 +2864,12 @@ body.modal-open {
 .status-dot {
   width: 8px;
   height: 8px;
-  background-color: #5c8374; /* Xanh lá trà dịح nhẹ */
+  background-color: #2ecc71; /* Xanh lá trà dịu nhẹ*/
   border-radius: 50%;
   display: inline-block;
   box-shadow: 0 0 0 3px rgba(92, 131, 116, 0.15);
   flex-shrink: 0;
-  margin-top: 5px;
+  position: relative;
 }
 
 /* TRẠM DỪNG CHÂN */
@@ -3064,6 +3166,506 @@ body.modal-open {
   transform: translateY(0);
 }
 
+/* DIPLOMA PASSCODE MODAL STYLES */
+/* Lớp nền mờ tối toàn màn hình */
+.diploma-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20, 15, 12, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+  padding: 20px;
+}
+
+/* Kích hoạt hiển thị modal */
+.diploma-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Khung nội dung Két sách */
+.diploma-modal-card {
+  height: auto !important;
+  max-width: 420px;
+  width: 100%;
+  gap: 12px;
+  background: var(--bg-card, #2b221b);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    inset 0 0 15px rgba(212, 175, 55, 0.05);
+  padding: 30px 24px;
+  text-align: center;
+  border-radius: 20px;
+  color: #f4e8d1;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.diploma-modal-overlay.active .diploma-modal-card {
+  transform: scale(1);
+}
+
+/* Icon & Tiêu đề */
+.diploma-modal-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.diploma-modal-title {
+  margin-bottom: 10px;
+  color: #e6c894;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.diploma-modal-desc {
+  font-size: 0.88rem;
+  color: #c2b29d;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Ô nhập mật mã */
+.diploma-modal-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+  outline: none;
+  font-size: 0.95rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.diploma-modal-input:focus {
+  border-color: rgba(212, 175, 55, 0.8);
+}
+
+/* Nút bấm */
+.diploma-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.btn-diploma-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d1c2a5;
+  padding: 10px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-diploma-cancel:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-diploma-confirm {
+  background: var(--primary-color, #4a3525);
+  color: #fce8c7;
+  padding: 10px 28px;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-diploma-confirm:hover {
+  filter: brightness(1.15);
+}
+
+/* Gợi ý hiển thị bên dưới ô Input */
+.diploma-modal-hint {
+  display: none;
+  background: rgba(241, 196, 15, 0.15);
+  border: 1px dashed rgba(241, 196, 15, 0.5);
+  color: #f39c12;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+  line-height: 1.4;
+  text-align: left;
+  animation: fadeIn 0.3s ease;
+}
+
+.diploma-modal-hint.show {
+  display: block;
+}
+
+/* Dòng thông báo lỗi / gợi ý dưới ô input */
+.diploma-error-msg {
+  display: none;
+  margin: 4px 0 8px 0;
+  font-size: 0.88rem;
+  color: #fce8c7;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.diploma-error-msg.show {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Hiệu ứng rung khi gõ sai */
+.error-shake {
+  animation: shake 0.4s ease-in-out;
+  border-color: #ef4444 !important;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* VINTAGE BOOK STYLE - DIPLOMA & SAFE MODAL */
+/* Modal Overlay chung cho Bằng / Két bí mật */
+.diploma-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 8, 6, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200000;
+  padding: 20px;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.diploma-modal-overlay.active,
+.diploma-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Card Nhập Mật Mã (Đồng bộ với .bot-card & .modal-card) */
+.book-modal-card {
+  max-width: 460px;
+  width: 100%;
+  background: #fdfbf7;
+  border: 1px solid #dcd0bf;
+  border-left: 14px solid #8b3a3a;
+  border-radius: 4px 10px 10px 4px;
+  text-align: left;
+  font-family: "Merriweather", serif;
+  padding: 26px 24px;
+  box-shadow:
+    3px 0 0 #f0e6d6,
+    6px 0 0 #e2d4c0,
+    0 15px 35px rgba(0, 0, 0, 0.6);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.book-modal-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.book-modal-header .modal-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.book-modal-header .modal-title {
+  font-family: "Playfair Display", serif;
+  color: #2b1c11;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.book-modal-header .modal-subtitle {
+  font-size: 0.85rem;
+  color: #6c584c;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Khung gợi ý từ Mimi */
+.book-hint-box {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px dashed #d4af37;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  color: #5c4738;
+  line-height: 1.5;
+}
+
+.book-hint-box code {
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #8b3a3a;
+  font-weight: bold;
+  border: 1px solid rgba(139, 58, 58, 0.2);
+  font-family: "Courier Prime", monospace;
+}
+
+/* Form Group & Input */
+.book-form-group {
+  margin-bottom: 14px;
+}
+
+.book-form-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: bold;
+  color: #2b1c11;
+  margin-bottom: 6px;
+}
+
+.book-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #faf6f0;
+  border: 1px solid #d4c5b9;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #2c221e;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.book-input::placeholder {
+  color: #9c8b7e;
+  font-style: italic;
+}
+
+.book-input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #8b3a3a;
+  box-shadow: 0 0 0 3px rgba(139, 58, 58, 0.15);
+}
+
+.book-input-uppercase {
+  text-transform: uppercase;
+}
+
+.book-hint-msg {
+  font-size: 0.8rem;
+  color: #991b1b;
+  margin-bottom: 12px;
+  min-height: 18px;
+  font-style: italic;
+}
+
+/* Footer Nút bấm Modal Nhập Mật Mã */
+.book-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e5d8c5;
+  padding-top: 14px;
+  margin-top: 6px;
+}
+
+.btn-book-cancel {
+  background: #dcd0bf;
+  color: #2b1c11;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.btn-book-cancel:hover {
+  background: #c8bca7;
+}
+
+.btn-book-cancel:active {
+  transform: scale(0.98);
+}
+
+.btn-book-confirm {
+  background: #8b3a3a;
+  color: #ffffff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+  font-family: inherit;
+  box-shadow: 0 2px 6px rgba(139, 58, 58, 0.3);
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.btn-book-confirm:hover {
+  background: #a54343;
+}
+
+.btn-book-confirm:active {
+  transform: scale(0.98);
+}
+
+/* DIPLOMA SUCCESS CARD (BẰNG CHỨNG NHẬN) */
+.diploma-card {
+  background: #fdfbf7;
+  border: 8px solid #8b3a3a;
+  outline: 2px solid #d4af37;
+  outline-offset: -5px;
+  padding: 40px 30px;
+  border-radius: 12px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.6),
+    inset 0 0 15px rgba(212, 175, 55, 0.1);
+  position: relative;
+  font-family: "Merriweather", serif;
+  box-sizing: border-box;
+}
+
+.diploma-card .diploma-icon {
+  font-size: 2.8rem;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.diploma-card .diploma-title {
+  font-family: "Charm", cursive, "Merriweather", serif;
+  color: #8b3a3a;
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  text-shadow: 1px 1px 2px rgba(139, 58, 58, 0.15);
+}
+
+.diploma-card .diploma-subtitle {
+  font-size: 0.82rem;
+  color: #6c584c;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+
+.diploma-card .diploma-player-name {
+  font-size: 1.6rem;
+  color: #d4af37;
+  margin: 12px 0;
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.diploma-card .diploma-desc {
+  font-size: 0.9rem;
+  color: #4a3a2c;
+  line-height: 1.65;
+  margin: 14px 15px;
+}
+
+.diploma-card .diploma-date {
+  margin-top: 22px;
+  font-size: 0.82rem;
+  color: #8c7a6b;
+  font-style: italic;
+}
+
+.btn-diploma-close {
+  background: #8b3a3a;
+  color: #ffffff;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.88rem;
+  font-family: inherit;
+  box-shadow: 0 4px 10px rgba(139, 58, 58, 0.3);
+  margin-top: 24px;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.btn-diploma-close:hover {
+  background: #a54343;
+}
+
+.btn-diploma-close:active {
+  transform: scale(0.98);
+}
+
 /* ==================== VINTAGE CAT ID CARD ==================== */
 /* Khung chứa căn giữa, giới hạn chiều rộng không bị co giãn */
 .cat-id-card-wrapper {
@@ -3158,7 +3760,7 @@ body.modal-open {
   filter: sepia(15%) contrast(105%);
 }
 
-.status-dot {
+.cat-status-dot {
   position: absolute;
   bottom: -4px;
   right: -4px;

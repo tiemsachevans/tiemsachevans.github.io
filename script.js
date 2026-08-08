@@ -260,6 +260,7 @@ const playlist = [
   { title: "60%_的遐想静谧", src: "bgm/60-的遐想静谧.mp3" },
   { title: "60%_的日常自由", src: "bgm/60-的日常自由.mp3" },
   { title: "赤いドレスの女", src: "bgm/赤いドレスの女.mp3" },
+  { title: "閃光", src: "bgm/閃光.mp3" },
   { title: "TruE (Ed Ver.)", src: "bgm/TruE-edver.mp3" },
   { title: "漫步香港1999", src: "bgm/漫步香港1999.mp3" },
   { title: "Không Buông", src: "bgm/không-buông.mp3" },
@@ -399,6 +400,31 @@ function initMusicPlayer() {
         currentTimeEl.textContent = formatTime(audio.currentTime);
       if (durationTimeEl)
         durationTimeEl.textContent = formatTime(audio.duration);
+
+      // --- LOGIC HIỂN THỊ VÀ KHÔI PHỤC MÃ MORSE ---
+      const trackTitleEl = document.querySelector(".track-title");
+      const currentTime = Math.floor(audio.currentTime);
+
+      if (trackTitleEl) {
+        // 1. Nếu chưa lưu tên bài gốc thì tự lưu vào dataset
+        if (
+          !trackTitleEl.dataset.originalTitle &&
+          !trackTitleEl.innerHTML.includes("Morse:")
+        ) {
+          trackTitleEl.dataset.originalTitle = trackTitleEl.textContent;
+        }
+
+        // 2. Kiểm tra khoảng thời gian 3:16 (196s) -> 3:20 (200s)
+        if (currentTime >= 196 && currentTime <= 200) {
+          trackTitleEl.innerHTML =
+            "<span style='color: #6475f1; font-weight: bold;'>48696d69747375</span>";
+        } else {
+          // 3. Nếu nằm ngoài khoảng thời gian, trả về tên gốc đã lưu trong dataset
+          if (trackTitleEl.dataset.originalTitle) {
+            trackTitleEl.textContent = trackTitleEl.dataset.originalTitle;
+          }
+        }
+      }
     }
   });
 
@@ -544,32 +570,41 @@ function reinitializePageScripts() {
 // ==================== SEARCH & FILTER LOGIC ====================
 function initSearchAndFilter() {
   const searchInput = document.getElementById("searchInput");
-  const genreContainer = document.getElementById("genreContainer");
   const filterToggleBtn = document.getElementById("filterToggleBtn");
-  const filterDropdownWrapper = document.getElementById(
-    "filterDropdownWrapper",
-  );
   const currentFilterText = document.getElementById("currentFilterText");
+  const genreContainer = document.getElementById("genreContainer");
+  const genreOptions = document.querySelectorAll(".genre-card-option");
   const botCards = document.querySelectorAll(".bot-card");
+  const secretCatCard = document.querySelector(".secret-cat-card");
 
-  if (filterToggleBtn && genreContainer) {
-    filterToggleBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      genreContainer.classList.toggle("show");
-    });
+  if (!searchInput && !genreContainer) return;
 
-    document.addEventListener("click", (e) => {
-      if (filterDropdownWrapper && !filterDropdownWrapper.contains(e.target)) {
-        genreContainer.classList.remove("show");
-      }
-    });
+  let activeFilter = "all";
+
+  // Hàm kiểm tra từ khóa manh mối
+  function isCatClue(term) {
+    const keywords = ["himitsu", "Himitsu", "HIMITSU"];
+    return keywords.some((key) => term.includes(key));
   }
 
-  let currentFilter = "all";
-  let searchTerm = "";
-
   function filterCards() {
+    const searchTerm = searchInput
+      ? searchInput.value.toLowerCase().trim()
+      : "";
+    const hasCatClue = isCatClue(searchTerm);
+
     botCards.forEach((card) => {
+      // Nếu là thẻ ẩn chú mèo
+      if (card.classList.contains("secret-cat-card")) {
+        if (hasCatClue) {
+          card.style.display = "block";
+        } else {
+          card.style.display = "none";
+        }
+        return;
+      }
+
+      // Logic lọc thẻ thông thường
       const name =
         card.querySelector(".bot-name")?.textContent.toLowerCase() || "";
       const tags =
@@ -577,43 +612,57 @@ function initSearchAndFilter() {
       const desc =
         card.querySelector(".bot-desc")?.textContent.toLowerCase() || "";
 
-      const matchSearch =
+      const matchesSearch =
         name.includes(searchTerm) ||
         tags.includes(searchTerm) ||
         desc.includes(searchTerm);
 
-      let matchFilter = true;
-      if (currentFilter !== "all") {
-        matchFilter = tags.includes(currentFilter.toLowerCase());
-      }
+      const matchesGenre =
+        activeFilter === "all" || tags.includes(activeFilter.toLowerCase());
 
-      if (matchSearch && matchFilter) {
-        card.style.display = "";
+      if (matchesSearch && matchesGenre) {
+        card.style.display = "block";
       } else {
         card.style.display = "none";
       }
     });
   }
 
-  searchInput?.addEventListener("input", (e) => {
-    searchTerm = e.target.value.toLowerCase().trim();
-    filterCards();
+  // Sự kiện nhập ô tìm kiếm
+  searchInput?.addEventListener("input", filterCards);
+
+  // Toggle Menu Thể loại
+  filterToggleBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    genreContainer?.classList.toggle("show");
   });
 
-  genreContainer?.querySelectorAll(".genre-card-option").forEach((option) => {
+  // Chọn thể loại
+  genreOptions.forEach((option) => {
     option.addEventListener("click", () => {
-      genreContainer
-        .querySelectorAll(".genre-card-option")
-        .forEach((opt) => opt.classList.remove("active"));
+      genreOptions.forEach((opt) => opt.classList.remove("active"));
       option.classList.add("active");
 
-      currentFilter = option.getAttribute("data-filter") || "all";
+      activeFilter = option.getAttribute("data-filter") || "all";
       if (currentFilterText) {
-        currentFilterText.textContent = option.textContent;
+        currentFilterText.textContent = option.textContent.trim();
       }
-      genreContainer.classList.remove("show");
+
+      genreContainer?.classList.remove("show");
       filterCards();
     });
+  });
+
+  // Đóng dropdown khi click ra ngoài
+  document.addEventListener("click", (e) => {
+    if (
+      genreContainer &&
+      !genreContainer.contains(e.target) &&
+      filterToggleBtn &&
+      !filterToggleBtn.contains(e.target)
+    ) {
+      genreContainer.classList.remove("show");
+    }
   });
 }
 
@@ -1167,8 +1216,8 @@ async function displayRandomCharacter() {
         <div class="random-card-content" style="cursor: pointer;" onclick="openBotModalByName('${escapeHTML(randomChar.name)}')">
           <h4 class="random-char-name">${escapeHTML(randomChar.name)}</h4>
           <div class="random-char-stats">
-            <span class="random-likes"><i class="bi bi-heart-fill"></i> ${randomChar.votes || 0} lượt thích</span>
-            <span class="random-feedbacks"><i class="bi bi-chat-quote-fill"></i> ${escapeHTML(randomChar.title || "Nhân vật")}</span>
+            <div class="random-likes"><i class="bi bi-heart-fill"></i> ${randomChar.votes || 0} lượt thích</div>
+            <div class="random-feedbacks"><i class="bi bi-chat-quote-fill"></i> ${escapeHTML(randomChar.title || "Nhân vật")}</div>
           </div>
         </div>
       `;
@@ -1249,30 +1298,52 @@ window.submitCfsNote = async function () {
 };
 
 function showThankYouLetterModal(author) {
-  let modal = document.getElementById("thankYouModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "thankYouModal";
-    modal.className = "modal-overlay";
-    modal.innerHTML = `
-      <div class="bot-modal" style="max-width: 420px; text-align: center; padding: 35px 25px; border-radius: 16px;">
-        <div style="font-size: 3rem; margin-bottom: 12px;">💌</div>
-        <h3 style="margin-bottom: 15px; color: var(--primary-color, #4a3525);">Thư Cảm Ơn Từ Tiệm Sách</h3>
-        <p id="thankYouMessage" style="font-size: 0.95rem; line-height: 1.7; margin-bottom: 25px; opacity: 0.85;"></p>
-        <button onclick="closeThankYouModal()" class="chip-btn" style="background: var(--primary-color, #4a3525); color: #fff; padding: 10px 24px; border-radius: 20px; border: none; cursor: pointer; font-weight: 500;">Nhận lấy yêu thương</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeThankYouModal();
-    });
+  let toast = document.getElementById("thankYouToast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "thankYouToast";
+    document.body.appendChild(toast);
   }
 
-  const msgEl = document.getElementById("thankYouMessage");
-  if (msgEl) {
-    msgEl.textContent = `Gửi bạn '${author}', cảm ơn những dòng tâm tư chân thành mà bạn đã gửi gắm vào góc Confession nhỏ của tiệm. Chúc bạn luôn bình yên và có những phút giây trải nghiệm tuyệt vời tại đây!`;
-  }
-  modal.classList.add("show");
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #fcf8f2;
+    color: #2b1c11;
+    padding: 14px 22px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    font-size: 0.9rem;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+    max-width: 360px;
+    line-height: 1.4;
+  `;
+
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+      <span style="font-size: 1.2rem; line-height: 1;">💌</span>
+      <strong style="font-size: 0.95rem;">Cảm ơn ${author || "Lữ khách"}!</strong>
+    </div>
+    <div>
+      <span style="opacity: 0.9;">Cảm ơn những dòng tâm tư chân thành mà bạn đã gửi gắm vào góc Confession nhỏ của Tiệm sách. Chúc bạn luôn bình yên và có những phút giây trải nghiệm tuyệt vời tại đây!</span>
+    </div>
+  `;
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+  });
+
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+  }, 3500);
 }
 
 window.closeThankYouModal = function () {
@@ -1302,7 +1373,7 @@ async function loadCfsNotes() {
 
   if (!data || data.length === 0) {
     cfsBoard.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 20px; opacity: 0.7; font-style: italic;">
+      <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #a0a0a0; opacity: 0.7; font-style: italic;">
         Chưa có dòng tâm thư nào trên bảng. Hãy là người đầu tiên dán ghi chú nhé!
       </div>
     `;
@@ -1339,31 +1410,54 @@ function initCatMascot() {
     "Meow! Đừng quên đọc một chương sách trước khi ngủ nhé.",
     "Bạn xoa mát tay quá~ <i class='bi bi-stars'></i>",
     "Meoww! Bạn nhận được một chiếc Bookmark may mắn! <i class='bi bi-bookmark-heart-fill'></i>",
+    "<i class='fa-solid fa-paw'></i> Chú mèo tiệm sách tặng bạn một cái ôm ấm áp!",
   ];
 
   catBtn.addEventListener("click", () => {
+    // Hiệu ứng nhún nhảy / nẩy mèo
     catBtn.classList.remove("purr");
     void catBtn.offsetWidth;
     catBtn.classList.add("purr");
 
     petCount++;
 
-    if (petCount >= 5) {
+    // KIỂM TRA CHẶNG GIẢI ĐỐ: Đủ 10 lần bấm
+    if (petCount === 10) {
       catBubble.innerHTML =
-        "<i class='fa-solid fa-paw'></i> Chú mèo tiệm sách tặng bạn một cái ôm ấm áp!";
-      petCount = 0;
+        "<i class='fa-solid fa-key' style='color: #f1c40f;'></i> <b>Meow! Đã nhận 10 lần xoa đầu của Lữ khách</b><br>Tớ trao cho bạn mảnh mật mã cuối: <b>RVVSRUtB</b>.<br><span style='font-size:0.8rem; opacity:0.9;'>Chúc bạn may mắn nha! Meow~</span>";
+
+      // Tạo hiệu ứng đặc biệt hoặc phát âm thanh nếu muốn
+      catBtn.style.transform = "scale(1.2)";
+      setTimeout(() => (catBtn.style.transform = "scale(1)"), 200);
+    } else if (petCount > 10) {
+      // Bấm thêm lần nữa sau khi đã nhận mã -> Hiện Modal nhập mật mã nhận bằng
+      catBubble.innerHTML = "🐱 Đang mở Két Sách Bí Mật...";
+
+      // Gọi hàm hiển thị Modal Nhận Bằng
+      if (typeof openDiplomaPasscodeModal === "function") {
+        openDiplomaPasscodeModal();
+      } else {
+        showDiplomaModalDirect(); // Hàm dự phòng nếu nhập trực tiếp
+      }
+
+      petCount = 0; // Reset lại đếm
     } else {
+      // Các lần bấm từ 1 -> 9: Hiển thị quote ngẫu nhiên
       const randomQuote =
         catQuotes[Math.floor(Math.random() * catQuotes.length)];
       catBubble.innerHTML = randomQuote;
     }
 
+    // Hiển thị bóng thoại
     catBubble.classList.add("show");
 
+    // Giữ bóng thoại lâu hơn một chút (4.5s) ở mốc 10 để người chơi kịp đọc mã
     clearTimeout(window.catTimer);
+    const displayTime = petCount >= 10 ? 4500 : 3000;
+
     window.catTimer = setTimeout(() => {
       catBubble.classList.remove("show");
-    }, 3000);
+    }, displayTime);
   });
 }
 
@@ -1384,4 +1478,290 @@ function saveLocalLikeState(charName, isLiked) {
     likedList = likedList.filter((name) => name !== charName);
   }
   localStorage.setItem("liked_characters", JSON.stringify(likedList));
+}
+
+// PUZZLE SYSTEM - PC & MOBILE COMPATIBLE
+// 1. CHẶNG 2: Tương tác Player Nhạc theo Thời gian (đã có)
+// 2. CHẶNG 3: Kích hoạt Thẻ Bí Mật từ ô Tìm Kiếm
+const characterSearchInput = document.getElementById("searchInput");
+const secretBotCard = document.getElementById("secretBotCard");
+
+if (characterSearchInput) {
+  characterSearchInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim().toUpperCase();
+    if (val === "BOOK_R77") {
+      // Hiện thẻ nhân vật bí mật
+      if (secretBotCard) {
+        secretBotCard.style.display = "block";
+        secretBotCard.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  });
+}
+
+// 3. CHẶNG 4: Nhận Bằng Cử Nhân
+// HÀM MỞ MODAL NHẬN BẰNG CỬ NHÂN / CHỨNG NHẬN
+let wrongAttempts = 0;
+
+function openDiplomaPasscodeModal() {
+  let modal = document.getElementById("diplomaInputModal");
+
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "diplomaInputModal";
+    modal.className = "diploma-modal-overlay";
+
+    modal.innerHTML = `
+      <div class="diploma-modal-card">
+        <div class="diploma-modal-icon">🎓</div>
+        <h3 class="diploma-modal-title">Két Sách Bí Mật</h3>
+        <p class="diploma-modal-desc">
+          Hãy nhập chuỗi mật mã cuối cùng để mở khóa Giấy Chứng Nhận!
+        </p>
+
+        <!-- Dòng nhắc mật mã từ Chú Mèo -->
+        <div class="cat-code-reminder">
+          <i class='fa-solid fa-paw'></i> <b>Mật mã từ Mimi:</b> <span class="highlight-code">RVVSRUtB</span>
+        </div>
+        
+        <input type="text" id="finalPasscode" class="diploma-modal-input" placeholder="NHẬP ĐẦY ĐỦ MẬT MÃ...">
+
+        <input type="text" id="playerNameInput" class="diploma-modal-input" placeholder="Nhập tên/biệt danh của bạn..." style="margin-top: 10px;">
+        
+        <!-- THÊM PHẦN TỬ HIỂN THỊ THÔNG BÁO LỖI / GỢI Ý BÊN DƯỚI Ô NHẬP -->
+        <div id="diplomaHint" class="diploma-error-msg"></div>
+
+        <div class="diploma-modal-actions">
+          <button onclick="closeDiplomaModal()" class="btn-diploma-cancel">Hủy</button>
+          <button onclick="verifyFinalPasscode()" class="btn-diploma-confirm">Xác Nhận</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // Focus trực tiếp vào ô input khi mở
+  modal.classList.add("active");
+  setTimeout(() => {
+    const input = document.getElementById("finalPasscode");
+    if (input) input.focus();
+  }, 100);
+}
+
+function closeDiplomaModal() {
+  const modal = document.getElementById("diplomaInputModal");
+  if (modal) {
+    modal.classList.remove("active");
+  }
+}
+
+// Kiểm tra mật mã cuối cùng để nhận Bằng Quản Thư
+function verifyFinalPasscode() {
+  const input = document.getElementById("finalPasscode");
+  const hintEl = document.getElementById("diplomaHint");
+  const nameInput = document.getElementById("playerNameInput");
+
+  // Xử lý lấy tên: Nếu để trống hoặc chỉ nhập khoảng trắng -> Mặc định là "Lữ khách ẩn danh"
+  const playerName =
+    nameInput && nameInput.value.trim()
+      ? nameInput.value.trim()
+      : "Lữ khách ẩn danh";
+
+  const codeVal = input ? input.value : "";
+  const code = codeVal.trim().toLowerCase();
+
+  // Danh sách các đáp án chấp nhận (eureka, EUREKA, RVVSRUtB)
+  const validAnswers = ["eureka", "rvvsrutb"];
+
+  if (validAnswers.includes(code)) {
+    wrongAttempts = 0;
+    if (hintEl) {
+      hintEl.innerHTML = "";
+      hintEl.classList.remove("show");
+    }
+
+    // Đóng Modal nhập mã
+    closeDiplomaModal();
+
+    // Hiển thị Giấy Chứng Nhận Thành Công (Truyền tên đã xử lý vào)
+    showDiplomaSuccess(playerName);
+  } else {
+    wrongAttempts++;
+
+    if (input) {
+      input.classList.add("error-shake");
+      setTimeout(() => input.classList.remove("error-shake"), 400);
+    }
+
+    if (hintEl) {
+      if (wrongAttempts >= 3) {
+        hintEl.innerHTML =
+          "💡 <b>Gợi ý:</b> Chuỗi <i>RVVSRUtB</i> là mật mã Base64 đó!";
+      } else {
+        hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/3 lần). Cố lên nào!`;
+      }
+      hintEl.classList.add("show");
+    } else {
+      alert("❌ Mật mã chưa đúng! Đáp án chính xác là: EUREKA");
+    }
+  }
+}
+
+function submitFinalPuzzleCode() {
+  // Lấy giá trị trực tiếp từ ô nhập #finalPasscode hoặc #puzzleInputModal
+  const finalInput = document.getElementById("finalPasscode");
+  const puzzleInput = document.getElementById("puzzleInputModal");
+
+  const userCode = (
+    finalInput ? finalInput.value : puzzleInput ? puzzleInput.value : ""
+  )
+    .trim()
+    .toUpperCase();
+
+  // Chấp nhận các mã hợp lệ
+  if (userCode === "EUREKA" || userCode === "Eureka" || userCode === "eureka") {
+    // 1. Lấy tên người chơi (nếu có ô nhập tên)
+    const usernameInput = document.getElementById("playerNameInput");
+    const playerName =
+      usernameInput && usernameInput.value.trim()
+        ? usernameInput.value.trim()
+        : "Lữ khách ẩn danh xuất sắc";
+
+    // 2. Điền thông tin vào Giấy Chứng Nhận
+    const nameDisplay = document.getElementById("diplomaPlayerName");
+    if (nameDisplay) nameDisplay.textContent = playerName;
+
+    // Cập nhật ngày cấp
+    const dateDisplay = document.getElementById("diplomaIssueDate");
+    if (dateDisplay) {
+      const today = new Date();
+      dateDisplay.textContent = `Ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+    }
+
+    // 3. Ẩn Modal nhập mã và Hiển thị Modal Giấy Chứng Nhận thành công
+    const inputContainer =
+      document.getElementById("diplomaInputModal") ||
+      document.getElementById("puzzleInputContainer");
+    const successModal = document.getElementById("diplomaSuccessModal");
+
+    if (inputContainer) {
+      inputContainer.classList.remove("active");
+      inputContainer.style.display = "none";
+    }
+
+    if (successModal) {
+      successModal.style.display = "flex";
+      successModal.classList.add("show");
+    }
+
+    // 4. Bắn pháo hoa chúc mừng
+    triggerCelebrationConfetti();
+  } else {
+    alert("❌ Mật mã chưa đúng. Cố lên nào!");
+  }
+}
+
+function showDiplomaSuccess(playerName = "Lữ khách ẩn danh") {
+  let modal = document.getElementById("diplomaSuccessModal");
+
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "diplomaSuccessModal";
+    modal.style.cssText = `
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 200000; padding: 20px; box-sizing: border-box;
+    `;
+
+    const today = new Date();
+    const dateStr = `Ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+
+    modal.innerHTML = `
+      <div style="
+        background: #fdfbf7;
+        border: 10px solid #8b3a3a;
+        outline: 2px solid #d4af37;
+        padding: 40px 30px;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        position: relative;
+        font-family: 'Merriweather', serif;
+      ">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🎓</div>
+        <h2 style="font-family: 'Cormorant Garamond', serif; color: #8b3a3a; font-size: 2.2rem; margin-bottom: 5px;">GIẤY CHỨNG NHẬN</h2>
+        <p style="font-size: 0.9rem; color: #6c584c; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">Lữ khách Xuất Sắc</p>
+        
+        <p style="font-size: 1rem; color: #2b1c11;">Chứng nhận lữ khách:</p>
+        <h3 id="diplomaPlayerName" style="font-size: 1.6rem; color: #d4af37; margin: 10px 0; font-family: 'Charm', cursive;">${escapeHTML(playerName)}</h3>
+        
+        <p style="font-size: 0.95rem; color: #4a3a2c; line-height: 1.6; margin: 15px 0;">
+          Đã giải mã thành công toàn bộ ẩn số và hoàn thành thử thách Két Sách Bí Mật tại Tiệm Sách Nhỏ của Evans.
+        </p>
+        
+        <div style="margin-top: 25px; font-size: 0.85rem; color: #8c7a6b; font-style: italic;" id="diplomaIssueDate">
+          ${dateStr}
+        </div>
+        
+        <button onclick="document.getElementById('diplomaSuccessModal').remove()" style="
+          margin-top: 25px;
+          background: #8b3a3a;
+          color: white;
+          border: none;
+          padding: 10px 25px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
+        ">Đóng</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    const nameEl = document.getElementById("diplomaPlayerName");
+    if (nameEl) nameEl.textContent = playerName;
+    modal.style.display = "flex";
+    modal.classList.add("show");
+  }
+
+  // Bắn pháo hoa chúc mừng
+  if (typeof triggerCelebrationConfetti === "function") {
+    triggerCelebrationConfetti();
+  }
+}
+
+// Hàm tạo hiệu ứng Confetti chúc mừng
+function triggerCelebrationConfetti() {
+  if (typeof confetti === "function") {
+    // Bắn từ bên TRÁI chéo sang
+    confetti({
+      particleCount: 200, // Số lượng hạt pháo hoa
+      angle: 60, // Góc bắn chéo hướng vào giữa
+      spread: 70, // Độ xòe của pháo hoa
+      origin: { x: 0, y: 0.75 }, // Xuất phát từ mép trái
+      zIndex: 999999, // Nổi lên trên Giấy chứng nhận
+    });
+
+    // Bắn từ bên PHẢI chéo sang
+    confetti({
+      particleCount: 200, // Số lượng hạt pháo hoa
+      angle: 120, // Góc bắn chéo hướng vào giữa
+      spread: 70, // Độ xòe của pháo hoa
+      origin: { x: 1, y: 0.75 }, // Xuất phát từ mép phải
+      zIndex: 999999, // Nổi lên trên Giấy chứng nhận
+    });
+  } else {
+    console.warn("Chưa nhúng thư viện canvas-confetti!");
+  }
+}
+
+// Hàm đóng Modal Bằng
+function closeDiplomaModal() {
+  const modal = document.getElementById("diplomaInputModal");
+  if (modal) {
+    modal.classList.remove("active");
+  }
 }
