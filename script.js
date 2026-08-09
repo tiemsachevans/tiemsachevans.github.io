@@ -1926,6 +1926,12 @@ function showDiplomaSuccess(
         <p style="font-size: 0.95rem; color: #4a3a2c; line-height: 1.6; margin: 15px 0;">
           Đã giải mã thành công toàn bộ ẩn số và hoàn thành thử thách Két Sách Bí Mật tại Tiệm Sách Nhỏ của Evans.
         </p>
+
+        <hr style="border: none; border-top: 1px solid #e2d7c7; margin: 20px 0 15px 0;" />
+
+        <div style="font-size: 0.85rem; color: #6c584c; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <span>Hãy chụp Giấy Chứng Nhận này và liên hệ với Evans thông qua server Discord để được nhận role độc quyền!</span>
+        </div>
         
         <div style="margin-top: 20px; font-size: 0.85rem; color: #8c7a6b; font-style: italic;" id="diplomaIssueDate">
           ${dateStr}
