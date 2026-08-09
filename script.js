@@ -1524,7 +1524,7 @@ function openDiplomaPasscodeModal() {
         <div class="diploma-modal-icon">🎓</div>
         <h3 class="diploma-modal-title">Két Sách Bí Mật</h3>
         <p class="diploma-modal-desc">
-          Hãy nhập chuỗi mật mã cuối cùng để mở khóa Giấy Chứng Nhận!
+          Hãy nhập Đáp án để mở khóa Giấy Chứng Nhận!
         </p>
 
         <!-- Dòng nhắc mật mã từ Chú Mèo -->
@@ -1532,7 +1532,7 @@ function openDiplomaPasscodeModal() {
           <i class='fa-solid fa-paw'></i> <b>Mật mã cuối cùng từ Mimi:</b> <span class="highlight-code">RVVSRUtB</span>
         </div>
         
-        <input type="text" id="finalPasscode" class="diploma-modal-input" placeholder="NHẬP ĐẦY ĐỦ MẬT MÃ...">
+        <input type="text" id="finalPasscode" class="diploma-modal-input" placeholder="NHẬP ĐẦY ĐỦ ĐÁP ÁN...">
 
         <input type="text" id="playerNameInput" class="diploma-modal-input" placeholder="Nhập tên/biệt danh của bạn..." style="margin-top: 10px;">
         
@@ -1641,18 +1641,18 @@ async function verifyFinalPasscode() {
     // Xử lý hiển thị Gợi ý / Mật mã theo số lần sai
     if (hintEl) {
       if (wrongAttempts >= 10) {
-        // Sai từ 10 lần trở lên -> Hiển thị thẳng mật mã
-        hintEl.innerHTML = `🔑 <b>Mật mã chính xác là:</b> <code style="color: #d4af37; font-weight: bold; font-size: 1.1rem;">613HimitsuEUREKA</code>`;
+        // Sai từ 10 lần trở lên -> Hiển thị thẳng đáp án
+        hintEl.innerHTML = `🔑 <b>Đáp án chính xác là:</b> <code style="color: #d4af37; font-weight: bold; font-size: 1.1rem;">613HimitsuEUREKA</code>`;
       } else if (wrongAttempts >= 3) {
         // Sai từ 3 đến 9 lần -> Cho gợi ý cấu trúc
-        hintEl.innerHTML = `<❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!<br>💡 <b>Gợi ý:</b> Mật mã có định dạng <i>Số + Chữ + Chữ</i> !`;
+        hintEl.innerHTML = `<❌ Đáp án chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!<br>💡 <b>Gợi ý:</b> Đáp án có định dạng <i>Số + Chữ + Chữ</i> !`;
       } else {
         // Sai dưới 3 lần -> Báo sai chung
-        hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
+        hintEl.innerHTML = `❌ Đáp án chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
       }
       hintEl.classList.add("show");
     } else {
-      alert("❌ Mật mã chưa đúng!");
+      alert("❌ Đáp án chưa đúng!");
     }
   }
 }
@@ -1709,7 +1709,7 @@ async function submitFinalPuzzleCode() {
 
     if (confirmBtn) confirmBtn.disabled = false;
   } else {
-    alert("❌ Mật mã chưa đúng. Cố lên nào!");
+    alert("❌ Đáp án chưa đúng. Cố lên nào!");
   }
 }
 
@@ -1801,6 +1801,7 @@ function showDiplomaSuccess(
     triggerCelebrationConfetti();
   }
 }
+
 // Hàm tạo hiệu ứng Confetti chúc mừng
 function triggerCelebrationConfetti() {
   if (typeof confetti === "function") {
