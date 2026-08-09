@@ -1521,7 +1521,7 @@ function openDiplomaPasscodeModal() {
 
         <!-- Dòng nhắc mật mã từ Chú Mèo -->
         <div class="cat-code-reminder">
-          <i class='fa-solid fa-paw'></i> <b>Mật mã từ Mimi:</b> <span class="highlight-code">RVVSRUtB</span>
+          <i class='fa-solid fa-paw'></i> <b>Mật mã cuối cùng từ Mimi:</b> <span class="highlight-code">RVVSRUtB</span>
         </div>
         
         <input type="text" id="finalPasscode" class="diploma-modal-input" placeholder="NHẬP ĐẦY ĐỦ MẬT MÃ...">
