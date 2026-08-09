@@ -1423,8 +1423,8 @@ function initCatMascot() {
 
     // KIỂM TRA CHẶNG GIẢI ĐỐ: Đủ 10 lần bấm
     if (petCount === 10) {
-      catBubble.innerHTML =
-        "<i class='fa-solid fa-key' style='color: #f1c40f;'></i> <b>Meow! Đã nhận 10 lần xoa đầu của Lữ khách</b><br>Tớ trao cho bạn mảnh mật mã cuối: <b>RVVSRUtB</b>.<br><span style='font-size:0.8rem; opacity:0.9;'>Chúc bạn may mắn nha! Meow~</span>";
+      catBubble.innerHTML = catBubble.innerHTML =
+        "<i class='fa-solid fa-key' style='color: #f1c40f;'></i> <b>Meow! Đã nhận 10 lần xoa đầu của Lữ khách! (Đừng nói cho Evans biết nha!)</b><br>Mimi trao cho bạn mảnh mật mã cuối cùng: <span style='font-weight: 900; color: #d35400; font-family: monospace; font-size: 1.05em;'>RVVSRUtB</span>.<br><span style='font-size:0.8rem; opacity:0.9;'>Chúc bạn may mắn! Meow~</span>";
 
       // Tạo hiệu ứng đặc biệt hoặc phát âm thanh nếu muốn
       catBtn.style.transform = "scale(1.2)";
@@ -1555,23 +1555,22 @@ function closeDiplomaModal() {
   }
 }
 
-// Kiểm tra mật mã cuối cùng để nhận Bằng Quản Thư
-function verifyFinalPasscode() {
+// Kiểm tra mật mã cuối cùng để nhận Giấy chứng nhận
+async function verifyFinalPasscode() {
   const input = document.getElementById("finalPasscode");
   const hintEl = document.getElementById("diplomaHint");
   const nameInput = document.getElementById("playerNameInput");
+  const confirmBtn = document.querySelector(".btn-diploma-confirm");
 
-  // Xử lý lấy tên: Nếu để trống hoặc chỉ nhập khoảng trắng -> Mặc định là "Lữ khách ẩn danh"
   const playerName =
     nameInput && nameInput.value.trim()
       ? nameInput.value.trim()
       : "Lữ khách ẩn danh";
-
   const codeVal = input ? input.value : "";
   const code = codeVal.trim().toLowerCase();
 
-  // Danh sách các đáp án chấp nhận (eureka, EUREKA, RVVSRUtB)
-  const validAnswers = ["eureka", "rvvsrutb"];
+  // Đáp án hợp lệ
+  const validAnswers = ["613himitsueureka"];
 
   if (validAnswers.includes(code)) {
     wrongAttempts = 0;
@@ -1580,35 +1579,62 @@ function verifyFinalPasscode() {
       hintEl.classList.remove("show");
     }
 
-    // Đóng Modal nhập mã
+    if (confirmBtn) confirmBtn.disabled = true;
+    let solverOrder = null;
+
+    // Lưu vào Supabase & lấy ID (#STT)
+    const supabase = await getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("puzzle_solvers")
+          .insert([{ player_name: playerName }])
+          .select("id");
+
+        if (error) {
+          console.error("❌ Lỗi khi lưu người giải mã vào Supabase:", error);
+        } else if (data && data.length > 0) {
+          solverOrder = data[0].id;
+        }
+      } catch (err) {
+        console.error("❌ Lỗi kết nối Supabase:", err);
+      }
+    }
+
     closeDiplomaModal();
+    if (confirmBtn) confirmBtn.disabled = false;
 
-    // Hiển thị Giấy Chứng Nhận Thành Công (Truyền tên đã xử lý vào)
-    showDiplomaSuccess(playerName);
+    // Hiển thị Giấy chứng nhận
+    showDiplomaSuccess(playerName, solverOrder);
   } else {
-    wrongAttempts++;
+    wrongAttempts++; // Tăng số lần nhập sai
 
+    // Rung lắc ô input báo lỗi
     if (input) {
       input.classList.add("error-shake");
       setTimeout(() => input.classList.remove("error-shake"), 400);
     }
 
+    // Xử lý hiển thị Gợi ý / Mật mã theo số lần sai
     if (hintEl) {
-      if (wrongAttempts >= 3) {
-        hintEl.innerHTML =
-          "💡 <b>Gợi ý:</b> Chuỗi <i>RVVSRUtB</i> là mật mã Base64 đó!";
+      if (wrongAttempts >= 5) {
+        // Sai từ 5 lần trở lên -> Hiển thị thẳng mật mã
+        hintEl.innerHTML = `🔑 <b>Mật mã chính xác là:</b> <code style="color: #d4af37; font-weight: bold; font-size: 1.1rem;">613HimitsuEUREKA</code>`;
+      } else if (wrongAttempts >= 3) {
+        // Sai từ 3 đến 4 lần -> Cho gợi ý cấu trúc
+        hintEl.innerHTML = `💡 <b>Gợi ý:</b> Mật mã có định dạng <i>Số + Chữ + Chữ</i> !<br>❌ Mật mã chưa đúng (Sai ${wrongAttempts}/5 lần). Cố lên nào!`;
       } else {
-        hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/3 lần). Cố lên nào!`;
+        // Sai dưới 3 lần -> Báo sai chung
+        hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/5 lần). Cố lên nào!`;
       }
       hintEl.classList.add("show");
     } else {
-      alert("❌ Mật mã chưa đúng! Đáp án chính xác là: EUREKA");
+      alert("❌ Mật mã chưa đúng!");
     }
   }
 }
 
-function submitFinalPuzzleCode() {
-  // Lấy giá trị trực tiếp từ ô nhập #finalPasscode hoặc #puzzleInputModal
+async function submitFinalPuzzleCode() {
   const finalInput = document.getElementById("finalPasscode");
   const puzzleInput = document.getElementById("puzzleInputModal");
 
@@ -1616,53 +1642,68 @@ function submitFinalPuzzleCode() {
     finalInput ? finalInput.value : puzzleInput ? puzzleInput.value : ""
   )
     .trim()
-    .toUpperCase();
+    .toLowerCase();
 
-  // Chấp nhận các mã hợp lệ
-  if (userCode === "EUREKA" || userCode === "Eureka" || userCode === "eureka") {
-    // 1. Lấy tên người chơi (nếu có ô nhập tên)
+  // Kiểm tra đáp án
+  if (userCode === "613himitsueureka") {
     const usernameInput = document.getElementById("playerNameInput");
     const playerName =
       usernameInput && usernameInput.value.trim()
         ? usernameInput.value.trim()
-        : "Lữ khách ẩn danh xuất sắc";
+        : "Lữ khách ẩn danh";
 
-    // 2. Điền thông tin vào Giấy Chứng Nhận
-    const nameDisplay = document.getElementById("diplomaPlayerName");
-    if (nameDisplay) nameDisplay.textContent = playerName;
+    // Vô hiệu hóa nút bấm tạm thời để tránh bấm 2 lần
+    const confirmBtn = document.querySelector(".btn-diploma-confirm");
+    if (confirmBtn) confirmBtn.disabled = true;
 
-    // Cập nhật ngày cấp
-    const dateDisplay = document.getElementById("diplomaIssueDate");
-    if (dateDisplay) {
-      const today = new Date();
-      dateDisplay.textContent = `Ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+    let solverOrder = null;
+
+    // --- LƯU THÔNG TIN VÀO SUPABASE & LẤY SỐ THỨ TỰ ---
+    const supabase = await getSupabase();
+    if (supabase) {
+      try {
+        // Insert lữ khách vào database và trả về thông tin dòng vừa chèn
+        const { data, error } = await supabase
+          .from("puzzle_solvers")
+          .insert([{ player_name: playerName }])
+          .select("id");
+
+        if (error) {
+          console.error("❌ Lỗi khi lưu người giải mã vào Supabase:", error);
+        } else if (data && data.length > 0) {
+          solverOrder = data[0].id; // id tự tăng chính là số thứ tự lượt giải
+        }
+      } catch (err) {
+        console.error("❌ Lỗi kết nối Supabase:", err);
+      }
     }
 
-    // 3. Ẩn Modal nhập mã và Hiển thị Modal Giấy Chứng Nhận thành công
-    const inputContainer =
-      document.getElementById("diplomaInputModal") ||
-      document.getElementById("puzzleInputContainer");
-    const successModal = document.getElementById("diplomaSuccessModal");
+    // Đóng Modal nhập mã
+    closeDiplomaModal();
 
-    if (inputContainer) {
-      inputContainer.classList.remove("active");
-      inputContainer.style.display = "none";
-    }
+    // Hiển thị Giấy Chứng Nhận với tên và số thứ tự
+    showDiplomaSuccess(playerName, solverOrder);
 
-    if (successModal) {
-      successModal.style.display = "flex";
-      successModal.classList.add("show");
-    }
-
-    // 4. Bắn pháo hoa chúc mừng
-    triggerCelebrationConfetti();
+    if (confirmBtn) confirmBtn.disabled = false;
   } else {
     alert("❌ Mật mã chưa đúng. Cố lên nào!");
   }
 }
 
-function showDiplomaSuccess(playerName = "Lữ khách ẩn danh") {
+function showDiplomaSuccess(
+  playerName = "Lữ khách ẩn danh",
+  solverOrder = null,
+) {
   let modal = document.getElementById("diplomaSuccessModal");
+
+  const orderHTML = solverOrder
+    ? `<div style="font-size: 0.95rem; color: #8b3a3a; font-weight: bold; margin-top: 8px; background: rgba(139, 58, 58, 0.08); padding: 6px 14px; border-radius: 20px; display: inline-block;">
+        ✨ Bạn là lữ khách thứ <strong>#${solverOrder}</strong> giải thành công mật mã!
+       </div>`
+    : "";
+
+  const today = new Date();
+  const dateStr = `Ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
 
   if (!modal) {
     modal = document.createElement("div");
@@ -1674,9 +1715,6 @@ function showDiplomaSuccess(playerName = "Lữ khách ẩn danh") {
       display: flex; justify-content: center; align-items: center;
       z-index: 200000; padding: 20px; box-sizing: border-box;
     `;
-
-    const today = new Date();
-    const dateStr = `Ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
 
     modal.innerHTML = `
       <div style="
@@ -1694,21 +1732,23 @@ function showDiplomaSuccess(playerName = "Lữ khách ẩn danh") {
       ">
         <div style="font-size: 3rem; margin-bottom: 10px;">🎓</div>
         <h2 style="font-family: 'Cormorant Garamond', serif; color: #8b3a3a; font-size: 2.2rem; margin-bottom: 5px;">GIẤY CHỨNG NHẬN</h2>
-        <p style="font-size: 0.9rem; color: #6c584c; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">Lữ khách Xuất Sắc</p>
+        <p style="font-size: 0.9rem; color: #6c584c; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Lữ khách Xuất Sắc</p>
         
-        <p style="font-size: 1rem; color: #2b1c11;">Chứng nhận lữ khách:</p>
-        <h3 id="diplomaPlayerName" style="font-size: 1.6rem; color: #d4af37; margin: 10px 0; font-family: 'Charm', cursive;">${escapeHTML(playerName)}</h3>
+        <p style="font-size: 1rem; color: #2b1c11; margin-bottom: 0;">Chứng nhận lữ khách:</p>
+        <h3 id="diplomaPlayerName" style="font-size: 1.6rem; color: #d4af37; margin: 8px 0; font-family: 'Charm', cursive;">${escapeHTML(playerName)}</h3>
         
+        <div id="diplomaOrderBox">${orderHTML}</div>
+
         <p style="font-size: 0.95rem; color: #4a3a2c; line-height: 1.6; margin: 15px 0;">
           Đã giải mã thành công toàn bộ ẩn số và hoàn thành thử thách Két Sách Bí Mật tại Tiệm Sách Nhỏ của Evans.
         </p>
         
-        <div style="margin-top: 25px; font-size: 0.85rem; color: #8c7a6b; font-style: italic;" id="diplomaIssueDate">
+        <div style="margin-top: 20px; font-size: 0.85rem; color: #8c7a6b; font-style: italic;" id="diplomaIssueDate">
           ${dateStr}
         </div>
         
         <button onclick="document.getElementById('diplomaSuccessModal').remove()" style="
-          margin-top: 25px;
+          margin-top: 20px;
           background: #8b3a3a;
           color: white;
           border: none;
@@ -1722,7 +1762,13 @@ function showDiplomaSuccess(playerName = "Lữ khách ẩn danh") {
     document.body.appendChild(modal);
   } else {
     const nameEl = document.getElementById("diplomaPlayerName");
+    const orderBox = document.getElementById("diplomaOrderBox");
+    const dateEl = document.getElementById("diplomaIssueDate");
+
     if (nameEl) nameEl.textContent = playerName;
+    if (orderBox) orderBox.innerHTML = orderHTML;
+    if (dateEl) dateEl.textContent = dateStr;
+
     modal.style.display = "flex";
     modal.classList.add("show");
   }
@@ -1732,7 +1778,6 @@ function showDiplomaSuccess(playerName = "Lữ khách ẩn danh") {
     triggerCelebrationConfetti();
   }
 }
-
 // Hàm tạo hiệu ứng Confetti chúc mừng
 function triggerCelebrationConfetti() {
   if (typeof confetti === "function") {

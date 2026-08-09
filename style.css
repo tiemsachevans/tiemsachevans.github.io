@@ -4040,9 +4040,8 @@ body.modal-open {
 
   .owner-letter-col {
     order: 3;
-  } /* Tâm thư chuyển xuống dưới trên mobile */
+  }
 
-  /* Cố định chiều cao modal trên phone và biến nó thành flex container có scroll */
   .modal-card,
   .modal-card.modal-card-wide {
     width: 95% !important;
@@ -4110,5 +4109,31 @@ body.modal-open {
     background: #fff;
     padding: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .cat-speech-bubble {
+    /* Đặt lề phải sát với mép phải của bảng màu vàng */
+    right: 0 !important;
+    left: auto !important;
+
+    /* Ép chiều rộng chiếm đa số màn hình nhưng không vượt quá mép trái */
+    width: 85vw !important;
+    max-width: 320px !important; /* Giới hạn tối đa nếu màn hình lớn hơn */
+
+    /* Xử lý xuống dòng tuyệt đối cho văn bản */
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+
+    /* Căn chỉnh lại spacing và chữ */
+    font-size: 0.82rem !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Giữ mũi tên chỉ đúng vị trí mascot con mèo bên dưới */
+  .cat-speech-bubble::after {
+    right: 18px !important;
+    left: auto !important;
   }
 }
