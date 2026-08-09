@@ -1640,15 +1640,15 @@ async function verifyFinalPasscode() {
 
     // Xử lý hiển thị Gợi ý / Mật mã theo số lần sai
     if (hintEl) {
-      if (wrongAttempts >= 5) {
-        // Sai từ 5 lần trở lên -> Hiển thị thẳng mật mã
+      if (wrongAttempts >= 10) {
+        // Sai từ 10 lần trở lên -> Hiển thị thẳng mật mã
         hintEl.innerHTML = `🔑 <b>Mật mã chính xác là:</b> <code style="color: #d4af37; font-weight: bold; font-size: 1.1rem;">613HimitsuEUREKA</code>`;
       } else if (wrongAttempts >= 3) {
-        // Sai từ 3 đến 4 lần -> Cho gợi ý cấu trúc
-        hintEl.innerHTML = `💡 <b>Gợi ý:</b> Mật mã có định dạng <i>Số + Chữ + Chữ</i> !<br>❌ Mật mã chưa đúng (Sai ${wrongAttempts}/5 lần). Cố lên nào!`;
+        // Sai từ 3 đến 9 lần -> Cho gợi ý cấu trúc
+        hintEl.innerHTML = `💡 <b>Gợi ý:</b> Mật mã có định dạng <i>Số + Chữ + Chữ</i> !<br>❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
       } else {
         // Sai dưới 3 lần -> Báo sai chung
-        hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/5 lần). Cố lên nào!`;
+        hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
       }
       hintEl.classList.add("show");
     } else {
