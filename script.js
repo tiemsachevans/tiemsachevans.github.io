@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   await syncCharacterVotes();
+  await loadFeedbacks();
   loadRandomDailyQuote();
   loadTopRanking();
   loadCfsNotes();
@@ -253,6 +254,67 @@ function initGlobalListeners() {
       window.toggleLike(likeBtn);
     }
   });
+
+  // Sự kiện gửi feedback trực tiếp trong Modal
+  document
+    .getElementById("submitFeedbackBtn")
+    ?.addEventListener("click", async () => {
+      const authorInput = document.getElementById("feedbackAuthor");
+      const contentInput = document.getElementById("feedbackContent");
+      const currentTitle = document
+        .getElementById("modalTitle")
+        ?.textContent.trim();
+
+      const author = authorInput?.value.trim() || "Lữ khách ẩn danh";
+      const content = contentInput?.value.trim();
+
+      if (!content) {
+        showToast("Vui lòng nhập nội dung cảm nhận!", "error");
+        return;
+      }
+
+      // 1. Tạo phần tử feedback HTML mới
+      const newFeedbackHTML = `
+    <div class="feedback-item">
+      <strong>${escapeHTML(author)}:</strong> ${escapeHTML(content)}
+    </div>
+  `;
+
+      // 2. Cập nhật giao diện Cột Phải trong Modal
+      const modalList = document.getElementById("dynamicFeedbackList");
+      if (modalList) {
+        const noFeedbackText = modalList.querySelector(".no-feedback-text");
+        if (noFeedbackText) noFeedbackText.remove();
+        modalList.insertAdjacentHTML("afterbegin", newFeedbackHTML);
+      }
+
+      // 3. Cập nhật song song vào Card ngoài giao diện chính
+      const allCards = document.querySelectorAll(".bot-card");
+      allCards.forEach((card) => {
+        const cardName = card.querySelector(".bot-name")?.textContent.trim();
+        if (cardName === currentTitle) {
+          const cardFeedbackList = card.querySelector(".feedback-list");
+          if (cardFeedbackList) {
+            cardFeedbackList.insertAdjacentHTML("afterbegin", newFeedbackHTML);
+          }
+        }
+      });
+
+      // 4. Lưu dữ liệu lên Supabase
+      const supabase = await getSupabase();
+      if (supabase && currentTitle) {
+        await supabase
+          .from("feedbacks")
+          .insert([
+            { char_name: currentTitle, author_name: author, content: content },
+          ]);
+      }
+
+      // Reset ô nhập & thông báo
+      if (authorInput) authorInput.value = "";
+      if (contentInput) contentInput.value = "";
+      showToast("Gửi đánh giá thành công!", "success");
+    });
 }
 
 // ==================== MUSIC PLAYER LOGIC ====================
@@ -677,7 +739,8 @@ function initModal() {
   if (!modal) return;
 
   botCards.forEach((card) => {
-    card.addEventListener("click", (e) => {
+    card.addEventListener("click", async (e) => {
+      // Bỏ qua nếu click vào các button hành động trên card
       if (
         e.target.closest(".chip-btn") ||
         e.target.closest(".bot-actions") ||
@@ -697,8 +760,8 @@ function initModal() {
 
       activeCardElement = card;
 
-      const name = card.querySelector(".bot-name")?.textContent || "Tên Sách";
-      const tags = card.querySelector(".bot-tags")?.textContent || "Thể loại";
+      const name = card.querySelector(".bot-name")?.textContent.trim() || "";
+      const tags = card.querySelector(".bot-tags")?.textContent || "";
       const toc = card.getAttribute("data-toc") || "Chưa có thông tin mục lục.";
       const opening = card.getAttribute("data-opening") || "";
       const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
@@ -742,6 +805,9 @@ function initModal() {
         }
       }
 
+      // 💥 ĐỒNG BỘ NỘI DUNG FEEDBACK KHI MỞ MODAL
+      await syncModalFeedbacks(name, card);
+
       modal.classList.add("show");
     });
   });
@@ -756,6 +822,88 @@ function initModal() {
       modal.classList.remove("show");
       activeCardElement = null;
     }
+  });
+}
+
+// 💥 HÀM ĐỒNG BỘ FEEDBACK TRIỆT ĐỂ
+async function syncModalFeedbacks(charName, botCard) {
+  const modalFeedbackList = document.getElementById("dynamicFeedbackList");
+  if (!modalFeedbackList) return;
+
+  // Xóa sạch nội dung cũ trong Modal trước khi tải
+  modalFeedbackList.innerHTML = "";
+
+  // 1. Nếu trên Card ngoài đã có các .feedback-item do đã render trước đó
+  const cardFeedbackItems = botCard.querySelectorAll(
+    ".feedback-list .feedback-item",
+  );
+
+  if (cardFeedbackItems.length > 0) {
+    cardFeedbackItems.forEach((item) => {
+      modalFeedbackList.appendChild(item.cloneNode(true));
+    });
+    return;
+  }
+
+  // 2. Nếu Card chưa có dữ liệu (hoặc chứa text mặc định từ HTML), thực hiện Fetch trực tiếp từ Supabase
+  try {
+    const supabase = await getSupabase();
+    if (supabase && charName) {
+      const { data, error } = await supabase
+        .from("feedbacks")
+        .select("*")
+        .eq("char_name", charName)
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        // Cập nhật lại vào cả Card ngoài lẫn Modal
+        const cardFeedbackContainer = botCard.querySelector(".feedback-list");
+        if (cardFeedbackContainer) cardFeedbackContainer.innerHTML = "";
+
+        data.forEach((fb) => {
+          const fbHTML = `
+            <div class="feedback-item">
+              <strong>${escapeHTML(fb.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(fb.content)}
+            </div>
+          `;
+          modalFeedbackList.insertAdjacentHTML("beforeend", fbHTML);
+          if (cardFeedbackContainer) {
+            cardFeedbackContainer.insertAdjacentHTML("beforeend", fbHTML);
+          }
+        });
+        return;
+      }
+    }
+  } catch (err) {
+    console.error("Lỗi khi tải feedback cho Modal:", err);
+  }
+
+  // 3. Nếu thực sự không có feedback nào trong CSDDL
+  modalFeedbackList.innerHTML = `
+    <p class="no-feedback-text" style="opacity:0.7; font-style:italic; padding: 8px 0;">
+      Chưa có lời nhắn nào cho ${escapeHTML(charName)}. Hãy là người đầu tiên gửi feedback!
+    </p>
+  `;
+}
+
+// 💥 HÀM BỔ SUNG: Render danh sách feedback sang Modal
+function renderModalFeedbacks(charName, botCard) {
+  const modalFeedbackList = document.getElementById("dynamicFeedbackList");
+  if (!modalFeedbackList) return;
+
+  const cardFeedbackItems = botCard.querySelectorAll(
+    ".feedback-list .feedback-item",
+  );
+
+  if (cardFeedbackItems.length === 0) {
+    modalFeedbackList.innerHTML = `<p class="no-feedback-text" style="opacity:0.7; font-style:italic;">Chưa có lời nhắn nào cho ${escapeHTML(charName)}. Hãy là người đầu tiên gửi feedback!</p>`;
+    return;
+  }
+
+  modalFeedbackList.innerHTML = "";
+  cardFeedbackItems.forEach((item) => {
+    const cloneItem = item.cloneNode(true);
+    modalFeedbackList.appendChild(cloneItem);
   });
 }
 
@@ -893,20 +1041,18 @@ async function handleLikeClick(characterId, currentVotes) {
 }
 
 // FEEDBACK SUBMISSION LOGIC
-
 window.toggleFeedback = async function (btn) {
   const card = btn.closest(".bot-card");
   const feedbackSec = card?.querySelector(".feedback-section");
-  const charName = card?.querySelector(".bot-name")?.textContent.trim();
 
   if (feedbackSec) {
     const isHidden =
       feedbackSec.style.display === "none" || !feedbackSec.style.display;
     feedbackSec.style.display = isHidden ? "block" : "none";
 
-    // Nếu mở ô feedback ra thì tải dữ liệu từ Supabase về
-    if (isHidden && charName) {
-      await loadFeedbacks(charName, feedbackSec);
+    // Nếu mở ô feedback ra thì tải lại dữ liệu từ Supabase về
+    if (isHidden) {
+      await loadFeedbacks();
     }
   }
 };
@@ -978,42 +1124,57 @@ window.sendFeedback = async function (btn) {
 };
 
 // ==================== TẢI FEEDBACK TỪ SUPABASE ====================
-async function loadFeedbacks(charName, feedbackSection) {
-  if (!charName || !feedbackSection) return;
-
-  const feedbackList = feedbackSection.querySelector(".feedback-list");
-  if (!feedbackList) return;
-
+async function loadFeedbacks() {
   const supabase = await getSupabase();
   if (!supabase) return;
 
-  // Lấy dữ liệu từ bảng 'feedbacks' trên Supabase
-  const { data, error } = await supabase
-    .from("feedbacks")
-    .select("*")
-    .eq("char_name", charName)
-    .order("created_at", { ascending: true });
+  try {
+    // 1. Lấy tất cả feedback từ Supabase (sắp xếp mới nhất lên đầu)
+    const { data: feedbacks, error } = await supabase
+      .from("feedbacks")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("❌ Lỗi lấy feedback từ Supabase:", error);
-    return;
+    if (error) {
+      console.error("Lỗi khi tải feedback từ Supabase:", error);
+      return;
+    }
+
+    if (!feedbacks || feedbacks.length === 0) return;
+
+    // 2. Duyệt qua từng bot-card trên trang để chèn feedback tương ứng
+    const botCards = document.querySelectorAll(".bot-card");
+
+    botCards.forEach((card) => {
+      const charNameEl = card.querySelector(".bot-name");
+      if (!charNameEl) return;
+
+      const charName = charNameEl.textContent.trim();
+      const feedbackListEl = card.querySelector(".feedback-list");
+
+      if (!feedbackListEl) return;
+
+      // Lọc các feedback thuộc về nhân vật này
+      const charFeedbacks = feedbacks.filter(
+        (item) => item.char_name === charName,
+      );
+
+      if (charFeedbacks.length > 0) {
+        // Xóa feedback mẫu cứng trên HTML
+        feedbackListEl.innerHTML = "";
+
+        // Chèn danh sách feedback thực tế từ Supabase
+        charFeedbacks.forEach((item) => {
+          const itemEl = document.createElement("div");
+          itemEl.className = "feedback-item";
+          itemEl.innerHTML = `<strong>${escapeHTML(item.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(item.content)}`;
+          feedbackListEl.appendChild(itemEl);
+        });
+      }
+    });
+  } catch (err) {
+    console.warn("Lỗi loadFeedbacks:", err);
   }
-
-  // Xóa danh sách cũ/mẫu
-  feedbackList.innerHTML = "";
-
-  if (!data || data.length === 0) {
-    feedbackList.innerHTML = `<div class="feedback-item"><em>Chưa có lời cảm nhận nào. Hãy là người đầu tiên!</em></div>`;
-    return;
-  }
-
-  // Đổ dữ liệu từ Supabase ra giao diện
-  data.forEach((item) => {
-    const newItem = document.createElement("div");
-    newItem.className = "feedback-item";
-    newItem.innerHTML = `<strong>${escapeHTML(item.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(item.content)}`;
-    feedbackList.appendChild(newItem);
-  });
 }
 
 // ==================== GENERAL UTILITIES ====================
