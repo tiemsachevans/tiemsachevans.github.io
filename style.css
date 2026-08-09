@@ -845,10 +845,7 @@ header nav a:not(.nav-logo):hover,
   gap: 8px;
 }
 
-/* ================================================================= */
-/* STYLES DÀNH RIÊNG CHO SECRET CARD TÁCH BIỆT                          */
-/* ================================================================= */
-
+/* STYLES DÀNH RIÊNG CHO SECRET CARD TÁCH BIỆT */
 .custom-secret-theme {
   position: relative;
   background: linear-gradient(145deg, #1e1b2e 0%, #2d243f 100%) !important;
@@ -861,6 +858,11 @@ header nav a:not(.nav-logo):hover,
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
+}
+
+.secret-cat-card {
+  pointer-events: none;
+  cursor: default !important;
 }
 
 .custom-secret-theme:hover {
@@ -922,17 +924,19 @@ header nav a:not(.nav-logo):hover,
   background: rgba(255, 255, 255, 0.05);
   border-left: 3px solid #d4af37;
   border-radius: 8px;
-  /* Tăng padding trái/phải để chữ không bị sát icon */
-  padding: 16px 36px;
+  padding: 10px 36px;
   margin: 8px 0;
+  display: flex;
+  align-items: center;
 }
 
 .secret-quote-text {
   font-family: "Merriweather", serif;
   font-size: 0.92rem;
-  line-height: 1.6;
+  line-height: 1.4;
   color: #e2e8f0;
-  margin: 0;
+  margin-top: 15px;
+  padding: 0;
   font-style: italic;
 }
 
@@ -946,14 +950,23 @@ header nav a:not(.nav-logo):hover,
 
 /* Icon góc trên trái */
 .quote-icon-left {
+  position: absolute;
+  top: 14px;
   left: 14px;
-  transform: translateY(-50%);
+  color: #fff8e7;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
-/* Icon phải: Dấu ngoặc đóng ” (Xoay 180 độ icon gốc) */
+/* Icon góc dưới phải */
 .quote-icon-right {
+  position: absolute;
+  bottom: 14px; /* Dùng bottom thay vì để mặc định */
   right: 14px;
-  transform: translateY(-50%) rotate(180deg);
+  color: #fff8e7;
+  font-size: 1.1rem;
+  line-height: 1;
+  transform: rotate(180deg); /* Bỏ translateY(-50%) */
 }
 
 /* Hint Box */
@@ -2751,7 +2764,7 @@ body.modal-open {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-top: 1px dashed #e3d5c6; /* Đổi thành đường đứt đoạn cho mềm mại */
+  border-top: 1px dashed #e3d5c6;
   padding-top: 20px;
 }
 

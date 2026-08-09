@@ -687,6 +687,14 @@ function initModal() {
         return;
       }
 
+      if (
+        card.dataset.secret === "true" ||
+        card.classList.contains("secret-cat-card")
+      ) {
+        e.stopPropagation();
+        return;
+      }
+
       activeCardElement = card;
 
       const name = card.querySelector(".bot-name")?.textContent || "Tên Sách";
@@ -1583,18 +1591,33 @@ async function verifyFinalPasscode() {
     let solverOrder = null;
 
     // Lưu vào Supabase & lấy ID (#STT)
+    // Đếm số người hiện có + Insert vào Supabase
     const supabase = await getSupabase();
     if (supabase) {
       try {
-        const { data, error } = await supabase
+        // Bước 1: Đếm chính xác số lượt đã lưu trong bảng puzzle_solvers
+        const { count, error: countError } = await supabase
           .from("puzzle_solvers")
-          .insert([{ player_name: playerName }])
-          .select("id");
+          .select("*", { count: "exact", head: true });
 
-        if (error) {
-          console.error("❌ Lỗi khi lưu người giải mã vào Supabase:", error);
-        } else if (data && data.length > 0) {
-          solverOrder = data[0].id;
+        if (countError) {
+          console.error("❌ Lỗi khi đếm lượt giải:", countError);
+        }
+
+        // Số thứ tự của người hiện tại = Tổng số đang có + 1
+        // (Ví dụ: Đã xóa hết dữ liệu test -> count = 0 -> solverOrder = 1)
+        solverOrder = (count || 0) + 1;
+
+        // Bước 2: Chèn tên người chơi mới vào database
+        const { error: insertError } = await supabase
+          .from("puzzle_solvers")
+          .insert([{ player_name: playerName }]);
+
+        if (insertError) {
+          console.error(
+            "❌ Lỗi khi lưu người giải mã vào Supabase:",
+            insertError,
+          );
         }
       } catch (err) {
         console.error("❌ Lỗi kết nối Supabase:", err);
