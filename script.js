@@ -1645,7 +1645,7 @@ async function verifyFinalPasscode() {
         hintEl.innerHTML = `🔑 <b>Mật mã chính xác là:</b> <code style="color: #d4af37; font-weight: bold; font-size: 1.1rem;">613HimitsuEUREKA</code>`;
       } else if (wrongAttempts >= 3) {
         // Sai từ 3 đến 9 lần -> Cho gợi ý cấu trúc
-        hintEl.innerHTML = `💡 <b>Gợi ý:</b> Mật mã có định dạng <i>Số + Chữ + Chữ</i> !<br>❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
+        hintEl.innerHTML = `<❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!<br>💡 <b>Gợi ý:</b> Mật mã có định dạng <i>Số + Chữ + Chữ</i> !`;
       } else {
         // Sai dưới 3 lần -> Báo sai chung
         hintEl.innerHTML = `❌ Mật mã chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
