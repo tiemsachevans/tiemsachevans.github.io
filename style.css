@@ -2524,6 +2524,35 @@ body.modal-open {
   word-wrap: break-word;
 }
 
+/* Nút tròn Hologram trong Color Picker */
+.color-hologram {
+  background: linear-gradient(
+    135deg,
+    #ff9a9e,
+    #fecfef,
+    #a1c4fd,
+    #c2e9fb,
+    #d4fc79,
+    #ffd166,
+    #e8d5ff
+  );
+}
+
+/* Hiệu ứng nền giấy Note Hologram dán trên bảng */
+.sticky-note.hologram-note {
+  background: linear-gradient(
+    135deg,
+    #ffb3ba 0%,
+    #ffdfba 17%,
+    #ffffba 34%,
+    #baffc9 51%,
+    #bae1ff 68%,
+    #d5baff 85%,
+    #ffc6ff 100%
+  ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
 /* Đinh ghim ở giữa mép trên tờ giấy */
 .sticky-note::before {
   content: "";

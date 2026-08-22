@@ -1440,9 +1440,14 @@ window.submitCfsNote = async function () {
     cfsBoard.innerHTML = "";
   }
 
+  const isHolo = color === "hologram";
   const noteEl = document.createElement("div");
-  noteEl.className = "cfs-note-item sticky-note";
-  noteEl.style.backgroundColor = color;
+  noteEl.className = `cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}`;
+  
+  if (!isHolo) {
+    noteEl.style.backgroundColor = color;
+  }
+
   noteEl.innerHTML = `
     <p class="note-content">"${escapeHTML(content)}"</p>
     <span class="note-author">— ${escapeHTML(author)}</span>
@@ -1552,8 +1557,13 @@ async function loadCfsNotes() {
   // Đổ danh sách note ra bảng dán ghi chú
   data.forEach((note) => {
     const noteEl = document.createElement("div");
-    noteEl.className = "cfs-note-item sticky-note";
-    noteEl.style.backgroundColor = note.bg_color || "#fff2b2";
+    const isHolo = note.bg_color === "hologram";
+    noteEl.className = `cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}`;
+    
+    if (!isHolo) {
+      noteEl.style.backgroundColor = note.bg_color || "#fff2b2";
+    }
+
     noteEl.innerHTML = `
       <p class="note-content">"${escapeHTML(note.content)}"</p>
       <span class="note-author">— ${escapeHTML(note.author || "Lữ khách ẩn danh")}</span>
