@@ -2604,6 +2604,10 @@ async function handleAvatarUpload(event) {
         const avatarModal = document.getElementById("userAvatarImg");
         if (avatarModal) avatarModal.src = compressedAvatarUrl;
 
+        // 🌟 Bổ sung cập nhật ngay lập tức cho ảnh đại diện trên trang Hồ sơ / Hộ chiếu
+        const profilePageAvatar = document.getElementById("profilePageAvatar");
+        if (profilePageAvatar) profilePageAvatar.src = compressedAvatarUrl;
+
         updateNavUserUI(currentUser);
         showToast("Đổi ảnh đại diện thành công!", "success");
       } catch (err) {
