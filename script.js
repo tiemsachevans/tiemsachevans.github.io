@@ -2599,16 +2599,24 @@ async function handleAvatarUpload(event) {
             updated_at: new Date().toISOString()
           });
 
+        // Cập nhật state chung của user hiện tại
         currentUser.user_metadata.avatar_url = compressedAvatarUrl;
         
-        const avatarModal = document.getElementById("userAvatarImg");
-        if (avatarModal) avatarModal.src = compressedAvatarUrl;
-
-        // 🌟 Bổ sung cập nhật ngay lập tức cho ảnh đại diện trên trang Hồ sơ / Hộ chiếu
+        // 🌟 1. Cập nhật ngay lập tức cho ảnh lớn trên hộ chiếu trang Profile (#profilePageAvatar)
         const profilePageAvatar = document.getElementById("profilePageAvatar");
-        if (profilePageAvatar) profilePageAvatar.src = compressedAvatarUrl;
+        if (profilePageAvatar) {
+          profilePageAvatar.src = compressedAvatarUrl;
+        }
 
+        // 🌟 2. Cập nhật cho ảnh trong Modal (nếu có trên trang)
+        const avatarModal = document.getElementById("userAvatarImg");
+        if (avatarModal) {
+          avatarModal.src = compressedAvatarUrl;
+        }
+
+        // 🌟 3. Cập nhật đồng bộ ảnh nhỏ trên thanh Navbar
         updateNavUserUI(currentUser);
+
         showToast("Đổi ảnh đại diện thành công!", "success");
       } catch (err) {
         console.error("Lỗi cập nhật avatar:", err);
