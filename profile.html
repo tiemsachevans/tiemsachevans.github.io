@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400..700&family=Fuzzy+Bubbles:wght@400;700&family=Grenze:ital,wght@0,100..900;1,100..900&family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Quintessential&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <title>Tiệm Sách Nhỏ Của Evans</title>
+    <link rel="icon" type="image/png" href="./images/icon.png" />
+  </head>
+
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="nav-left-group">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <a href="index.html" class="nav-logo">
+          <span>Tiệm Sách Evans</span>
+        </a>
+      </div>
+
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="index.html" class="nav-link">Trang Chủ</a>
+        </li>
+        <li class="nav-item">
+          <a href="characters.html" class="nav-link">Tủ Sách Nhân Vật</a>
+        </li>
+        <li class="nav-item">
+          <a href="about.html" class="nav-link">Tác Giả</a>
+        </li>
+        <li class="nav-item">
+          <a href="station.html" class="nav-link">Trạm Dừng Chân</a>
+        </li>
+        <li class="nav-item mobile-nav-btn-item">
+          <button type="button" class="nav-auth-btn mobile-menu-btn" onclick="handleNavAuthClick()">
+            <i class="fa-solid fa-feather"></i> <span>Hồ Sơ Độc Giả</span>
+          </button>
+        </li>
+        <li class="nav-item mobile-nav-btn-item">
+          <button type="button" class="theme-mobile-menu-btn mobile-menu-btn" onclick="toggleThemeMode()">
+            <i class="bi bi-moon-stars-fill" id="mobileMenuThemeIcon"></i>
+            <span id="mobileMenuThemeText">Chế Độ Ban Đêm</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="nav-right-actions">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleThemeMode()" title="Chuyển chế độ Ngày / Đêm">
+          <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+        </button>
+        <button type="button" class="nav-auth-btn" id="navAuthBtn" onclick="handleNavAuthClick()">
+          <i class="fa-solid fa-feather"></i> <span>Đóng Mộc / Nhận Thẻ</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Widget Trình phát nhạc dạng Capsule ngang -->
+    <div class="music-capsule-player" id="musicPlayer">
+      <audio id="audioSource" preload="auto"></audio>
+
+      <!-- Các nút điều khiển chính bên trái -->
+      <div class="capsule-controls">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="loopBtn"
+          title="Chế độ lặp lại"
+        >
+          <i class="bi bi-repeat" id="loopIcon"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn"
+          id="prevBtn"
+          title="Bài trước"
+        >
+          <i class="bi bi-skip-backward-fill"></i>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn play-pause-main"
+          id="playPauseBtn"
+          title="Phát / Dừng"
+        >
+          <i class="bi bi-play-fill" id="playIcon"></i>
+        </button>
+        <button type="button" class="capsule-btn" id="nextBtn" title="Bài tiếp">
+          <i class="bi bi-skip-forward-fill"></i>
+        </button>
+      </div>
+
+      <!-- Tên bài hát và Timestamp ở giữa -->
+      <div class="capsule-track-info">
+        <div class="marquee-container">
+          <span class="track-title" id="trackTitle">Đang tải nhạc...</span>
+        </div>
+        <div class="time-display-box">
+          <span id="currentTime">0:00</span> /
+          <span id="durationTime">0:00</span>
+        </div>
+
+        <input
+          type="range"
+          id="progressBar"
+          class="simple-progress"
+          value="0"
+          min="0"
+          max="100"
+          step="0.1"
+        />
+      </div>
+
+      <!-- Nút mở danh sách chọn bài (Dropdown) bên phải -->
+      <div class="capsule-playlist-wrapper" id="playlistWrapper">
+        <button
+          type="button"
+          class="capsule-btn"
+          id="playlistToggleBtn"
+          title="Danh sách bài hát"
+        >
+          <i class="bi bi-list-ul"></i>
+        </button>
+
+        <!-- Menu danh sách phát bung lên -->
+        <div class="capsule-playlist-menu" id="playlistMenu">
+          <div class="playlist-header">✨ Danh sách phát Evans</div>
+          <div id="playlistContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <main id="main-content">
+      <!-- Sub banner -->
+      <div class="sub-banner">
+        <div class="sub-banner-overlay"></div>
+        <div class="sub-banner-content">
+          <h1 class="sub-banner-title">Hồ Sơ & Sổ Tay Độc Giả</h1>
+          <p class="sub-banner-subtitle">Nơi lưu giữ từng bước chân và trang sách bạn từng ghé qua</p>
+        </div>
+      </div>
+
+      <!-- Khung chính Hồ sơ -->
+      <div class="profile-page-container">
+        <!-- CỘT TRÁI: HỘ CHIẾU ĐỘC GIẢ (VINTAGE PASSPORT) -->
+        <div class="passport-card-col">
+          <div class="passport-cover">
+            <div class="passport-stamp-badge"><i class="bi bi-patch-check-fill"></i> ĐỘC GIẢ CHÍNH THỨC</div>
+            
+            <div class="passport-avatar-wrapper">
+              <div class="passport-avatar-frame">
+                <span class="owner-crown-badge" title="Chủ Tiệm Evans">
+                  <i class="fa-solid fa-crown"></i>
+                </span>
+                <img id="profilePageAvatar" src="./images/default_avt.jpg" alt="Avatar Lữ khách" />
+                <label for="passportAvatarInput" class="avatar-upload-trigger" title="Đổi ảnh đại diện">
+                  <i class="fa-solid fa-camera"></i>
+                </label>
+              </div>
+              <input type="file" id="passportAvatarInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)" />
+            </div>
+
+            <div class="passport-name-group">
+              <div class="passport-name-row" id="viewNameRow">
+                <h3 id="profilePageDisplayName" class="passport-name">Lữ khách</h3>
+                <button type="button" class="btn-passport-edit" onclick="startEditName()" title="Đổi tên danh xưng">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              </div>
+              
+              <!-- Khung sửa tên trực tiếp -->
+              <div class="passport-edit-row" id="editNameRow" style="display: none;">
+                <input type="text" id="inlineNameInput" class="passport-name-input" maxlength="25" placeholder="Tên danh xưng mới..." />
+                <div class="passport-edit-btns">
+                  <button type="button" class="btn-save-inline" onclick="saveInlineName()"><i class="bi bi-check-lg"></i></button>
+                  <button type="button" class="btn-cancel-inline" onclick="cancelEditName()"><i class="bi bi-x-lg"></i></button>
+                </div>
+              </div>
+
+              <span id="profilePageUsername" class="passport-handle">@username</span>
+            </div>
+
+            <!-- Bio ngắn -->
+            <div class="passport-bio-box">
+              <div id="viewBioRow">
+                <p id="profilePageBio" class="passport-bio-text">"Một lữ khách trầm lặng yêu thích những trang sách của Evans."</p>
+                <button type="button" class="btn-edit-bio" onclick="startEditBio()" title="Sửa dòng trạng thái">
+                  <i class="fa-solid fa-pen-nib"></i>
+                </button>
+              </div>
+
+              <!-- Khung sửa dòng trạng thái trực tiếp -->
+              <div id="editBioRow" style="display: none;">
+                <textarea id="inlineBioInput" class="passport-bio-textarea" rows="2" maxlength="120" placeholder="Viết vài dòng tâm niệm / trạng thái của bạn..."></textarea>
+                <div class="passport-edit-btns" style="justify-content: flex-end; margin-top: 6px;">
+                  <button type="button" class="btn-save-inline" onclick="saveInlineBio()">Lưu</button>
+                  <button type="button" class="btn-cancel-inline" onclick="cancelEditBio()">Hủy</button>
+                </div>
+              </div>
+            </div>
+
+            <hr class="passport-divider" />
+
+            <ul class="passport-details-list">
+              <li>
+                <span class="detail-label"><i class="bi bi-calendar-heart"></i> Ngày cấp thẻ:</span>
+                <strong id="profilePageJoinDate" class="detail-value">24/07/2026</strong>
+              </li>
+              <li>
+                <span class="detail-label"><i class="bi bi-bookmark-heart-fill"></i> Tri kỷ đã lưu:</span>
+                <strong id="profileFavCount" class="detail-value">0 nhân vật</strong>
+              </li>
+              <li>
+                <span class="detail-label"><i class="bi bi-chat-quote-fill"></i> Tâm thư đã dán:</span>
+                <strong id="profileNoteCount" class="detail-value">0 dòng</strong>
+              </li>
+            </ul>
+
+            <button type="button" class="btn-passport-logout" onclick="handleLogout()">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Rời Tiệm Sách
+            </button>
+          </div>
+        </div>
+
+        <!-- CỘT PHẢI: TAB NỘI DUNG SỔ TAY -->
+        <div class="journal-content-col">
+          <!-- Thanh điều hướng Tab -->
+          <div class="journal-tabs-bar">
+            <button type="button" class="journal-tab-btn active" onclick="switchJournalTab('favorites', this)">
+              <i class="bi bi-heart-fill"></i> Tủ Sách Tri Kỷ
+            </button>
+            <button type="button" class="journal-tab-btn" onclick="switchJournalTab('notes', this)">
+              <i class="bi bi-sticky-fill"></i> Tâm Thư Của Tôi
+            </button>
+            <button type="button" class="journal-tab-btn" onclick="switchJournalTab('medals', this)">
+              <i class="bi bi-award-fill"></i> Huy Hiệu & Danh Hiệu
+            </button>
+          </div>
+
+          <!-- TAB 1: DANH SÁCH TRI KỶ ĐÃ THÍCH -->
+          <div class="journal-tab-pane active" id="tabFavorites">
+            <div class="tab-pane-header">
+              <h4 id="favTabTitle">Cuốn sách yêu thích của ${userProfile.name}</h4>
+              <span class="tab-subtitle">Nhân vật để lại dấu ấn trong lòng bạn</span>
+            </div>
+            <div class="favorites-grid-container" id="profileFavoritesList">
+              <span class="loading-text">Đang lật mở sổ tay...</span>
+            </div>
+          </div>
+
+          <!-- TAB 2: TÂM THƯ & GHI CHÚ CFS -->
+          <div class="journal-tab-pane" id="tabNotes" style="display: none;">
+            <div class="tab-pane-header">
+              <h4>Những dòng tâm tư bạn đã gửi gắm</h4>
+              <span class="tab-subtitle">Lưu giữ những mảnh cảm xúc tại góc nhắn gửi</span>
+            </div>
+            <div class="user-notes-grid-container" id="profileNotesList">
+              <span class="loading-text">Đang tải lại lời nhắn...</span>
+            </div>
+          </div>
+
+          <!-- TAB 3: TỦ HUY HIỆU DANH DỰ -->
+          <div class="journal-tab-pane" id="tabMedals" style="display: none;">
+            <div class="tab-pane-header">
+              <h4>Tủ Kính Thành Tựu & Vinh Danh</h4>
+              <span class="tab-subtitle">Chứng nhận sự đồng hành của bạn cùng Evans</span>
+            </div>
+            <div class="medals-showcase-grid" id="profileMedalsList">
+              <!-- Render động qua JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Nút lên đầu trang -->
+    <button id="backToTopBtn" class="back-to-top-btn" title="Lên đầu trang">
+      <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="site-footer">
+      <!--  THẺ NHÂN VIÊN MÈO VINTAGE  -->
+      <div class="cat-id-card-wrapper">
+        <div class="cat-id-card">
+          <!-- Kẹp ghim mạ vàng đồng Vintage -->
+          <div class="card-clip brass-clip" title="Kẹp giấy tiệm sách">
+            <svg
+              viewBox="0 0 32 60"
+              width="26"
+              height="50"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 12V42C12 45.3137 14.6863 48 18 48C21.3137 48 24 45.3137 24 42V12C24 6.47715 19.5228 2 14 2C8.47715 2 4 6.47715 4 12V48"
+                stroke="url(#brass-grad)"
+                stroke-width="3.8"
+                stroke-linecap="round"
+              />
+              <defs>
+                <linearGradient
+                  id="brass-grad"
+                  x1="0"
+                  y1="0"
+                  x2="32"
+                  y2="60"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stop-color="#fff2c2" />
+                  <stop offset="40%" stop-color="#d4af37" />
+                  <stop offset="100%" stop-color="#7a5a18" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <!-- Con dấu sáp đỏ đè lên thẻ -->
+          <div class="card-stamp">
+            ĐÃ DUYỆT <i class="bi bi-patch-check-fill"></i>
+          </div>
+
+          <div class="card-body">
+            <!-- Cột trái: Ảnh đại diện & Mã thẻ -->
+            <div class="card-photo-col">
+              <div class="cat-photo-frame">
+                <img
+                  src="/images/cat_icon.jpg"
+                  alt="cat-avatar"
+                  class="cat-avatar-img"
+                />
+                <span class="cat-status-dot" title="Đang trực ca"></span>
+              </div>
+              <div class="badge-tag">THẺ NHÂN VIÊN</div>
+              <div class="badge-number">ID: MEOW-01</div>
+            </div>
+
+            <!-- Cột phải: Thông tin sơ yếu lý lịch -->
+            <div class="card-info-col">
+              <h4 class="cat-name">Mimi <small>(Mèo Tiệm Sách)</small></h4>
+              <div class="cat-role">Trưởng Ban Đón Khách & Giấc Ngủ</div>
+
+              <ul class="cat-details">
+                <li>
+                  <strong
+                    ><i class="fa-solid fa-scroll"></i> Kinh nghiệm:</strong
+                  >
+                  3 năm sưởi nắng & đọc cọp
+                </li>
+                <li>
+                  <strong><i class="bi bi-stars"></i> Kỹ năng:</strong> Lắng
+                  nghe, purr purr chuẩn nhịp
+                </li>
+                <li>
+                  <strong><i class="bi bi-coin"></i> Mức lương:</strong> 50g
+                  hạt/ngày + 5 lượt xoa đầu/giờ
+                </li>
+                <li>
+                  <strong
+                    ><i class="bi bi-moon-stars-fill"></i> Trạng thái:</strong
+                  >
+                  <em class="status-text">Đang cuộn tròn trên kệ sách</em>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Dòng ghi chú chân thẻ -->
+          <div class="card-footer-note">
+            <i class="bi bi-cup-hot-fill"></i>
+            <i>Sự bình yên đôi khi bắt đầu từ một cái chạm vô tình.</i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mascott Chú Mèo Tiệm Sách ở Footer -->
+      <div class="footer-cat-wrapper">
+        <div class="cat-speech-bubble" id="catBubble">
+          Gừ gừ... (Nhấp vào tớ đi!)
+        </div>
+        <button
+          type="button"
+          class="cat-mascot-btn cat-bubble"
+          id="catMascotBtn"
+        >
+          <img src="./images/cat.jpg" alt="Cat Mascot" id="catIcon" />
+        </button>
+      </div>
+    </footer>
+
+<!-- MODAL CHI TIẾT NHÂN VẬT CHUẨN 2 CỘT -->
+    <div class="modal-overlay" id="botModal">
+      <div class="modal-card modal-card-wide">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-body modal-grid-layout">
+          <!-- CỘT TRÁI: THÔNG TIN & LỆNH -->
+          <div class="modal-left-col">
+            <div class="modal-header-row">
+              <h2 class="bot-name" id="modalTitle">Tên Sách</h2>
+              <div class="modal-vote-widget" id="modalVoteBtn" onclick="toggleLike(this)" title="Thả tim / Vote">
+                <span class="modal-heart-icon"><i class="bi bi-heart-fill"></i></span>
+                <span id="modalVoteCount">0</span>
+              </div>
+            </div>
+            <div class="bot-tags" id="modalSubtitle">Thể loại</div>
+            <div class="modal-scroll-area">
+              <div class="modal-section-box">
+                <h4 class="modal-section-heading" id="modalTocHeading">Trigger Commands</h4>
+                <div id="modalToc" class="modal-text-content"></div>
+              </div>
+              <div class="modal-section-box" id="openingSectionBox" style="display: none; margin-top: 14px;">
+                <h4 class="modal-section-heading" id="modalOpeningScenesHeading">Opening Scenes</h4>
+                <div id="modalOpeningScenes" class="modal-text-content"></div>
+              </div>
+            </div>
+            <div class="bot-chips" id="modalChipsContainer"></div>
+          </div>
+
+          <!-- CỘT PHẢI: FEEDBACK & FORM GỬI ĐÁNH GIÁ -->
+          <div class="modal-right-col" id="modalFeedbackContainer">
+            <h4 class="modal-section-heading">Lời nhắn & Cảm nhận</h4>
+            <div class="dynamic-feedback-list" id="dynamicFeedbackList">
+              <p class="no-feedback-text">Chưa có lời nhắn nào cho nhân vật này. Hãy là người đầu tiên gửi feedback!</p>
+            </div>
+            <div class="feedback-form-box">
+              <input type="text" id="feedbackAuthor" class="feedback-input" placeholder="Tên lữ khách..." />
+              <textarea id="feedbackContent" class="feedback-textarea" placeholder="Viết đôi lời cảm nhận..."></textarea>
+              <button type="button" id="submitFeedbackBtn" class="feedback-submit-btn">Gửi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Đăng Nhập / Đăng Ký (Nếu người dùng chưa đăng nhập) -->
+    <div class="modal-overlay" id="authModal">
+      <div class="auth-card-vintage">
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+        <div id="authFormState">
+          <div class="auth-header">
+            <div class="auth-stamp"><i class="fa-solid fa-stamp"></i> THẺ ĐỘC GIẢ</div>
+            <h3 class="auth-title" id="authFormTitle">Đăng Nhập Tiệm Sách</h3>
+            <p class="auth-subtitle">Ghi danh lữ khách để mở trang Sổ Tay Hành Trình</p>
+          </div>
+          <form id="authForm" onsubmit="handleAuthSubmit(event)">
+            <div class="auth-input-group">
+              <label>Tên tài khoản / Biệt danh:</label>
+              <input type="text" id="authUsernameInput" class="auth-input" required placeholder="Nhập tên tài khoản..." />
+            </div>
+            <div class="auth-input-group">
+              <label>Mật khẩu:</label>
+              <div class="password-input-wrapper">
+                <input type="password" id="authPasswordInput" class="auth-input" required minlength="6" placeholder="Tối thiểu 6 ký tự..." />
+                <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('authPasswordInput', this)">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="auth-input-group" id="authConfirmPwGroup" style="display: none;">
+              <label>Xác nhận lại mật khẩu:</label>
+              <div class="password-input-wrapper">
+                <input type="password" id="authConfirmPasswordInput" class="auth-input" placeholder="Nhập lại mật khẩu..." />
+                <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('authConfirmPasswordInput', this)">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" id="authSubmitBtn" class="auth-submit-btn">
+              <i class="fa-solid fa-key"></i> <span id="authSubmitBtnText">Xác Nhận Đăng Nhập</span>
+            </button>
+          </form>
+          <div class="auth-switch-box">
+            <span id="authSwitchText">Chưa có thẻ độc giả?</span>
+            <button type="button" class="auth-switch-btn" id="authSwitchBtn" onclick="toggleAuthMode()">Đăng ký nhận thẻ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>

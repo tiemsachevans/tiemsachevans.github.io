@@ -32,6 +32,8 @@ async function getSupabase() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initThemeMode();
+  await initProfilePage();
   const supabase = await getSupabase();
   if (supabase) {
     console.log("Supabase đã sẵn sàng!");
@@ -52,6 +54,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   initMusicPlayer();
   initMenuToggle();
   initCatMascot();
+  initDustParticles();
+  checkUserSession();
+  checkUnlockedPuzzles();
 });
 
 // Hàm escape HTML chống XSS
@@ -149,10 +154,6 @@ async function loadRandomDailyQuote() {
       "Không tìm thấy quote từ Supabase, chuyển sang danh sách dự phòng.",
     );
     allQuotes = [
-      {
-        text: "Hôm nay nếu có mệt mỏi quá, cứ nghỉ ngơi đi nhé. Mọi chuyện rồi sẽ ổn thôi.",
-        author: "Khương Tịch Ngôn",
-      },
       {
         text: "Tiệm sách nhỏ này được dựng nên từ những mảnh ký ức và những câu chuyện chưa kể.",
         author: "Evans",
@@ -552,22 +553,14 @@ function initAjaxNavigation() {
 
     e.preventDefault();
 
-    const navMenu = document.getElementById("navMenu");
-    const menuToggle = document.getElementById("menuToggle");
-    const musicPlayer = document.getElementById("musicPlayer");
-
-    if (navMenu && navMenu.classList.contains("show")) {
-      navMenu.classList.remove("show");
-      menuToggle?.classList.remove("active");
-      if (musicPlayer) {
-        musicPlayer.classList.remove("hidden-by-menu");
-      }
-    }
+    // Đóng hoàn toàn menu và gỡ khóa scroll trước khi chuyển trang
+    closeMobileMenu();
 
     loadPageViaAjax(href);
   });
 
   window.addEventListener("popstate", () => {
+    closeMobileMenu();
     const path = window.location.pathname.split("/").pop() || "index.html";
     loadPageViaAjax(path, false);
   });
@@ -627,6 +620,24 @@ function reinitializePageScripts() {
   displayRandomCharacter();
   initCatMascot();
   loadRandomDailyQuote();
+  initDustParticles();
+  checkUnlockedPuzzles();
+  
+  if (document.querySelector(".profile-page-container")) {
+    initProfilePage();
+  }
+}
+// Chuyển trang profile mượt mà qua AJAX
+function handleNavAuthClick() {
+  closeMobileMenu();
+  if (currentUser) {
+    const currentPath = window.location.pathname.split("/").pop() || "index.html";
+    if (currentPath !== "profile.html") {
+      loadPageViaAjax("profile.html");
+    }
+  } else {
+    openAuthModal();
+  }
 }
 
 // ==================== SEARCH & FILTER LOGIC ====================
@@ -671,13 +682,8 @@ function initSearchAndFilter() {
         card.querySelector(".bot-name")?.textContent.toLowerCase() || "";
       const tags =
         card.querySelector(".bot-tags")?.textContent.toLowerCase() || "";
-      const desc =
-        card.querySelector(".bot-desc")?.textContent.toLowerCase() || "";
 
-      const matchesSearch =
-        name.includes(searchTerm) ||
-        tags.includes(searchTerm) ||
-        desc.includes(searchTerm);
+      const matchesSearch = name.includes(searchTerm);
 
       const matchesGenre =
         activeFilter === "all" || tags.includes(activeFilter.toLowerCase());
@@ -729,101 +735,119 @@ function initSearchAndFilter() {
 }
 
 // ==================== MODAL CARD SYSTEM LOGIC ====================
-let activeCardElement = null;
+let isModalInitialized = false;
 
 function initModal() {
-  const modal = document.getElementById("botModal");
-  const modalClose = document.getElementById("modalClose");
-  const botCards = document.querySelectorAll(".bot-card");
+  // 1. GATEKEEPER: TỰ ĐỘNG CHẶN KHI BẤM VÀO CÁC NÚT ĐANG GIẤU LINK
+  document.addEventListener("click", (e) => {
+    // Chỉ kích hoạt khi click vào một cái nút có chứa thuộc tính data-real-href
+    const lockedBtn = e.target.closest("a[data-real-href]");
+    
+    if (lockedBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
 
-  if (!modal) return;
+      // Lấy trực tiếp ID puzzle từ chính cái nút đó
+      const puzzleId = lockedBtn.dataset.puzzleId || "delmare";
+      openPuzzleModal(puzzleId);
+    }
+  }, true);
 
-  botCards.forEach((card) => {
-    card.addEventListener("click", async (e) => {
-      // Bỏ qua nếu click vào các button hành động trên card
+  // 2. LOGIC MỞ BẢNG THÔNG TIN NHÂN VẬT (Bấm vào vùng trống của thẻ)
+  document.addEventListener("click", async (e) => {
+    const modal = document.getElementById("botModal");
+    if (e.target.closest("#modalClose") || (modal && e.target === modal)) {
+      modal.classList.remove("show");
+      return;
+    }
+
+    const card = e.target.closest(".bot-card");
+    if (card) {
       if (
         e.target.closest(".chip-btn") ||
         e.target.closest(".bot-actions") ||
         e.target.closest(".feedback-section") ||
-        e.target.closest(".btn-like")
-      ) {
-        return;
-      }
-
-      if (
+        e.target.closest(".btn-like") ||
         card.dataset.secret === "true" ||
         card.classList.contains("secret-cat-card")
       ) {
-        e.stopPropagation();
-        return;
+        return; 
       }
-
-      activeCardElement = card;
-
-      const name = card.querySelector(".bot-name")?.textContent.trim() || "";
-      const tags = card.querySelector(".bot-tags")?.textContent || "";
-      const toc = card.getAttribute("data-toc") || "Chưa có thông tin mục lục.";
-      const opening = card.getAttribute("data-opening") || "";
-      const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
-      const likeCount = card.querySelector(".like-count")?.textContent || "0";
-      const isLiked =
-        card.querySelector(".btn-like")?.classList.contains("liked") || false;
-
-      const modalTitle = document.getElementById("modalTitle");
-      const modalSubtitle = document.getElementById("modalSubtitle");
-      const modalToc = document.getElementById("modalToc");
-      const modalOpeningScenes = document.getElementById("modalOpeningScenes");
-      const openingSectionBox = document.getElementById("openingSectionBox");
-      const modalChipsContainer = document.getElementById(
-        "modalChipsContainer",
-      );
-      const modalVoteCount = document.getElementById("modalVoteCount");
-
-      if (modalTitle) modalTitle.textContent = name;
-      if (modalSubtitle) modalSubtitle.textContent = tags;
-      if (modalToc) modalToc.innerHTML = toc;
-
-      if (openingSectionBox && modalOpeningScenes) {
-        if (opening) {
-          openingSectionBox.style.display = "block";
-          modalOpeningScenes.innerHTML = opening;
-        } else {
-          openingSectionBox.style.display = "none";
-        }
+      
+      const charName = card.querySelector(".bot-name")?.textContent.trim();
+      if (charName && charName !== "Coming Soon...") {
+        e.preventDefault();
+        openBotModalByName(charName);
       }
-
-      if (modalChipsContainer) modalChipsContainer.innerHTML = chipsHTML;
-
-      if (modalVoteCount) {
-        modalVoteCount.textContent = likeCount;
-        const parentBtn =
-          modalVoteCount.closest("button") || modalVoteCount.parentElement;
-        if (parentBtn) {
-          parentBtn.classList.add("like-btn");
-          parentBtn.style.cursor = "pointer";
-          parentBtn.classList.toggle("liked", isLiked);
-        }
-      }
-
-      // 💥 ĐỒNG BỘ NỘI DUNG FEEDBACK KHI MỞ MODAL
-      await syncModalFeedbacks(name, card);
-
-      modal.classList.add("show");
-    });
+    }
   });
 
-  modalClose?.addEventListener("click", () => {
-    modal.classList.remove("show");
-    activeCardElement = null;
-  });
-
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.classList.remove("show");
-      activeCardElement = null;
+  // 3. TÍNH NĂNG BẤM RA NGOÀI ĐỂ TẮT BẢNG CÂU ĐỐ
+  document.addEventListener("click", (e) => {
+    const puzzleModal = document.getElementById("puzzleModal");
+    // Nếu bảng câu đố đang mở và người dùng click vào vùng nền mờ (overlay)
+    if (puzzleModal && puzzleModal.classList.contains("active")) {
+      if (e.target === puzzleModal) {
+        closePuzzleModal();
+      }
     }
   });
 }
+
+// Bổ sung quét lại thẻ khóa sau khi Modal thông tin nhân vật vừa tải xong
+window.openBotModalByName = async function (name) {
+  /* ... Giữ nguyên toàn bộ logic mở modal hiện tại của bạn ... */
+  const modal = document.getElementById("botModal");
+  if (!modal) return;
+
+  const normalize = (str) => (str || "").trim().toLowerCase().replace(/[’']/g, "'");
+  const cleanTargetName = normalize(name);
+
+  const characters = await getAllCharacters();
+  const char = characters.find((c) => normalize(c.name) === cleanTargetName);
+
+  if (char) {
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    const modalToc = document.getElementById("modalToc");
+    const modalTocHeading = document.getElementById("modalTocHeading");
+    const modalOpeningScenes = document.getElementById("modalOpeningScenes");
+    const openingSectionBox = document.getElementById("openingSectionBox");
+    const modalChipsContainer = document.getElementById("modalChipsContainer");
+    const modalVoteCount = document.getElementById("modalVoteCount");
+    const modalVoteBtn = document.getElementById("modalVoteBtn");
+
+    if (modalTitle) modalTitle.textContent = char.name;
+    if (modalSubtitle) modalSubtitle.textContent = char.title || "";
+    if (modalTocHeading) modalTocHeading.textContent = "Trigger Commands";
+    if (modalToc) modalToc.innerHTML = char.toc || "Chưa có thông tin trigger commands.";
+
+    if (openingSectionBox && modalOpeningScenes) {
+      if (char.opening && char.opening.trim() !== "") {
+        openingSectionBox.style.display = "block";
+        modalOpeningScenes.innerHTML = char.opening;
+      } else {
+        openingSectionBox.style.display = "none";
+      }
+    }
+
+    if (modalChipsContainer) modalChipsContainer.innerHTML = char.chipsHTML || "";
+    if (modalVoteCount) modalVoteCount.textContent = char.votes || 0;
+
+    const userLikedList = getLocalLikedCharacters();
+    const isLiked = userLikedList.some((n) => normalize(n) === cleanTargetName);
+    if (modalVoteBtn) {
+      modalVoteBtn.classList.toggle("liked", isLiked);
+    }
+
+    modal.classList.add("show");
+    await syncModalFeedbacksByName(char.name);
+    
+    // GỌI HÀM QUÉT KIỂM TRA MỞ KHÓA NGAY SAU KHI MODAL TẠO XONG NÚT
+    checkUnlockedPuzzles();
+  }
+};
 
 // 💥 HÀM ĐỒNG BỘ FEEDBACK TRIỆT ĐỂ
 async function syncModalFeedbacks(charName, botCard) {
@@ -909,53 +933,99 @@ function renderModalFeedbacks(charName, botCard) {
 
 // ==================== XỬ LÝ MỞ MODAL CHI TIẾT NHÂN VẬT ====================
 window.openBotModalByName = async function (name) {
-  const cards = document.querySelectorAll(".bot-card");
+  const modal = document.getElementById("botModal");
+  if (!modal) {
+    console.warn("Chưa tìm thấy #botModal trên trang hiện tại.");
+    return;
+  }
 
-  // Trường hợp 1: Nếu đang ở characters.html (tìm thấy thẻ .bot-card trực tiếp)
-  if (cards.length > 0) {
-    for (const card of cards) {
-      const cardName = card.querySelector(".bot-name")?.textContent.trim();
-      if (cardName === name) {
-        card.click();
+  // Chuẩn hóa dấu nháy đơn và khoảng trắng
+  const normalize = (str) => (str || "").trim().toLowerCase().replace(/[’']/g, "'");
+  const cleanTargetName = normalize(name);
+
+  // 1. Lấy dữ liệu nhân vật
+  const characters = await getAllCharacters();
+  const char = characters.find((c) => normalize(c.name) === cleanTargetName);
+
+  if (char) {
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    const modalToc = document.getElementById("modalToc");
+    const modalTocHeading = document.getElementById("modalTocHeading");
+    const modalOpeningScenes = document.getElementById("modalOpeningScenes");
+    const openingSectionBox = document.getElementById("openingSectionBox");
+    const modalChipsContainer = document.getElementById("modalChipsContainer");
+    const modalVoteCount = document.getElementById("modalVoteCount");
+    const modalVoteBtn = document.getElementById("modalVoteBtn");
+
+    if (modalTitle) modalTitle.textContent = char.name;
+    if (modalSubtitle) modalSubtitle.textContent = char.title || "";
+    if (modalTocHeading) modalTocHeading.textContent = "Trigger Commands";
+    if (modalToc) modalToc.innerHTML = char.toc || "Chưa có thông tin trigger commands.";
+
+    if (openingSectionBox && modalOpeningScenes) {
+      if (char.opening && char.opening.trim() !== "") {
+        openingSectionBox.style.display = "block";
+        modalOpeningScenes.innerHTML = char.opening;
+      } else {
+        openingSectionBox.style.display = "none";
+      }
+    }
+
+    if (modalChipsContainer) modalChipsContainer.innerHTML = char.chipsHTML || "";
+    if (modalVoteCount) modalVoteCount.textContent = char.votes || 0;
+
+    const userLikedList = getLocalLikedCharacters();
+    const isLiked = userLikedList.some((n) => normalize(n) === cleanTargetName);
+    if (modalVoteBtn) {
+      modalVoteBtn.classList.toggle("liked", isLiked);
+    }
+
+    // 2. Mở Modal
+    modal.classList.add("show");
+
+    // 3. Tải feedback
+    await syncModalFeedbacksByName(char.name);
+  } else {
+    console.error("Không tìm thấy thông tin cho nhân vật:", name);
+  }
+};
+
+// Hàm tải feedback trực tiếp theo tên nhân vật vào Modal
+async function syncModalFeedbacksByName(charName) {
+  const modalFeedbackList = document.getElementById("dynamicFeedbackList");
+  if (!modalFeedbackList) return;
+
+  modalFeedbackList.innerHTML = `<span style="font-size:0.85rem; opacity:0.7; font-style:italic;">Đang tải cảm nhận...</span>`;
+
+  try {
+    const supabase = await getSupabase();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("feedbacks")
+        .select("*")
+        .eq("char_name", charName)
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        modalFeedbackList.innerHTML = data.map((fb) => `
+          <div class="feedback-item">
+            <strong>${escapeHTML(fb.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(fb.content)}
+          </div>
+        `).join("");
         return;
       }
     }
+  } catch (err) {
+    console.warn("Lỗi tải feedback:", err);
   }
 
-  // Trường hợp 2: Nếu đang ở index.html (không có thẻ .bot-card trên DOM)
-  const characters = await getAllCharacters();
-  const char = characters.find((c) => c.name === name);
-  if (!char) return;
-
-  const modal = document.getElementById("botModal");
-  if (!modal) return;
-
-  const modalTitle = document.getElementById("modalTitle");
-  const modalSubtitle = document.getElementById("modalSubtitle");
-  const modalToc = document.getElementById("modalToc");
-  const modalOpeningScenes = document.getElementById("modalOpeningScenes");
-  const openingSectionBox = document.getElementById("openingSectionBox");
-  const modalChipsContainer = document.getElementById("modalChipsContainer");
-  const modalVoteCount = document.getElementById("modalVoteCount");
-
-  if (modalTitle) modalTitle.textContent = char.name;
-  if (modalSubtitle) modalSubtitle.textContent = char.title || "";
-  if (modalToc) modalToc.innerHTML = char.toc || "Chưa có thông tin mục lục.";
-
-  if (openingSectionBox && modalOpeningScenes) {
-    if (char.opening) {
-      openingSectionBox.style.display = "block";
-      modalOpeningScenes.innerHTML = char.opening;
-    } else {
-      openingSectionBox.style.display = "none";
-    }
-  }
-
-  if (modalChipsContainer) modalChipsContainer.innerHTML = char.chipsHTML || "";
-  if (modalVoteCount) modalVoteCount.textContent = char.votes || 0;
-
-  modal.classList.add("show");
-};
+  modalFeedbackList.innerHTML = `
+    <p class="no-feedback-text">
+      Chưa có lời nhắn nào cho ${escapeHTML(charName)}. Hãy là người đầu tiên gửi feedback!
+    </p>
+  `;
+}
 
 window.toggleLike = async function (btn) {
   const now = Date.now();
@@ -1019,6 +1089,23 @@ window.toggleLike = async function (btn) {
       loadTopRanking();
     }
   }
+
+  if (currentUser) {
+  const supabase = await getSupabase();
+  if (supabase) {
+    if (willBeLiked) {
+      await supabase
+        .from("user_favorites")
+        .upsert([{ user_id: currentUser.id, char_name: charName }], { onConflict: "user_id, char_name" });
+    } else {
+      await supabase
+        .from("user_favorites")
+        .delete()
+        .eq("user_id", currentUser.id)
+        .eq("char_name", charName);
+    }
+  }
+}
 };
 
 async function handleLikeClick(characterId, currentVotes) {
@@ -1071,7 +1158,8 @@ window.sendFeedback = async function (btn) {
     charName = document.getElementById("modalTitle")?.textContent.trim();
   }
 
-  const name = nameInput?.value.trim() || "Lữ khách ẩn danh";
+  const loggedInName = currentUser?.user_metadata?.display_name;
+  const author = loggedInName || nameInput?.value.trim() || "Lữ khách ẩn danh";
   const content = contentInput?.value.trim();
 
   if (!content) {
@@ -1177,6 +1265,113 @@ async function loadFeedbacks() {
   }
 }
 
+// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
+function initDustParticles() {
+  let canvas = document.getElementById("dustCanvas");
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.id = "dustCanvas";
+    document.body.appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext("2d");
+  let width = (canvas.width = window.innerWidth);
+  let height = (canvas.height = window.innerHeight);
+
+  window.addEventListener("resize", () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  // Số lượng hạt bụi (tối ưu hiệu năng từ PC đến Mobile)
+  const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
+  const particles = [];
+
+  class DustParticle {
+    constructor() {
+      this.reset(true);
+    }
+
+    reset(initial = false) {
+      this.x = Math.random() * width;
+      this.y = initial ? Math.random() * height : -10;
+      this.radius = Math.random() * 2.2 + 0.8; // Kích thước hạt từ 0.8px - 3px
+      this.vx = (Math.random() - 0.5) * 0.4; // Tốc độ dạt ngang nhẹ
+      this.vy = Math.random() * 0.5 + 0.2;  // Tốc độ rơi từ từ
+      this.opacity = Math.random() * 0.6 + 0.3;
+      this.fadeSpeed = Math.random() * 0.008 + 0.003;
+      this.growing = Math.random() > 0.5;
+      
+      // Màu sắc bụi vàng kim & bụi giấy ấm áp
+      const colors = [
+        "255, 235, 170", // Vàng sáng
+        "212, 175, 55",  // Vàng đồng vintage
+        "245, 222, 179", // Vàng lúa mạch
+        "255, 255, 255"  // Đốm trắng sáng li ti
+      ];
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Hiệu ứng nhấp nháy mờ ảo
+      if (this.growing) {
+        this.opacity += this.fadeSpeed;
+        if (this.opacity >= 0.85) this.growing = false;
+      } else {
+        this.opacity -= this.fadeSpeed;
+        if (this.opacity <= 0.15) this.growing = true;
+      }
+
+      // Khi hạt trôi ra khỏi màn hình thì đưa trở lại phía trên
+      if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+        this.reset();
+      }
+    }
+
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new DustParticle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].update();
+      particles[i].draw();
+    }
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+
+// Hàm đóng menu mobile và mở lại cuộn trang
+function closeMobileMenu() {
+  const navMenu = document.getElementById("navMenu");
+  const menuToggle = document.getElementById("menuToggle");
+  const musicPlayer = document.getElementById("musicPlayer");
+
+  if (navMenu) navMenu.classList.remove("show");
+  if (menuToggle) menuToggle.classList.remove("active");
+  document.body.classList.remove("menu-open"); // Gỡ bỏ class khóa cuộn trang
+
+  if (musicPlayer) {
+    musicPlayer.classList.remove("hidden-by-menu");
+  }
+}
+
 // ==================== GENERAL UTILITIES ====================
 function initMenuToggle() {
   const menuToggle = document.getElementById("menuToggle");
@@ -1187,6 +1382,7 @@ function initMenuToggle() {
     e.stopPropagation();
     const isOpen = navMenu?.classList.toggle("show");
     menuToggle.classList.toggle("active", isOpen);
+    document.body.classList.toggle("menu-open", isOpen);
 
     if (musicPlayer) {
       if (isOpen) {
@@ -1197,6 +1393,7 @@ function initMenuToggle() {
     }
   });
 
+  // Đóng menu và mở lại cuộn khi click ra ngoài vùng menu
   document.addEventListener("click", (e) => {
     if (
       navMenu &&
@@ -1204,9 +1401,7 @@ function initMenuToggle() {
       !navMenu.contains(e.target) &&
       !menuToggle?.contains(e.target)
     ) {
-      navMenu.classList.remove("show");
-      menuToggle?.classList.remove("active");
-      if (musicPlayer) musicPlayer.classList.remove("hidden-by-menu");
+      closeMobileMenu();
     }
   });
 }
@@ -1238,72 +1433,90 @@ function toggleDonateQR() {
 // ==================== HÀM LẤY DỮ LIỆU TỔNG HỢP (SUPABASE + FALLBACK HTML) ====================
 async function getAllCharacters() {
   const supabase = await getSupabase();
+  let cloudCharacters = [];
+
+  // 1. Luôn truy vấn dữ liệu mới nhất (đặc biệt là cột votes) từ Supabase
   if (supabase) {
     try {
       const { data, error } = await supabase.from("characters").select("*");
-
-      if (error) {
-        console.error("❌ Lỗi SELECT Supabase:", error);
-      } else if (data && data.length > 0) {
-        console.log("✅ Đã lấy thành công danh sách từ Supabase:", data);
-        return data;
-      } else {
-        console.warn(
-          "⚠️ Bảng 'characters' trên Supabase đang trống (chưa có hàng nào).",
-        );
+      if (!error && data && data.length > 0) {
+        cloudCharacters = data;
       }
     } catch (err) {
       console.warn("Lỗi kết nối Supabase:", err);
     }
   }
 
-  // Dự phòng: Đọc từ characters.html nếu Supabase lỗi hoặc chưa có dữ liệu
-  try {
-    const res = await fetch("characters.html");
-    if (!res.ok) return [];
-    const htmlText = await res.text();
-    const doc = new DOMParser().parseFromString(htmlText, "text/html");
-    const cards = doc.querySelectorAll(".bot-card");
+  // 2. Lấy thêm thông tin chi tiết (Mục lục, trích đoạn, chips) từ characters.html nếu Supabase thiếu cột
+  let htmlCharacters = [];
+  const domCards = document.querySelectorAll(".bot-card:not(.secret-cat-card)");
 
-    const list = [];
-    cards.forEach((card) => {
+  if (domCards.length > 0) {
+    domCards.forEach((card) => {
       const name = card.querySelector(".bot-name")?.textContent.trim() || "";
-      const title =
-        card.querySelector(".bot-tags")?.textContent.trim() || "Nhân vật";
-      const votesText =
-        card.querySelector(".like-count")?.textContent.trim() || "0";
-      const votes = parseInt(votesText, 10) || 0;
+      const title = card.querySelector(".bot-tags")?.textContent.trim() || "";
       const toc = card.getAttribute("data-toc") || "";
       const opening = card.getAttribute("data-opening") || "";
       const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
-
-      if (name) {
-        list.push({ name, title, votes, toc, opening, chipsHTML });
+      if (name && name !== "Coming Soon...") {
+        htmlCharacters.push({ name, title, toc, opening, chipsHTML });
       }
     });
-    return list;
-  } catch (err) {
-    console.error("Lỗi đọc dữ liệu dự phòng từ characters.html:", err);
-    return [];
+  } else {
+    try {
+      const res = await fetch("characters.html");
+      if (res.ok) {
+        const htmlText = await res.text();
+        const doc = new DOMParser().parseFromString(htmlText, "text/html");
+        const cards = doc.querySelectorAll(".bot-card:not(.secret-cat-card)");
+        cards.forEach((card) => {
+          const name = card.querySelector(".bot-name")?.textContent.trim() || "";
+          const title = card.querySelector(".bot-tags")?.textContent.trim() || "";
+          const toc = card.getAttribute("data-toc") || "";
+          const opening = card.getAttribute("data-opening") || "";
+          const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
+          if (name && name !== "Coming Soon...") {
+            htmlCharacters.push({ name, title, toc, opening, chipsHTML });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("Lỗi đọc file characters.html:", err);
+    }
   }
+
+  // 3. Hợp nhất: Lấy số vote từ Supabase và chi tiết mô tả từ file HTML
+  const mergedList = htmlCharacters.map((hChar) => {
+    const matchedCloud = cloudCharacters.find(
+      (c) => c.name && c.name.trim().toLowerCase() === hChar.name.trim().toLowerCase()
+    );
+    return {
+      name: hChar.name,
+      title: (matchedCloud && matchedCloud.title) || hChar.title,
+      votes: matchedCloud ? (matchedCloud.votes || 0) : 0,
+      toc: (matchedCloud && matchedCloud.toc) || hChar.toc,
+      opening: (matchedCloud && matchedCloud.opening) || hChar.opening,
+      chipsHTML: (matchedCloud && matchedCloud.chipsHTML) || hChar.chipsHTML,
+    };
+  });
+
+  return mergedList.length > 0 ? mergedList : cloudCharacters;
 }
 
-// ==================== ĐỒNG BỘ LƯỢT VOTE TỪ SUPABASE VÀO THẺ NHÂN VẬT ====================
+// ==================== ĐỒNG BỘ LƯỢT VOTE & TRẠNG THÁI TIM ====================
 async function syncCharacterVotes() {
-  const cards = document.querySelectorAll(".bot-card");
-  if (cards.length === 0) return;
-
   const characters = await getAllCharacters();
   if (!characters || characters.length === 0) return;
 
   const voteMap = new Map();
   characters.forEach((char) => {
-    if (char.name) voteMap.set(char.name.trim(), char.votes || 0);
+    if (char.name) voteMap.set(char.name.trim().toLowerCase(), char.votes || 0);
   });
 
-  // Lấy danh sách các nhân vật người dùng đã bấm thích trên thiết bị này
   const userLikedList = getLocalLikedCharacters();
 
+  // 1. Cập nhật các thẻ bot-card ngoài trang
+  const cards = document.querySelectorAll(".bot-card");
   cards.forEach((card) => {
     const nameEl = card.querySelector(".bot-name");
     const countEl = card.querySelector(".like-count");
@@ -1311,19 +1524,31 @@ async function syncCharacterVotes() {
 
     if (nameEl) {
       const charName = nameEl.textContent.trim();
+      const key = charName.toLowerCase();
 
-      // Cập nhật số lượt vote tổng từ Supabase
-      if (countEl && voteMap.has(charName)) {
-        countEl.textContent = voteMap.get(charName);
+      if (countEl && voteMap.has(key)) {
+        countEl.textContent = voteMap.get(key);
       }
 
-      // Khôi phục màu đỏ cho nút tim nếu thiết bị này đã từng vote
       if (likeBtn) {
-        const isLikedOnDevice = userLikedList.includes(charName);
+        const isLikedOnDevice = userLikedList.some((n) => n.trim().toLowerCase() === key);
         likeBtn.classList.toggle("liked", isLikedOnDevice);
       }
     }
   });
+
+  // 2. Cập nhật cho Modal nếu đang hiển thị
+  const modalTitle = document.getElementById("modalTitle")?.textContent.trim();
+  const modalVoteCount = document.getElementById("modalVoteCount");
+  const modalVoteBtn = document.getElementById("modalVoteBtn");
+
+  if (modalTitle && voteMap.has(modalTitle.toLowerCase())) {
+    if (modalVoteCount) modalVoteCount.textContent = voteMap.get(modalTitle.toLowerCase());
+    if (modalVoteBtn) {
+      const isModalLiked = userLikedList.some((n) => n.trim().toLowerCase() === modalTitle.toLowerCase());
+      modalVoteBtn.classList.toggle("liked", isModalLiked);
+    }
+  }
 }
 
 // ==================== BẢNG XẾP HẠNG TOP 3 ====================
@@ -1333,36 +1558,50 @@ async function loadTopRanking() {
 
   container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Đang tải xếp hạng...</span>`;
 
-  const characters = await getAllCharacters();
+  try {
+    const characters = await getAllCharacters();
 
-  if (!characters || characters.length === 0) {
-    container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Chưa có dữ liệu xếp hạng.</span>`;
-    return;
-  }
+    if (!characters || characters.length === 0) {
+      container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7;">Chưa có dữ liệu xếp hạng.</span>`;
+      return;
+    }
 
-  // Sắp xếp theo số lượt thích giảm dần và lấy 3 nhân vật đầu tiên
-  const sorted = [...characters]
-    .sort((a, b) => (b.votes || 0) - (a.votes || 0))
-    .slice(0, 3);
+    const sorted = [...characters]
+      .sort((a, b) => (b.votes || 0) - (a.votes || 0))
+      .slice(0, 3);
 
-  container.innerHTML = sorted
-    .map((char, index) => {
-      const rank = index + 1;
-      let badgeHTML = `<i class="bi bi-award-fill"></i> Top ${rank}`;
-      if (rank === 1) badgeHTML = `<i class="bi bi-trophy-fill"></i> Top 1`;
+    container.innerHTML = sorted
+      .map((char, index) => {
+        const rank = index + 1;
+        const badgeHTML = rank === 1 
+          ? `<i class="bi bi-trophy-fill"></i> Top 1` 
+          : `<i class="bi bi-award-fill"></i> Top ${rank}`;
 
-      return `
-        <div class="ranking-card rank-${rank}" style="cursor: pointer;" onclick="openBotModalByName('${escapeHTML(char.name)}')">
-          <span class="rank-badge">${badgeHTML}</span>
-          <div class="rank-info">
-            <h4 class="char-name">${escapeHTML(char.name)}</h4>
-            <span class="char-title">${escapeHTML(char.title || "Nhân vật")}</span>
-            <span class="vote-count">❤️ ${char.votes || 0} lượt thích</span>
+        return `
+          <div class="ranking-card rank-${rank}" style="cursor: pointer;" data-char-name="${escapeHTML(char.name || '')}">
+            <span class="rank-badge">${badgeHTML}</span>
+            <div class="rank-info">
+              <h4 class="char-name">${escapeHTML(char.name || '')}</h4>
+              <span class="char-title">${escapeHTML(char.title || "Nhân vật")}</span>
+              <span class="vote-count">❤️ ${char.votes || 0} lượt thích</span>
+            </div>
           </div>
-        </div>
-      `;
-    })
-    .join("");
+        `;
+      })
+      .join("");
+
+    // Gán sự kiện click trực tiếp, an toàn tuyệt đối 100% với mọi ký tự đặc biệt
+    container.querySelectorAll(".ranking-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const name = card.getAttribute("data-char-name");
+        if (name) openBotModalByName(name);
+      });
+    });
+
+  } catch (error) {
+    console.error("Lỗi khi tải bảng xếp hạng:", error);
+    container.innerHTML = `<span style="font-size: 0.9rem; opacity: 0.7; color: red;">Không thể tải dữ liệu xếp hạng.</span>`;
+  }
 }
 
 // ==================== HIỂN THỊ NHÂN VẬT NGẪU NHIÊN ====================
@@ -1379,20 +1618,40 @@ async function displayRandomCharacter() {
     if (!characters || characters.length === 0) {
       container.innerHTML = `<span class="random-placeholder-text">Không tìm thấy dữ liệu.</span>`;
     } else {
-      const randomChar =
-        characters[Math.floor(Math.random() * characters.length)];
+      const validChars = characters.filter((c) => c.name && c.name !== "Coming Soon...");
+      const randomChar = validChars[Math.floor(Math.random() * validChars.length)];
+      const userLikedList = getLocalLikedCharacters();
+      const isLiked = userLikedList.some(
+        (n) => n.trim().toLowerCase() === randomChar.name.trim().toLowerCase()
+      );
+
       container.innerHTML = `
-        <div class="random-card-content" style="cursor: pointer;" onclick="openBotModalByName('${escapeHTML(randomChar.name)}')">
+        <div class="random-card-content" data-char-name="${escapeHTML(randomChar.name || '')}">
           <h4 class="random-char-name">${escapeHTML(randomChar.name)}</h4>
           <div class="random-char-stats">
-            <div class="random-likes"><i class="bi bi-heart-fill"></i> ${randomChar.votes || 0} lượt thích</div>
-            <div class="random-feedbacks"><i class="bi bi-chat-quote-fill"></i> ${escapeHTML(randomChar.title || "Nhân vật")}</div>
+            <div class="random-likes">
+              <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" style="color: ${isLiked ? '#ff4d4d' : '#8b3a3a'};"></i> 
+              <span>${randomChar.votes || 0}</span> lượt thích
+            </div>
+            <div class="random-feedbacks">
+              <i class="bi bi-bookmark-fill"></i> ${escapeHTML(randomChar.title || "Nhân vật")}
+            </div>
           </div>
+          <span class="random-hint-text">Nhấp để mở xem chi tiết nhân vật ✨</span>
         </div>
       `;
+
+      // Gán sự kiện click trực tiếp cho thẻ Random
+      const randomContent = container.querySelector(".random-card-content");
+      if (randomContent) {
+        randomContent.addEventListener("click", () => {
+          const name = randomContent.getAttribute("data-char-name");
+          if (name) openBotModalByName(name);
+        });
+      }
     }
     container.classList.remove("fade-out");
-  }, 300);
+  }, 250);
 }
 
 document
@@ -1422,7 +1681,8 @@ window.submitCfsNote = async function () {
   const colorInput = document.querySelector('input[name="noteColor"]:checked');
   const submitBtn = document.getElementById("cfsSubmitBtn");
 
-  const author = authorInput?.value.trim() || "Lữ khách ẩn danh";
+  const loggedInName = currentUser?.user_metadata?.display_name;
+  const author = loggedInName || authorInput?.value.trim() || "Lữ khách ẩn danh";
   const content = contentInput?.value.trim();
   const color = colorInput ? colorInput.value : "#fff2b2";
 
@@ -1570,6 +1830,7 @@ async function loadCfsNotes() {
     `;
     cfsBoard.appendChild(noteEl);
   });
+  initDustParticles();
 }
 
 // CAT MASCOT INTERACTION
@@ -1761,64 +2022,67 @@ async function verifyFinalPasscode() {
     if (confirmBtn) confirmBtn.disabled = true;
     let solverOrder = null;
 
-    // Lưu vào Supabase & lấy ID (#STT)
-    // Đếm số người hiện có + Insert vào Supabase
+    // Lưu vào Supabase & lấy STT giải mã
     const supabase = await getSupabase();
     if (supabase) {
       try {
-        // Bước 1: Đếm chính xác số lượt đã lưu trong bảng puzzle_solvers
-        const { count, error: countError } = await supabase
-          .from("puzzle_solvers")
-          .select("*", { count: "exact", head: true });
-
-        if (countError) {
-          console.error("❌ Lỗi khi đếm lượt giải:", countError);
+        const rowToInsert = { player_name: playerName };
+        if (currentUser) {
+          rowToInsert.user_id = currentUser.id;
         }
 
-        // Số thứ tự của người hiện tại = Tổng số đang có + 1
-        // (Ví dụ: Đã xóa hết dữ liệu test -> count = 0 -> solverOrder = 1)
-        solverOrder = (count || 0) + 1;
-
-        // Bước 2: Chèn tên người chơi mới vào database
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
           .from("puzzle_solvers")
-          .insert([{ player_name: playerName }]);
+          .insert([rowToInsert])
+          .select("id");
 
         if (insertError) {
-          console.error(
-            "❌ Lỗi khi lưu người giải mã vào Supabase:",
-            insertError,
-          );
+          console.error("❌ Lỗi khi lưu người giải mã vào Supabase:", insertError);
+        } else if (data && data.length > 0) {
+          solverOrder = data[0].id;
+        }
+
+        if (currentUser) {
+          await supabase.from("user_progress").upsert({
+            user_id: currentUser.id,
+            diploma_unlocked: true,
+            solver_order: solverOrder || 1,
+            player_name: playerName,
+            updated_at: new Date().toISOString()
+          });
         }
       } catch (err) {
         console.error("❌ Lỗi kết nối Supabase:", err);
       }
     }
 
+    localStorage.setItem("evans_diploma_unlocked", "true");
+    if (solverOrder) {
+      localStorage.setItem("evans_solver_order", solverOrder.toString());
+    }
+
     closeDiplomaModal();
     if (confirmBtn) confirmBtn.disabled = false;
 
-    // Hiển thị Giấy chứng nhận
     showDiplomaSuccess(playerName, solverOrder);
-  } else {
-    wrongAttempts++; // Tăng số lần nhập sai
 
-    // Rung lắc ô input báo lỗi
+    if (currentUser) {
+      loadUserMedals(currentUser);
+    }
+  } else {
+    wrongAttempts++;
+
     if (input) {
       input.classList.add("error-shake");
       setTimeout(() => input.classList.remove("error-shake"), 400);
     }
 
-    // Xử lý hiển thị Gợi ý / Mật mã theo số lần sai
     if (hintEl) {
       if (wrongAttempts >= 10) {
-        // Sai từ 10 lần trở lên -> Hiển thị thẳng đáp án
         hintEl.innerHTML = `🔑 <b>Đáp án chính xác là:</b> <code style="color: #d4af37; font-weight: bold; font-size: 1.1rem;">613HimitsuEUREKA</code>`;
       } else if (wrongAttempts >= 3) {
-        // Sai từ 3 đến 9 lần -> Cho gợi ý cấu trúc
-        hintEl.innerHTML = `<❌ Đáp án chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!<br>💡 <b>Gợi ý:</b> Đáp án có định dạng <i>Số + Chữ + Chữ</i> !`;
+        hintEl.innerHTML = `❌ Đáp án chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!<br>💡 <b>Gợi ý:</b> Đáp án có định dạng <i>Số + Chữ + Chữ</i> !`;
       } else {
-        // Sai dưới 3 lần -> Báo sai chung
         hintEl.innerHTML = `❌ Đáp án chưa đúng (Sai ${wrongAttempts}/10 lần). Cố lên nào!`;
       }
       hintEl.classList.add("show");
@@ -2010,4 +2274,1354 @@ function closeDiplomaModal() {
   if (modal) {
     modal.classList.remove("active");
   }
+}
+
+// ==================== HỆ THỐNG XÁC THỰC & HỒ SƠ ĐỘC GIẢ ====================
+let isSignUpMode = false;
+let currentUser = null;
+
+// 1. Kiểm tra phiên đăng nhập hiện tại khi tải trang
+async function checkUserSession() {
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    updateNavUserUI(currentUser);
+    await syncAllUserData(currentUser);
+  } else {
+    currentUser = null;
+    updateNavUserUI(null);
+  }
+
+  // Lắng nghe thay đổi trạng thái đăng nhập
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    currentUser = session ? session.user : null;
+    updateNavUserUI(currentUser);
+    if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+      await syncAllUserData(currentUser);
+    }
+  });
+}
+
+// Hàm gộp toàn bộ quá trình đồng bộ dữ liệu
+async function syncAllUserData(user) {
+  if (!user) return;
+  await syncAccountFavorites(user);
+  await syncAccountProgress(user);
+}
+
+// 2. Cập nhật giao diện Navbar (Avatar + Tên lữ khách)
+function updateNavUserUI(user) {
+  const navBtns = document.querySelectorAll(".nav-auth-btn");
+  if (navBtns.length === 0) return;
+
+  navBtns.forEach((navBtn) => {
+    if (user) {
+      const meta = user.user_metadata || {};
+      const name = meta.display_name || (user.email ? user.email.split("@")[0] : "Lữ khách");
+      const avatar = meta.avatar_url || "./images/cat_icon.jpg";
+
+      navBtn.innerHTML = `
+        <img src="${avatar}" class="nav-auth-avatar-mini" alt="Avatar" />
+        <span>${escapeHTML(name)}</span>
+      `;
+    } else {
+      navBtn.innerHTML = `<i class="fa-solid fa-feather"></i> <span>Đóng Mộc / Nhận Thẻ</span>`;
+    }
+  });
+}
+
+// 3. Ẩn/Hiện mật khẩu
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
+  
+  const icon = btn.querySelector("i");
+  if (icon) {
+    icon.className = isPassword ? "bi bi-eye-slash" : "bi bi-eye";
+  }
+}
+
+// 4. Mở/Đóng Modal Thẻ Độc Giả
+async function openAuthModal() {
+  const modal = document.getElementById("authModal");
+  if (!modal) return;
+
+  const formState = document.getElementById("authFormState");
+  const profileState = document.getElementById("authProfileState");
+
+  if (currentUser) {
+    if (formState) formState.style.display = "none";
+    if (profileState) profileState.style.display = "block";
+
+    const meta = currentUser.user_metadata || {};
+    const displayName = meta.display_name || (currentUser.email ? currentUser.email.split("@")[0] : "Lữ khách");
+    const avatarUrl = meta.avatar_url || "./images/cat_icon.jpg";
+    const username = currentUser.email ? currentUser.email.split("@")[0] : displayName;
+
+    document.getElementById("profileDisplayName").textContent = displayName;
+    
+    const emailEl = document.getElementById("profileDisplayEmail");
+    if (emailEl) {
+      emailEl.textContent = `@${username}`;
+    }
+
+    document.getElementById("userAvatarImg").src = avatarUrl;
+    cancelEditName();
+
+    // Đồng bộ lại dữ liệu khi mở hồ sơ
+    await syncAllUserData(currentUser);
+  } else {
+    if (formState) formState.style.display = "block";
+    if (profileState) profileState.style.display = "none";
+  }
+
+  modal.classList.add("show");
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById("authModal");
+  if (modal) modal.classList.remove("show");
+}
+
+// Hàm xử lý bật/tắt thông báo quên mật khẩu
+window.toggleForgotPasswordNotice = function() {
+  const notice = document.getElementById("forgotPasswordNotice");
+  if (notice) {
+    notice.style.display = notice.style.display === "none" ? "block" : "none";
+  }
+};
+
+// 5. Chuyển đổi giữa Đăng Nhập & Đăng Ký
+function toggleAuthMode() {
+  isSignUpMode = !isSignUpMode;
+  const title = document.getElementById("authFormTitle");
+  const confirmPwGroup = document.getElementById("authConfirmPwGroup");
+  const btnText = document.getElementById("authSubmitBtnText");
+  const switchText = document.getElementById("authSwitchText");
+  const switchBtn = document.getElementById("authSwitchBtn");
+  const forgotPwGroup = document.getElementById("authForgotPwGroup");
+  const forgotNotice = document.getElementById("forgotPasswordNotice");
+
+  if (isSignUpMode) {
+    if (title) title.textContent = "Đăng Ký Thẻ Độc Giả";
+    if (confirmPwGroup) confirmPwGroup.style.display = "block";
+    if (btnText) btnText.textContent = "Đăng Ký Nhận Thẻ";
+    if (switchText) switchText.textContent = "Đã có thẻ độc giả?";
+    if (switchBtn) switchBtn.textContent = "Đăng nhập ngay";
+    
+    // Ẩn phần quên mật khẩu khi ở chế độ Đăng ký
+    if (forgotPwGroup) forgotPwGroup.style.display = "none";
+    if (forgotNotice) forgotNotice.style.display = "none";
+  } else {
+    if (title) title.textContent = "Đăng Nhập Tiệm Sách";
+    if (confirmPwGroup) confirmPwGroup.style.display = "none";
+    if (btnText) btnText.textContent = "Xác Nhận Đăng Nhập";
+    if (switchText) switchText.textContent = "Chưa có thẻ độc giả?";
+    if (switchBtn) switchBtn.textContent = "Đăng ký nhận thẻ";
+    
+    // Hiển thị lại phần quên mật khẩu khi ở chế độ Đăng nhập
+    if (forgotPwGroup) forgotPwGroup.style.display = "block";
+  }
+}
+
+// Tạo email ảo từ Username
+function formatVirtualEmail(username) {
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+  return `${cleanUsername}@tiemsach.local`;
+}
+
+// 6. Xử lý Đăng Ký / Đăng Nhập
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  const rawUsername = document.getElementById("authUsernameInput").value.trim();
+  const password = document.getElementById("authPasswordInput").value;
+  const submitBtn = document.getElementById("authSubmitBtn");
+
+  if (!rawUsername) {
+    showToast("Vui lòng nhập tên tài khoản!", "error");
+    return;
+  }
+
+  const virtualEmail = formatVirtualEmail(rawUsername);
+
+  if (isSignUpMode) {
+    const confirmPassword = document.getElementById("authConfirmPasswordInput").value;
+    if (password !== confirmPassword) {
+      showToast("Mật khẩu xác nhận không trùng khớp!", "error");
+      return;
+    }
+  }
+
+  submitBtn.disabled = true;
+
+  try {
+    if (isSignUpMode) {
+      // 1. ĐĂNG KÝ
+      const { data, error } = await supabase.auth.signUp({
+        email: virtualEmail,
+        password: password,
+        options: {
+          data: {
+            display_name: rawUsername,
+            avatar_url: "./images/default_avt.jpg"
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes("already registered") || error.message.includes("User already exists")) {
+          throw new Error("Tên tài khoản này đã có người sử dụng!");
+        }
+        throw error;
+      }
+
+      currentUser = data.user;
+
+      if (currentUser) {
+        await supabase.from("profiles").upsert({
+          id: currentUser.id,
+          display_name: rawUsername,
+          avatar_url: "./images/default_avt.jpg",
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      showToast(`Đăng ký thẻ thành công! Chào mừng ${rawUsername}.`, "success");
+    } else {
+      // 2. ĐĂNG NHẬP
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: virtualEmail,
+        password: password
+      });
+
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Tên tài khoản hoặc mật khẩu không chính xác!");
+        }
+        throw error;
+      }
+
+      currentUser = data.user;
+
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+        const nameToSave = profile?.display_name || currentUser.user_metadata?.display_name || rawUsername;
+        
+        await supabase.from("profiles").upsert({
+          id: currentUser.id,
+          display_name: nameToSave,
+          avatar_url: currentUser.user_metadata?.avatar_url || "./images/default_avt.jpg",
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      showToast("Đăng nhập thành công!", "success");
+    }
+
+    if (currentUser) {
+      await supabase
+        .from("puzzle_solvers")
+        .update({ user_id: currentUser.id })
+        .eq("player_name", rawUsername)
+        .is("user_id", null);
+    }
+
+    updateNavUserUI(currentUser);
+    closeAuthModal();
+
+    if (currentUser) {
+      await syncAllUserData(currentUser);
+      if (document.querySelector(".profile-page-container")) {
+        await renderProfileInfo(currentUser);
+      }
+    }
+  } catch (err) {
+    console.error("Lỗi xác thực:", err);
+    showToast(err.message || "Thao tác không thành công!", "error");
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+// 7. Tự động nén & Đổi ảnh Avatar
+async function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file || !currentUser) return;
+
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  showToast("Đang xử lý ảnh đại diện...", "success");
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const img = new Image();
+    img.onload = async function () {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const size = 150;
+      canvas.width = size;
+      canvas.height = size;
+
+      const minDim = Math.min(img.width, img.height);
+      const startX = (img.width - minDim) / 2;
+      const startY = (img.height - minDim) / 2;
+
+      ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
+      const compressedAvatarUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+      try {
+        const { error: authError } = await supabase.auth.updateUser({
+          data: { avatar_url: compressedAvatarUrl }
+        });
+
+        if (authError) throw authError;
+
+        await supabase
+          .from("profiles")
+          .upsert({
+            id: currentUser.id,
+            avatar_url: compressedAvatarUrl,
+            updated_at: new Date().toISOString()
+          });
+
+        currentUser.user_metadata.avatar_url = compressedAvatarUrl;
+        
+        const avatarModal = document.getElementById("userAvatarImg");
+        if (avatarModal) avatarModal.src = compressedAvatarUrl;
+
+        updateNavUserUI(currentUser);
+        showToast("Đổi ảnh đại diện thành công!", "success");
+      } catch (err) {
+        console.error("Lỗi cập nhật avatar:", err);
+        showToast("Không thể lưu ảnh, vui lòng thử lại!", "error");
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 8. Chỉnh sửa tên hiển thị Inline
+function startEditName() {
+  const nameDisplayRow = document.getElementById("nameDisplayRow");
+  const nameEditRow = document.getElementById("nameEditRow");
+  const currentName = document.getElementById("profileDisplayName").textContent.trim();
+
+  document.getElementById("inlineNameInput").value = currentName;
+  nameDisplayRow.style.display = "none";
+  nameEditRow.style.display = "flex";
+  document.getElementById("inlineNameInput").focus();
+}
+
+function cancelEditName() {
+  const nameDisplayRow = document.getElementById("nameDisplayRow");
+  const nameEditRow = document.getElementById("nameEditRow");
+  if (nameDisplayRow) nameDisplayRow.style.display = "flex";
+  if (nameEditRow) nameEditRow.style.display = "none";
+}
+
+async function saveInlineName() {
+  const newName = document.getElementById("inlineNameInput").value.trim();
+  if (!newName) {
+    showToast("Tên không được để trống!", "error");
+    return;
+  }
+
+  const supabase = await getSupabase();
+  if (!supabase || !currentUser) return;
+
+  // Lấy tên cũ trước khi đổi để dùng làm điều kiện tìm kiếm cập nhật
+  const oldName = currentUser.user_metadata?.display_name || 
+                  (currentUser.email ? currentUser.email.split("@")[0] : "");
+
+  try {
+    // 1. Cập nhật tên trong Auth Metadata
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { display_name: newName }
+    });
+    if (authError) throw authError;
+
+    // 2. Cập nhật / Upsert vào bảng profiles
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: currentUser.id,
+        display_name: newName,
+        updated_at: new Date().toISOString()
+      });
+
+    // 3. ĐỒNG BỘ: Cập nhật tên tác giả trong bảng feedbacks
+    if (oldName) {
+      await supabase
+        .from("feedbacks")
+        .update({ author_name: newName })
+        .eq("author_name", oldName);
+    }
+
+    // 4. ĐỒNG BỘ: Cập nhật tên tác giả trong bảng cfs_notes
+    if (oldName) {
+      await supabase
+        .from("cfs_notes")
+        .update({ author: newName })
+        .or(`user_id.eq.${currentUser.id},author.eq.${oldName}`);
+    }
+
+    // 5. Cập nhật state & giao diện tại chỗ
+    currentUser.user_metadata.display_name = newName;
+    const profileNameEl = document.getElementById("profileDisplayName");
+    if (profileNameEl) profileNameEl.textContent = newName;
+    
+    const profilePageNameEl = document.getElementById("profilePageDisplayName");
+    if (profilePageNameEl) profilePageNameEl.textContent = newName;
+
+    updateNavUserUI(currentUser);
+    cancelEditName();
+    
+    // Tải lại feedback và cfs ngoài UI nếu có mặt trên trang
+    await loadFeedbacks();
+    await loadCfsNotes();
+
+    showToast("Đã đổi tên và đồng bộ toàn bộ lời nhắn!", "success");
+  } catch (err) {
+    console.error("Lỗi đổi tên:", err);
+    showToast("Không thể đổi tên, vui lòng thử lại!", "error");
+  }
+}
+
+// 9. Đăng xuất
+async function handleLogout() {
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  await supabase.auth.signOut();
+  currentUser = null;
+  closeAuthModal();
+  updateNavUserUI(null);
+  showToast("Đã đăng xuất khỏi tiệm sách.", "success");
+
+  const currentPath = window.location.pathname.split("/").pop() || "index.html";
+  if (currentPath === "profile.html" || document.querySelector(".profile-page-container")) {
+    loadPageViaAjax("index.html");
+  }
+}
+
+// ==================== ĐỒNG BỘ LOCALSTORAGE & TÀI KHOẢN SUPABASE ====================
+
+// Đồng bộ danh sách tim từ localStorage lên bảng user_favorites
+async function syncAccountFavorites(user) {
+  if (!user) return;
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  try {
+    // 1. Lấy danh sách tim đang có trên thiết bị hiện tại
+    let localLikes = getLocalLikedCharacters();
+
+    // 2. Lấy danh sách tim đã lưu trên Supabase Cloud của tài khoản này
+    const { data: cloudFavorites, error } = await supabase
+      .from("user_favorites")
+      .select("char_name")
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.warn("Lỗi đọc user_favorites từ Supabase:", error);
+      return;
+    }
+
+    const cloudNames = cloudFavorites ? cloudFavorites.map((f) => f.char_name.trim()) : [];
+
+    // 3. Hợp nhất hai danh sách (Loại bỏ trùng lặp)
+    const mergedLikes = Array.from(new Set([...localLikes, ...cloudNames]));
+    
+    // Lưu danh sách đầy đủ vào lại localStorage của thiết bị
+    localStorage.setItem("liked_characters", JSON.stringify(mergedLikes));
+
+    // 4. Nếu có tim từ localStorage mà trên Supabase chưa có -> Tự động Insert lên Cloud
+    const newItemsToPush = localLikes.filter((name) => !cloudNames.includes(name));
+    if (newItemsToPush.length > 0) {
+      const rowsToInsert = newItemsToPush.map((charName) => ({
+        user_id: user.id,
+        char_name: charName.trim()
+      }));
+
+      await supabase
+        .from("user_favorites")
+        .upsert(rowsToInsert, { onConflict: "user_id, char_name" });
+    }
+
+    // 5. Cập nhật lại giao diện để toàn bộ nút tim chuyển sang màu đỏ
+    await syncCharacterVotes();
+  } catch (err) {
+    console.warn("Lỗi trong quá trình syncAccountFavorites:", err);
+  }
+}
+
+// Đồng bộ tiến trình giải đố / nhận bằng chứng nhận
+async function syncAccountProgress(user) {
+  if (!user) return;
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  try {
+    const isLocalUnlocked = localStorage.getItem("evans_diploma_unlocked") === "true";
+    const localOrder = localStorage.getItem("evans_solver_order");
+
+    const { data, error } = await supabase
+      .from("user_progress")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!error && data && data.diploma_unlocked) {
+      // Nếu trên cloud đã có -> lưu vào localStorage
+      localStorage.setItem("evans_diploma_unlocked", "true");
+      if (data.solver_order) {
+        localStorage.setItem("evans_solver_order", data.solver_order.toString());
+      }
+    } else if (isLocalUnlocked) {
+      // Nếu trên máy đã mở khóa mà cloud chưa có -> đẩy lên Supabase
+      await supabase.from("user_progress").upsert({
+        user_id: user.id,
+        diploma_unlocked: true,
+        solver_order: localOrder ? parseInt(localOrder) : null,
+        player_name: user.user_metadata?.display_name || "Lữ khách",
+        updated_at: new Date().toISOString()
+      });
+    }
+  } catch (err) {
+    console.warn("Lỗi syncAccountProgress:", err);
+  }
+}
+
+// ==================== QUẢN LÝ THEME DARK / LIGHT TỰ ĐỘNG & SYSTEM TRACKING ====================
+
+// 1. Kiểm tra ưu tiên: Theme thủ công > Theme hệ điều hành của máy > Giờ thực tế
+function getSystemTheme() {
+  // Kiểm tra cài đặt Darkmode của hệ thống thiết bị (Windows/Mac/iOS/Android)
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").media !== "not all") {
+    return prefersDark ? "dark" : "light";
+  }
+
+  // Dự phòng theo giờ thực tế (6h - 18h là ngày)
+  const currentHour = new Date().getHours();
+  return currentHour >= 6 && currentHour < 18 ? "light" : "dark";
+}
+
+function updateThemeUI(theme) {
+  const body = document.body;
+  const themeIcon = document.getElementById("themeIcon");
+  const mobileMenuThemeIcon = document.getElementById("mobileMenuThemeIcon");
+  const mobileMenuThemeText = document.getElementById("mobileMenuThemeText");
+
+  if (theme === "dark") {
+    body.classList.add("dark-theme");
+    if (themeIcon) {
+      themeIcon.className = "bi bi-sun-fill";
+      themeIcon.style.color = "#ffd700";
+    }
+    if (mobileMenuThemeIcon) {
+      mobileMenuThemeIcon.className = "bi bi-sun-fill";
+      mobileMenuThemeIcon.style.color = "#ffd700";
+    }
+    if (mobileMenuThemeText) {
+      mobileMenuThemeText.textContent = "Chế Độ Ban Ngày";
+    }
+  } else {
+    body.classList.remove("dark-theme");
+    if (themeIcon) {
+      themeIcon.className = "bi bi-moon-stars-fill";
+      themeIcon.style.color = "#fff8e7";
+    }
+    if (mobileMenuThemeIcon) {
+      mobileMenuThemeIcon.className = "bi bi-moon-stars-fill";
+      mobileMenuThemeIcon.style.color = "#fff8e7";
+    }
+    if (mobileMenuThemeText) {
+      mobileMenuThemeText.textContent = "Chế Độ Ban Đêm";
+    }
+  }
+}
+
+function initThemeMode() {
+  const savedTheme = localStorage.getItem("evans_theme");
+  // Nếu người dùng chưa từng bấm nút chọn theme, tự động đồng bộ theo hệ điều hành của máy
+  const activeTheme = savedTheme ? savedTheme : getSystemTheme();
+  updateThemeUI(activeTheme);
+
+  // Tự động lắng nghe khi người dùng đổi theme trên máy tính/điện thoại ngoài desktop
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+      // Chỉ tự động đổi nếu người dùng chưa chọn thủ công
+      if (!localStorage.getItem("evans_theme")) {
+        updateThemeUI(e.matches ? "dark" : "light");
+      }
+    });
+  }
+}
+
+// Hàm bấm nút chuyển đổi thủ công
+window.toggleThemeMode = function () {
+  const isCurrentlyDark = document.body.classList.contains("dark-theme");
+  const newTheme = isCurrentlyDark ? "light" : "dark";
+
+  localStorage.setItem("evans_theme", newTheme);
+  updateThemeUI(newTheme);
+
+  if (newTheme === "dark") {
+    showToast("Màn đêm đã buông xuống Tiệm Sách 🌙", "success");
+  } else {
+    showToast("Ánh bình minh đã le lói vào Tiệm Sách ☀️", "success");
+  }
+};
+
+// ==================== LOGIC ĐIỀU HƯỚNG & QUẢN LÝ PROFILE PAGE ====================
+// Khởi tạo toàn bộ dữ liệu trang profile.html
+async function initProfilePage() {
+  // Kiểm tra tồn tại giao diện Profile trên DOM thay vì chỉ check URL
+  const isProfileDOM = document.querySelector(".profile-page-container");
+  if (!isProfileDOM) return;
+
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session || !session.user) {
+    showToast("Vui lòng đăng nhập để mở Sổ Tay Độc Giả!", "error");
+    setTimeout(() => {
+      loadPageViaAjax("index.html");
+    }, 1200);
+    return;
+  }
+
+  currentUser = session.user;
+  await renderProfileInfo(currentUser);
+  await loadUserFavorites(currentUser);
+  await loadUserNotes(currentUser);
+  await loadUserMedals(currentUser);
+}
+
+// Hiển thị thông tin Hộ Chiếu & Tiêu đề Cuốn Sách Yêu Thích
+const OWNER_USER_ID = "c836f3a3-eea1-41ff-8c89-df2a62eeb2b6"; // Nhập User UID của bạn vào đây
+
+async function renderProfileInfo(user) {
+  const supabase = await getSupabase();
+  let displayName = user.user_metadata?.display_name || (user.email ? user.email.split("@")[0] : "Lữ khách");
+  let avatarUrl = user.user_metadata?.avatar_url || "./images/default_avt.jpg";
+  let bio = user.user_metadata?.bio || "Một lữ khách trầm lặng yêu thích những trang sách của Evans.";
+  const username = user.email ? user.email.split("@")[0] : displayName;
+
+  if (supabase) {
+    try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url, bio")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileData) {
+        if (profileData.display_name) displayName = profileData.display_name;
+        if (profileData.avatar_url) avatarUrl = profileData.avatar_url;
+        if (profileData.bio) bio = profileData.bio;
+      }
+    } catch (err) {
+      console.warn("Lỗi đọc profiles:", err);
+    }
+  }
+
+  const avatarEl = document.getElementById("profilePageAvatar");
+  const avatarFrame = document.querySelector(".passport-avatar-frame");
+  const nameEl = document.getElementById("profilePageDisplayName");
+  const usernameEl = document.getElementById("profilePageUsername");
+  const bioEl = document.getElementById("profilePageBio");
+  const joinDateEl = document.getElementById("profilePageJoinDate");
+  const favTabTitle = document.getElementById("favTabTitle");
+  const stampBadge = document.querySelector(".passport-stamp-badge");
+
+  if (avatarEl) avatarEl.src = avatarUrl;
+  if (nameEl) nameEl.textContent = displayName;
+  if (usernameEl) usernameEl.textContent = `@${username}`;
+  if (bioEl) bioEl.textContent = `"${bio}"`;
+  
+  if (favTabTitle) {
+    favTabTitle.textContent = `Cuốn sách yêu thích của ${displayName}`;
+  }
+
+  if (joinDateEl && user.created_at) {
+    const d = new Date(user.created_at);
+    joinDateEl.textContent = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  }
+
+  // KIỂM TRA ĐẶC QUYỀN CHỦ TIỆM SÁCH EVANS
+  const cleanUser = (username || "").toLowerCase().trim();
+  const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) || 
+                  ["fevans", "evans", "iamevans"].includes(cleanUser);
+
+  if (avatarFrame && stampBadge) {
+    if (isOwner) {
+      avatarFrame.classList.add("owner-avatar-frame");
+      stampBadge.className = "passport-stamp-badge owner-stamp-badge";
+      stampBadge.innerHTML = `<i class="fa-solid fa-crown"></i> CHỦ TIỆM SÁCH`;
+    } else {
+      avatarFrame.classList.remove("owner-avatar-frame");
+      stampBadge.className = "passport-stamp-badge";
+      stampBadge.innerHTML = `<i class="bi bi-patch-check-fill"></i> ĐỘC GIẢ CHÍNH THỨC`;
+    }
+  }
+}
+
+// Các hàm chỉnh sửa Tên Inline trên Profile
+window.startEditName = function () {
+  const viewRow = document.getElementById("viewNameRow");
+  const editRow = document.getElementById("editNameRow");
+  const currentName = document.getElementById("profilePageDisplayName")?.textContent.trim() || "";
+
+  const input = document.getElementById("inlineNameInput");
+  if (input) input.value = currentName;
+
+  if (viewRow) viewRow.style.display = "none";
+  if (editRow) editRow.style.display = "flex";
+  if (input) input.focus();
+};
+
+window.cancelEditName = function () {
+  const viewRow = document.getElementById("viewNameRow");
+  const editRow = document.getElementById("editNameRow");
+  if (viewRow) viewRow.style.display = "flex";
+  if (editRow) editRow.style.display = "none";
+};
+
+window.saveInlineName = async function () {
+  const input = document.getElementById("inlineNameInput");
+  const newName = input ? input.value.trim() : "";
+  if (!newName) {
+    showToast("Tên không được để trống!", "error");
+    return;
+  }
+
+  const supabase = await getSupabase();
+  if (!supabase || !currentUser) return;
+
+  const oldName = currentUser.user_metadata?.display_name || 
+                  (currentUser.email ? currentUser.email.split("@")[0] : "");
+
+  try {
+    // 1. Cập nhật Auth metadata
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { display_name: newName }
+    });
+    if (authError) throw authError;
+
+    // 2. Ghi đè / Upsert trực tiếp vào bảng profiles
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: currentUser.id,
+      display_name: newName,
+      updated_at: new Date().toISOString()
+    });
+    if (profileError) throw profileError;
+
+    // 3. Đồng bộ tên mới sang bảng feedbacks & cfs_notes
+    if (oldName) {
+      await supabase.from("feedbacks").update({ author_name: newName }).eq("author_name", oldName);
+      await supabase.from("cfs_notes").update({ author: newName }).or(`user_id.eq.${currentUser.id},author.eq.${oldName}`);
+    }
+
+    currentUser.user_metadata.display_name = newName;
+
+    // Cập nhật lại UI lập tức
+    await renderProfileInfo(currentUser);
+    window.cancelEditName();
+    updateNavUserUI(currentUser);
+
+    showToast("Đã đổi tên và đồng bộ thành công!", "success");
+  } catch (err) {
+    console.error("Lỗi đổi tên:", err);
+    showToast("Không thể đổi tên, vui lòng thử lại!", "error");
+  }
+};
+
+// Các hàm chỉnh sửa Bio Inline trên Profile
+window.startEditBio = function () {
+  const viewBio = document.getElementById("viewBioRow");
+  const editBio = document.getElementById("editBioRow");
+  const currentBio = document.getElementById("profilePageBio")?.textContent.replace(/^"|"$/g, "").trim() || "";
+
+  const textarea = document.getElementById("inlineBioInput");
+  if (textarea) textarea.value = currentBio;
+
+  if (viewBio) viewBio.style.display = "none";
+  if (editBio) editBio.style.display = "block";
+  if (textarea) textarea.focus();
+};
+
+window.cancelEditBio = function () {
+  const viewBio = document.getElementById("viewBioRow");
+  const editBio = document.getElementById("editBioRow");
+  if (viewBio) viewBio.style.display = "block";
+  if (editBio) editBio.style.display = "none";
+};
+
+window.saveInlineBio = async function () {
+  const textarea = document.getElementById("inlineBioInput");
+  const newBio = textarea ? textarea.value.trim() : "";
+  if (!newBio) {
+    showToast("Dòng trạng thái không được để trống!", "error");
+    return;
+  }
+
+  const supabase = await getSupabase();
+  if (!supabase || !currentUser) return;
+
+  try {
+    // 1. Cập nhật Auth metadata
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { bio: newBio }
+    });
+    if (authError) throw authError;
+
+    // 2. Cập nhật bảng profiles
+    await supabase.from("profiles").upsert({
+      id: currentUser.id,
+      bio: newBio,
+      updated_at: new Date().toISOString()
+    });
+
+    currentUser.user_metadata.bio = newBio;
+    const bioEl = document.getElementById("profilePageBio");
+    if (bioEl) bioEl.textContent = `"${newBio}"`;
+
+    window.cancelEditBio();
+    showToast("Đã cập nhật dòng tâm niệm!", "success");
+  } catch (err) {
+    console.error("Lỗi cập nhật bio:", err);
+    showToast("Không thể lưu trạng thái!", "error");
+  }
+};
+
+// Chuyển Tab trong Sổ Tay
+function switchJournalTab(tabName, btn) {
+  document.querySelectorAll(".journal-tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".journal-tab-pane").forEach(p => p.style.display = "none");
+
+  btn.classList.add("active");
+
+  if (tabName === "favorites") {
+    document.getElementById("tabFavorites").style.display = "block";
+  } else if (tabName === "notes") {
+    document.getElementById("tabNotes").style.display = "block";
+  } else if (tabName === "medals") {
+    document.getElementById("tabMedals").style.display = "block";
+  }
+}
+
+// Tải danh sách Nhân vật yêu thích của tài khoản
+async function loadUserFavorites(user) {
+  const container = document.getElementById("profileFavoritesList");
+  const countEl = document.getElementById("profileFavCount");
+  if (!container) return;
+
+  const supabase = await getSupabase();
+  const { data: favorites, error } = await supabase
+    .from("user_favorites")
+    .select("char_name")
+    .eq("user_id", user.id);
+
+  if (error || !favorites || favorites.length === 0) {
+    container.innerHTML = `<div class="empty-state-text">Bạn chưa lưu nhân vật nào vào Tủ Sách Tri Kỷ. Hãy ghé qua Tủ Sách Nhân Vật nhé!</div>`;
+    if (countEl) countEl.textContent = "0 nhân vật";
+    return;
+  }
+
+  if (countEl) countEl.textContent = `${favorites.length} nhân vật`;
+
+  container.innerHTML = favorites.map(fav => `
+    <div class="fav-char-mini-card" data-char-name="${escapeHTML(fav.char_name)}">
+      <div>
+        <h5 class="fav-char-name">${escapeHTML(fav.char_name)}</h5>
+        <span class="fav-char-tag">Tri kỷ đồng hành</span>
+      </div>
+      <button type="button" class="btn-remove-fav" onclick="event.stopPropagation(); removeFavoriteDirectly('${escapeHTML(fav.char_name)}')" title="Bỏ lưu">
+        <i class="bi bi-heart-fill"></i>
+      </button>
+    </div>
+  `).join("");
+
+  // Gán sự kiện mở modal cho mini card trong sổ tay
+  container.querySelectorAll(".fav-char-mini-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const name = card.getAttribute("data-char-name");
+      if (name) openBotModalByName(name);
+    });
+  });
+}
+
+// Bỏ thích trực tiếp từ trang Profile
+async function removeFavoriteDirectly(charName) {
+  const supabase = await getSupabase();
+  if (!supabase || !currentUser) return;
+
+  await supabase.from("user_favorites").delete().eq("user_id", currentUser.id).eq("char_name", charName);
+  
+  let localLikes = getLocalLikedCharacters().filter(n => n.trim().toLowerCase() !== charName.trim().toLowerCase());
+  localStorage.setItem("liked_characters", JSON.stringify(localLikes));
+
+  showToast(`Đã xóa ${charName} khỏi Tủ Sách Tri Kỷ`, "success");
+  await loadUserFavorites(currentUser);
+  await syncCharacterVotes();
+}
+
+// Tải danh sách Tâm thư CFS của người dùng
+async function loadUserNotes(user) {
+  const container = document.getElementById("profileNotesList");
+  const countEl = document.getElementById("profileNoteCount");
+  if (!container) return;
+
+  const supabase = await getSupabase();
+  const rawUsername = user.email ? user.email.split("@")[0] : "";
+  const displayName = user.user_metadata?.display_name || rawUsername;
+
+  const { data: notes, error } = await supabase
+    .from("cfs_notes")
+    .select("*")
+    .or(`user_id.eq.${user.id},author.ilike.${displayName}`)
+    .order("created_at", { ascending: false });
+
+  if (error || !notes || notes.length === 0) {
+    container.innerHTML = `<div class="empty-state-text">Bạn chưa dán tờ tâm thư nào tại Góc Nhắn Gửi.</div>`;
+    if (countEl) countEl.textContent = "0 dòng";
+    return;
+  }
+
+  if (countEl) countEl.textContent = `${notes.length} dòng`;
+
+  container.innerHTML = notes.map(note => {
+    const isHolo = note.bg_color === "hologram";
+    return `
+      <div class="cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}" style="${!isHolo ? `background-color: ${note.bg_color || '#fff2b2'};` : ''}">
+        <p class="note-content">"${escapeHTML(note.content)}"</p>
+        <span class="note-author">— ${escapeHTML(note.author || displayName)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+// ==================== TẢI TỦ KÍNH HUY HIỆU & DANH HIỆU TỪ SUPABASE ====================
+async function loadUserMedals(user) {
+  const container = document.getElementById("profileMedalsList");
+  if (!container) return;
+
+  const supabase = await getSupabase();
+  let isDiplomaUnlocked = false;
+  let solverOrder = null;
+  let unlockedDateStr = "";
+  let customBadges = []; // Danh hiệu tùy chỉnh từ bảng profiles
+
+  if (supabase && user) {
+    try {
+      // 1. Lấy thông tin badges & title từ bảng profiles
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("title, badges, created_at")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileData && Array.isArray(profileData.badges)) {
+        customBadges = profileData.badges;
+      }
+
+      // 2. Kiểm tra tiến trình giải đố từ bảng puzzle_solvers
+      const { data: solverData } = await supabase
+        .from("puzzle_solvers")
+        .select("id, created_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (solverData) {
+        isDiplomaUnlocked = true;
+        solverOrder = solverData.id;
+        if (solverData.created_at) {
+          const d = new Date(solverData.created_at);
+          unlockedDateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+        }
+      }
+    } catch (err) {
+      console.warn("Lỗi kiểm tra danh hiệu từ Supabase:", err);
+    }
+  }
+
+  // Dự phòng local
+  if (!isDiplomaUnlocked) {
+    isDiplomaUnlocked = localStorage.getItem("evans_diploma_unlocked") === "true";
+    solverOrder = localStorage.getItem("evans_solver_order");
+    if (isDiplomaUnlocked && !unlockedDateStr) {
+      const today = new Date();
+      unlockedDateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+    }
+  }
+
+  let joinDateStr = "24/07/2026";
+  if (user && user.created_at) {
+    const d = new Date(user.created_at);
+    joinDateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  }
+
+  // --- TEMPLATE HUY HIỆU ---
+  // 1. Kẻ Vén Màn Bí Mật
+  const secretUnlockedHTML = `
+    <div class="showcase-medal-card unlocked-secret" onclick="viewSavedDiploma()" title="Nhấp để xem lại Bằng Chứng Nhận">
+      <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%);">🎓</div>
+      <div class="medal-info-wrap">
+        <strong class="medal-title-text">Kẻ Vén Màn Bí Mật #${solverOrder}</strong>
+        <span class="medal-desc-text">Đã giải mã thành công toàn bộ Két Sách Bí Mật</span>
+        <span class="medal-date-tag"><i class="bi bi-calendar-check"></i> Đạt được: ${unlockedDateStr}</span>
+      </div>
+    </div>
+  `;
+
+  const secretLockedHTML = `
+    <div class="showcase-medal-card locked-medal" title="Thành tựu ẩn">
+      <div class="medal-emblem-circle locked-icon">🔒</div>
+      <div class="medal-info-wrap">
+        <strong class="medal-title-text">Kẻ Vén Màn Bí Mật</strong>
+        <span class="medal-desc-text">??? (Chưa mở khóa)</span>
+        <span class="medal-date-tag locked-tag"><i class="bi bi-lock-fill"></i> Chưa mở khóa</span>
+      </div>
+    </div>
+  `;
+
+  // 2. Độc Giả Thân Thiết
+  const memberMedalHTML = `
+    <div class="showcase-medal-card">
+      <div class="medal-emblem-circle" style="background: radial-gradient(circle, #e2d7c7 0%, #8c7a6b 100%);">📜</div>
+      <div class="medal-info-wrap">
+        <strong class="medal-title-text">Độc Giả Thân Thiết</strong>
+        <span class="medal-desc-text">Đã đăng ký Thẻ Độc Giả chính thức của Evans</span>
+        <span class="medal-date-tag"><i class="bi bi-calendar-check"></i> Cấp ngày: ${joinDateStr}</span>
+      </div>
+    </div>
+  `;
+
+  // 3. Render các danh hiệu tùy chỉnh thêm từ cột `badges` trên Supabase
+  let customBadgesHTML = "";
+  if (customBadges.length > 0) {
+    customBadgesHTML = customBadges.map((badgeName) => `
+      <div class="showcase-medal-card custom-badge-card">
+        <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffd700 0%, #b8860b 100%);">👑</div>
+        <div class="medal-info-wrap">
+          <strong class="medal-title-text">${escapeHTML(badgeName)}</strong>
+          <span class="medal-desc-text">Danh hiệu vinh dự được cấp bởi Tiệm Sách</span>
+          <span class="medal-date-tag"><i class="bi bi-patch-check-fill"></i> Đã kích hoạt</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // Sắp xếp: Custom badges & Mở khóa -> Độc giả thân thiết -> Khóa (xếp cuối)
+  let finalMedalsHTML = customBadgesHTML;
+  if (isDiplomaUnlocked && solverOrder) {
+    finalMedalsHTML += secretUnlockedHTML + memberMedalHTML;
+  } else {
+    finalMedalsHTML += memberMedalHTML + secretLockedHTML;
+  }
+
+  container.innerHTML = finalMedalsHTML;
+}
+
+// Xem lại bằng chứng nhận
+window.viewSavedDiploma = function () {
+  const name = currentUser?.user_metadata?.display_name || "Lữ khách";
+  const order = localStorage.getItem("evans_solver_order") || "1";
+  showDiplomaSuccess(name, order);
+};
+
+// ==================== HỆ THỐNG MẬT MÃ KHÓA NHÂN VẬT ====================
+// Cấu hình đáp án, tiêu đề và Toast riêng biệt cho từng nhân vật
+const puzzleConfigs = {
+  delmare: {
+    answer: "bannga",
+    title: "Vực Sâu Danh Dự",
+    subtitle: "Delmare's Abyss",
+    toastMsg: "Cánh cửa dẫn đến Delmare's Abyss đã mở! Chúc ngài chinh phục bản ngã thành công."
+  },
+  huy: {
+    answer: "candyland",
+    title: "Một Cơn Say",
+    subtitle: "Dương Khắc Huy (@_hyvq.ft)",
+    toastMsg: "Giỏi lắm. Giờ thì đến đây, đừng để tôi phải đợi lâu."
+  },
+  seol: {
+    answer: "jacktheripper",
+    title: "Phía Sau Màn Sương",
+    subtitle: "Seol Min-jae",
+    toastMsg: "Màn sương đã tan. Chúc may mắn, đồ tể."
+  },
+  arashi: {
+    answer: "otomekaibou",
+    title: "Thanh Âm Cấm Kỵ",
+    subtitle: "Arashi「嵐」",
+    toastMsg: "Đã giải mã giai điệu cấm kỵ của Arashi! Cánh cửa đêm nay chính thức rộng mở."
+  },
+  tam: {
+    answer: "ihearu",
+    title: "Sợi Dây Liên Kết",
+    subtitle: "Phó Kỳ Tâm",
+    toastMsg: "Tôi nghe thấy tiếng mở cửa từ em rồi."
+  },
+  ngon: {
+    answer: "fake",
+    title: "Bản Chất Sự Vật",
+    subtitle: "Khương Tịch Ngôn",
+    toastMsg: "Dù biết là giả, nhưng tôi vẫn trân trọng khoảnh khắc này."
+  },
+  salfozziel: {
+    answer: ["1", "2", "3"],
+    title: "Cái Giá Của Sự Lựa Chọn",
+    subtitle: "Salfozziel",
+    toastMsg: "Đã ghi nhận lựa chọn của ngươi. Hãy để 'Bữa Tiệc' của chúng ta được khai màn."
+  }
+};
+
+// Mở Modal Giải Mã
+window.openPuzzleModal = function(puzzleId) {
+  const modal = document.getElementById("puzzleModal");
+  if(modal) {
+      modal.classList.add("active");
+      modal.dataset.currentPuzzle = puzzleId;
+      document.getElementById("puzzlePasscodeInput").value = "";
+      document.getElementById("puzzleErrorMsg").classList.remove("show");
+      
+      const modalTitle = modal.querySelector(".modal-title");
+      const modalSubtitle = modal.querySelector(".modal-subtitle");
+      const hintBox = modal.querySelector(".book-hint-box");
+      const formatHint = modal.querySelector(".book-form-group div");
+      
+      if (puzzleId === "huy") {
+        if (modalTitle) modalTitle.textContent = "Một Đêm Say";
+        if (modalSubtitle) modalSubtitle.textContent = "Dương Khắc Huy (@_hyvq.ft)";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.88rem;">
+              Dương Khắc Huy (@_hyvq.ft) vừa đăng một Highlights / Tin nổi bật mới:
+            </p>
+            <p style="font-weight: bold; font-size: 0.95rem; color: #8b3a3a; margin: 10px 0; font-style: italic;">
+              "Vết tích của một đêm quên lối về."
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="font-style: italic; color: #8b3a3a; font-size: 0.82rem; line-height: 1.4;">
+              "Nơi chốn ngập tràn sự ngọt ngào giả tạo, nơi những viên kẹo đủ màu sắc che giấu cạm bẫy phía sau ánh đèn mập mờ."
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 9 chữ cái, viết liền không dấu";
+      } else if (puzzleId === "seol") {
+        if (modalTitle) modalTitle.textContent = "Phía Sau Màn Sương";
+        if (modalSubtitle) modalSubtitle.textContent = "Seol Min-jae";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.88rem;">
+              Thanh tra Abberline vắt óc suy nghĩ trước những lời khai từ nhân chứng có mặt tại hiện trường.<br>
+              Nhưng chân tướng thực sự nằm ở dòng chữ thầm lặng viết vội bằng máu khô trên góc bàn:
+            </p>
+            <p style="font-weight: bold; font-size: 1.05rem; color: #8b3a3a; margin: 10px 0; letter-spacing: 1px;">
+              I U R P &nbsp; K H OO
+            </p>
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.88rem;">Bên ngoài, văng vẳng tiếng đồng dao của trẻ con vang lên từ những con hẻm tối tăm.</p>
+            <p style="margin-top: 10px; line-height: 1.5; font-size: 0.88rem;">Danh tính kẻ thủ ác chỉ có 1.</p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="font-style: italic; color: #8b3a3a; font-size: 0.82rem; line-height: 1.4;">
+              "Đi lùi 3 bước để tiến đến sự thật." - Đó là điều mà kẻ sát nhân đã để lại trên bức tường đỏ thắm tại hiện trường.
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 13 chữ cái, viết liền không dấu";
+      } else if (puzzleId === "arashi") {
+        if (modalTitle) modalTitle.textContent = "Thanh Âm Cấm Kỵ";
+        if (modalSubtitle) modalSubtitle.textContent = "Arashi「嵐」";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.9rem; font-style: italic; color: #8b3a3a;">
+              「もっと痛くしてよ 君の体温を感じたいんだ<br>
+              めいっぱい愛してよ 壊れるくらいに」
+            </p>
+            <p style="font-size: 0.85rem; color: #4a3a2c; margin-bottom: 10px;">
+              "Motto itaku shite yo, kimi no taion o kanjitain da<br>
+              Meippai aishite yo, kowareru kurai ni"
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
+              "Find me, hear me."
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 11 chữ cái, viết liền không dấu";
+      } else if (puzzleId === "tam") {
+        if (modalTitle) modalTitle.textContent = "Sợi Dây Liên Kết";
+        if (modalSubtitle) modalSubtitle.textContent = "Phó Kỳ Tâm";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.9rem; font-style: italic; color: #8b3a3a;">
+              .. .... . .- .-. ..-
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
+              "Tần số kết nối giữa hai tâm hồn, nơi âm thanh vượt qua màng nhĩ để chạm thẳng đến sự thấu cảm."
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
+      } else if (puzzleId === "ngon") {
+        if (modalTitle) modalTitle.textContent = "Bản Chất Sự Vật";
+        if (modalSubtitle) modalSubtitle.textContent = "Khương Tịch Ngôn";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.9rem; font-style: italic; color: #8b3a3a;">
+              Báo cáo giám định tác phẩm nghệ thuật tại hiện trường: Bức tranh được tuyên bố là bản gốc thế kỷ 17, nhưng chuyên gia phát hiện ra sợi vải canvas làm bằng chất liệu tổng hợp chưa từng tồn tại trước năm 1935.
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
+              Tác phẩm này hoàn toàn không phải hàng nguyên bản. Bản chất của nó là gì?
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 4 chữ cái, viết liền không dấu";
+      } else if (puzzleId === "salfozziel") {
+        if (modalTitle) modalTitle.textContent = "Cái Giá Của Sự Lựa Chọn";
+        if (modalSubtitle) modalSubtitle.textContent = "Salfozziel";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.9rem; font-style: italic; color: #8b3a3a;">
+              Ta là chiếc gương phản chiếu tâm trí ngươi, nhưng để phá vỡ vòng lặp này, ngươi buộc phải thực hiện chính xác một hành động duy nhất bằng cách chọn một trong ba con đường sau:<br>🔹 <strong>1.</strong> Uống chén độc dược ngưng đọng thời gian để trở thành kẻ bất tử trong cô độc vĩnh cửu.<br>🔹 <strong>2.</strong> Tự tay bóp nát trái tim mình để tồn tại dưới dạng một thực thể vô định không cảm xúc.<br>🔹 <strong>3.</strong> Nhảy xuống vực sâu không đáy để hòa làm một với bóng tối nguyên thủy.<br>
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
+              <em>(Cảnh báo: Tấm gương dần xuất hiện những vết nứt, khiến hình ảnh phản chiếu của ngươi trở nên méo mó.)</em>
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "There's only one true answer.";
+      } else {
+        // Mặc định: Delmare's Abyss
+        if (modalTitle) modalTitle.textContent = "Vực Sâu Danh Dự";
+        if (modalSubtitle) modalSubtitle.textContent = "Delmare's Abyss";
+        if (hintBox) {
+          hintBox.innerHTML = `
+            <p style="margin-bottom: 12px; line-height: 1.6;">
+              Một kẻ bước đi vội.<br>
+              Chẳng mang an yên nào.<br>
+              Chỉ toàn những nỗi đau.<br>
+              Ký ức nhuộm màu sầu.<br>
+              Chờ đợi giấc mộng tan.<br>
+              Tỉnh lại ám ảnh hoài.
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 12px 0;">
+            <p style="font-style: italic; color: #8b3a3a; font-size: 0.85rem; line-height: 1.4;">
+              "Sự thật về một người không nằm ở khởi đầu, cũng chẳng ở kết cục. Con người thật luôn bị kẹp chặt ở chính giữa những lằn ranh."
+            </p>
+          `;
+        }
+        if (formatHint) formatHint.textContent = "* Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
+      }
+      
+      setTimeout(() => {
+        document.getElementById("puzzlePasscodeInput").focus();
+      }, 100);
+  }
+}
+
+// Đóng Modal Giải Mã
+window.closePuzzleModal = function() {
+  const modal = document.getElementById("puzzleModal");
+  if(modal) modal.classList.remove("active");
+}
+
+// Kiểm tra mã nhập vào
+window.verifyPuzzleCode = function() {
+  const modal = document.getElementById("puzzleModal");
+  const input = document.getElementById("puzzlePasscodeInput");
+  const errorMsg = document.getElementById("puzzleErrorMsg");
+  
+  const puzzleId = modal.dataset.currentPuzzle;
+  const code = input.value.trim().toLowerCase();
+  
+let validAnswers = ["bannga"];
+  if (puzzleId === "huy") {
+    validAnswers = ["candyland"];
+  }
+  if (puzzleId === "seol") {
+    validAnswers = ["jacktheripper"];
+  }
+  if (puzzleId === "arashi") {
+    validAnswers = ["otomekaibou"];
+  }
+  if (puzzleId === "tam") {
+    validAnswers = ["ihearu"];
+  }
+  if (puzzleId === "ngon") {
+    validAnswers = ["fake"];
+  }
+  if (puzzleId === "salfozziel") {
+    validAnswers = ["1", "2", "3"];
+  }
+
+if (validAnswers.includes(code)) {
+      localStorage.setItem(`unlocked_${puzzleId}`, "true");
+      closePuzzleModal();
+      unlockCharacterLinks(puzzleId);
+      showToast("Đã giải mã thành công! Nút Google AI Studio đã mở.", "success");
+} else {
+      input.classList.add("error-shake");
+      setTimeout(() => input.classList.remove("error-shake"), 400);
+      errorMsg.innerHTML = "❌ Đáp án chưa chính xác. Vui lòng thử lại!";
+      errorMsg.classList.add("show");
+  }
+}
+
+// Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
+window.unlockCharacterLinks = function(puzzleId) {
+    // Đổi màu ổ khóa ở Header card bên ngoài
+    const cards = document.querySelectorAll(`.bot-card[data-puzzle-id="${puzzleId}"]`);
+    cards.forEach(card => {
+        const icon = card.querySelector(".bot-title-wrap .lock-icon");
+        if(icon) {
+            icon.className = "bi bi-unlock-fill lock-icon";
+            icon.style.color = "#2ecc71"; 
+            icon.title = "Đã mở khóa";
+        }
+    });
+
+    // Trả lại đường dẫn thật cho nút Google AI Studio
+    const lockedLinks = document.querySelectorAll(`a[data-real-href][data-puzzle-id="${puzzleId}"]`);
+    lockedLinks.forEach(link => {
+        link.href = link.getAttribute("data-real-href"); 
+        link.removeAttribute("data-real-href");          
+        link.target = "_blank";
+        
+        const innerLock = link.querySelector(".inner-lock"); 
+        if(innerLock) innerLock.remove();
+    });
+}
+
+// Kiểm tra khi vừa tải trang, nếu đã giải mã rồi thì thả link ra luôn
+window.checkUnlockedPuzzles = function() {
+  document.querySelectorAll("a[data-real-href]").forEach(link => {
+      const puzzleId = link.dataset.puzzleId;
+      if (puzzleId && localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
+          unlockCharacterLinks(puzzleId);
+      }
+  });
 }

@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -17,29 +19,35 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400..700&family=Fuzzy+Bubbles:wght@400;700&family=Grenze:ital,wght@0,100..900;1,100..900&family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Quintessential&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400..700&family=Fuzzy+Bubbles:wght@400;700&family=Grenze:ital,wght@0,100..900;1,100..900&family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Quintessential&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mansalva&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
-    <title>Tiệm sách nhỏ của Evans</title>
+    <title>Tiệm Sách Nhỏ Của Evans</title>
     <link rel="icon" type="image/png" href="./images/icon.png" />
   </head>
 
   <body>
     <nav class="navbar">
-      <!-- Nút 3 gạch góc trái màn hình -->
-      <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <div class="nav-left-group">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <a href="index.html" class="nav-logo">
+          <span>Tiệm Sách Evans</span>
+        </a>
+      </div>
 
-      <!-- Logo / Brand -->
-      <a href="index.html" class="nav-logo">
-        <span>Tiệm Sách Evans</span>
-      </a>
-
-      <!-- Danh sách các link -->
       <ul class="nav-menu" id="navMenu">
-        <!-- Trỏ về file index.html -->
         <li class="nav-item">
           <a href="index.html" class="nav-link">Trang Chủ</a>
         </li>
@@ -52,7 +60,27 @@
         <li class="nav-item">
           <a href="station.html" class="nav-link">Trạm Dừng Chân</a>
         </li>
+        <li class="nav-item mobile-nav-btn-item">
+          <button type="button" class="nav-auth-btn mobile-menu-btn" onclick="handleNavAuthClick()">
+            <i class="fa-solid fa-feather"></i> <span>Hồ Sơ Độc Giả</span>
+          </button>
+        </li>
+        <li class="nav-item mobile-nav-btn-item">
+          <button type="button" class="theme-mobile-menu-btn mobile-menu-btn" onclick="toggleThemeMode()">
+            <i class="bi bi-moon-stars-fill" id="mobileMenuThemeIcon"></i>
+            <span id="mobileMenuThemeText">Chế Độ Ban Đêm</span>
+          </button>
+        </li>
       </ul>
+
+      <div class="nav-right-actions">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleThemeMode()" title="Chuyển chế độ Ngày / Đêm">
+          <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+        </button>
+        <button type="button" class="nav-auth-btn" id="navAuthBtn" onclick="handleNavAuthClick()">
+          <i class="fa-solid fa-feather"></i> <span>Đóng Mộc / Nhận Thẻ</span>
+        </button>
+      </div>
     </nav>
 
     <!-- Widget Trình phát nhạc dạng Capsule ngang -->
@@ -356,14 +384,17 @@
             </div>
           </div>
         </div>
-        <!-- ARASHI「嵐」  -->
+        <!-- ARASHI「嵐」 (ĐÃ KHÓA) -->
         <div
           class="bot-card"
+          data-locked="true"
+          data-puzzle-id="arashi"
           data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Arashi<br>!profile : Xem trang cá nhân của Arashi"
         >
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Arashi「嵐」</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">Nhật Bản / R21 / Khiêu Dâm / SEX / NSFW</div>
             <p class="bot-desc">"Góc quay này, tuyệt đẹp."</p>
@@ -376,13 +407,16 @@
                 rel="noopener noreferrer"
                 >Story</a
               >
+              <!-- Nút Google AI Studio bị khóa, chờ giải mã -->
               <a
-                href="https://aistudio.google.com/app/prompts/1SdLaiTSPGgjMGzAC2ijnrJ8UhrUMvQFq"
+                data-real-href="https://aistudio.google.com/app/prompts/1SdLaiTSPGgjMGzAC2ijnrJ8UhrUMvQFq"
+                data-puzzle-id="arashi"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Google AI Studio</a
+                style="cursor: pointer;"
               >
+                Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
               <a
                 href="https://www.dokichat.club/vi/role/d4d92134-97fa-4d82-845e-0b7060e1d9b5"
                 class="chip-btn"
@@ -413,38 +447,30 @@
             </div>
 
             <div class="feedback-section">
-              <div class="feedback-list">
-              </div>
+              <div class="feedback-list"></div>
               <div class="feedback-input-box">
                 <div class="input-row">
-                  <input
-                    type="text"
-                    class="book-input input-name"
-                    placeholder="Tên lữ khách..."
-                  />
+                  <input type="text" class="book-input input-name" placeholder="Tên lữ khách..." />
                 </div>
                 <div class="input-row">
-                  <input
-                    type="text"
-                    class="book-input input-content"
-                    placeholder="Viết đôi lời cảm nhận..."
-                  />
-                  <button class="btn-send" onclick="sendFeedback(this)">
-                    Gửi
-                  </button>
+                  <input type="text" class="book-input input-content" placeholder="Viết đôi lời cảm nhận..." />
+                  <button class="btn-send" onclick="sendFeedback(this)">Gửi</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <!-- DELMARE'S ABYSS -->
+        <!-- DELMARE'S ABYSS (ĐÃ KHÓA) -->
         <div
           class="bot-card"
+          data-locked="true"
+          data-puzzle-id="delmare"
           data-toc="!tieptuc: Tiếp tục cốt truyện<br>!npc : Hiển thị toàn bộ thông tin của Người chơi trong ván đấu<br>!npc + [Tên] : Hiển thị toàn bộ thông tin của Người chơi được chỉ định trong ván đấu"
         >
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Delmare's Abyss</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">Tâm Lý / Đấu Trí / Sinh Tồn</div>
             <p class="bot-desc">
@@ -461,12 +487,14 @@
                 >Story</a
               >
               <a
-                href="https://aistudio.google.com/app/prompts/1s4m__wYTx9LkiqHvYAlgqF3CUaHd2VeQ"
+                data-real-href="https://aistudio.google.com/app/prompts/1s4m__wYTx9LkiqHvYAlgqF3CUaHd2VeQ"
+                data-puzzle-id="delmare"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Google AI Studio</a
+                style="cursor: pointer;"
               >
+                Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
             </div>
 
             <div class="bot-actions">
@@ -499,9 +527,7 @@
                     class="book-input input-content"
                     placeholder="Viết đôi lời cảm nhận..."
                   />
-                  <button class="btn-send" onclick="sendFeedback(this)">
-                    Gửi
-                  </button>
+                  <button class="btn-send" onclick="sendFeedback(this)">Gửi</button>
                 </div>
               </div>
             </div>
@@ -574,14 +600,17 @@
             </div>
           </div>
         </div>
-        <!-- DƯƠNG KHẮC HUY  -->
+        <!-- DƯƠNG KHẮC HUY (ĐÃ KHÓA) -->
         <div
           class="bot-card"
+          data-locked="true"
+          data-puzzle-id="huy"
           data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Dương Khắc Huy<br>!profile : Kiểm tra trang cá nhân của Dương Khắc Huy"
         >
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Dương Khắc Huy</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Việt Nam / R21 / FwB / Playboy / Badboy / Redflag / Trêu Đùa / Tâm Lý / NSFW
@@ -599,13 +628,16 @@
                 rel="noopener noreferrer"
                 >Story</a
               >
+              <!-- Nút Google AI Studio bị khóa, chờ giải mã -->
               <a
-                href="https://aistudio.google.com/app/prompts/1X6f1BobTbkhFBYp_HE_53KwA-CfkFz5m"
+                data-real-href="https://aistudio.google.com/app/prompts/1X6f1BobTbkhFBYp_HE_53KwA-CfkFz5m"
+                data-puzzle-id="huy"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Google AI Studio</a
+                style="cursor: pointer;"
               >
+                Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
             </div>
 
             <div class="bot-actions">
@@ -939,7 +971,7 @@
             </div>
           </div>
         </div>
-        <!-- KHƯƠNG TỊCH NGÔN  -->
+        <!-- KHƯƠNG TỊCH NGÔN (ĐÃ KHÓA)  -->
         <div
           class="bot-card"
           data-toc="!tieptuc : Tiếp tục cốt truyện<br>!diendan : Truy cập diễn đàn của Trường Đại học Vân Nam<br>!cfs : Truy cập trang Confession của Trường Đại học Vân Nam<br>!phone : Kiểm tra điện thoại của Khương Tịch Ngôn<br>!tarot : Bốc bài Tarot<br>!mnf : Tiếp nhận thông điệp vũ trụ<br>!hrs : Tra cứu Tử vi Cung hoàng đạo hôm nay của bạn<br>!desire : Xâm nhập giấc mơ thầm kín của Khương Tịch Ngôn (NSFW only)"
@@ -947,6 +979,7 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Khương Tịch Ngôn</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Trung Quốc / TXVT / Bạn Thân Anh Trai / Healing / Soft
@@ -971,12 +1004,14 @@
                 >Google AI Studio</a
               >
               <a
-                href="https://aistudio.google.com/app/prompts/1HLgVcH2FmC2h101S7Y5vo7vcicjYlJwX"
+                data-real-href="https://aistudio.google.com/app/prompts/1HLgVcH2FmC2h101S7Y5vo7vcicjYlJwX"
+                data-puzzle-id="ngon"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >🔞 Google AI Studio</a
+                style="cursor: pointer;"
               >
+                🔞 Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
             </div>
 
             <div class="bot-actions">
@@ -1609,14 +1644,15 @@
             </div>
           </div>
         </div>
-        <!-- SALFOZZIEL -->
+        <!-- SALFOZZIEL (ĐÃ KHÓA)-->
         <div
-          class="bot-card"
+          class="bot-card" data-puzzle-id="salfozziel"
           data-toc="!tieptuc : Tiếp tục cốt truyện<br>!inv : Kiểm tra túi đồ của bạn<br>!diary : Đọc nhật ký của Salfozziel"
         >
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Salfozziel</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Hệ Thống / Đấu Trí / Tâm Lý / Trò Chơi / Cá Cược
@@ -1641,12 +1677,14 @@
                 >Google AI Studio</a
               >
               <a
-                href="https://aistudio.google.com/app/prompts/1HcKrYYP3fMknzqeEDzf9Tvhx6E6mafUf"
+                data-real-href="https://aistudio.google.com/app/prompts/1HcKrYYP3fMknzqeEDzf9Tvhx6E6mafUf"
+                data-puzzle-id="salfozziel"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >🔞 Google AI Studio</a
+                style="cursor: pointer;"
               >
+                🔞 Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
               <a
                 href="https://www.dokichat.club/vi/role/45d75d50-1cff-4cbd-bcd8-8f6e1c22440f"
                 class="chip-btn"
@@ -1701,19 +1739,16 @@
             </div>
           </div>
         </div>
-        <!-- SEOL MIN-JAE  -->
-        <div class="bot-card">
-          <div
-            class="bot-body"
-            data-toc="!tieptuc : Tiếp tục cốt truyện<br>!news : Xem tin tức trong ngày"
-          >
+        <!-- SEOL MIN-JAE (ĐÃ KHÓA) -->
+        <div class="bot-card" data-puzzle-id="seol" data-toc="!tieptuc : Tiếp tục cốt truyện<br>!news : Xem tin tức trong ngày">
+          <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Seol Min-Jae</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">Hàn Quốc / Tội Phạm / Cảnh Sát / Đấu Trí / Điều Tra</div>
             <p class="bot-desc">
-              "Nhìn cậu, không giống như một người sống trong bóng tối – lẫn ánh
-              sáng."
+              "Nhìn cậu, không giống như một người sống trong bóng tối – lẫn ánh sáng."
             </p>
             <div class="bot-divider"></div>
             <div class="bot-chips">
@@ -1724,13 +1759,16 @@
                 rel="noopener noreferrer"
                 >Story</a
               >
+              <!-- Nút Google AI Studio bị khóa, chờ giải mã -->
               <a
-                href="https://aistudio.google.com/app/prompts/1S--bQ8U-hkbzI4OrPxY4rd_KknnO53t7"
+                data-real-href="https://aistudio.google.com/app/prompts/1S--bQ8U-hkbzI4OrPxY4rd_KknnO53t7"
+                data-puzzle-id="seol"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Google AI Studio</a
+                style="cursor: pointer;"
               >
+                Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
               <a
                 href="https://www.dokichat.club/role/56c75918-ec98-422a-85af-607338e83930"
                 class="chip-btn"
@@ -1754,25 +1792,14 @@
             </div>
 
             <div class="feedback-section">
-              <div class="feedback-list">
-              </div>
+              <div class="feedback-list"></div>
               <div class="feedback-input-box">
                 <div class="input-row">
-                  <input
-                    type="text"
-                    class="book-input input-name"
-                    placeholder="Tên lữ khách..."
-                  />
+                  <input type="text" class="book-input input-name" placeholder="Tên lữ khách..." />
                 </div>
                 <div class="input-row">
-                  <input
-                    type="text"
-                    class="book-input input-content"
-                    placeholder="Viết đôi lời cảm nhận..."
-                  />
-                  <button class="btn-send" onclick="sendFeedback(this)">
-                    Gửi
-                  </button>
+                  <input type="text" class="book-input input-content" placeholder="Viết đôi lời cảm nhận..." />
+                  <button class="btn-send" onclick="sendFeedback(this)">Gửi</button>
                 </div>
               </div>
             </div>
@@ -1995,14 +2022,15 @@
             </div>
           </div>
         </div>
-        <!-- PHÓ KỲ TÂM  -->
+        <!-- PHÓ KỲ TÂM (ĐÃ KHÓA)  -->
         <div
-          class="bot-card"
+          class="bot-card" data-puzzle-id="tam"
           data-toc="!tieptuc : Tiếp tục cốt truyện<br>!diendan : Truy cập diễn đàn của Trường Đại học Vân Nam<br>!cfs : Truy cập trang Confession của Trường Đại học Vân Nam<br>!phone : Kiểm tra điện thoại của Phó Kỳ Tâm<br>!tarot : Bốc bài Tarot<br>!mnf : Tiếp nhận thông điệp vũ trụ<br>!hrs : Tra cứu Tử vi Cung hoàng đạo hôm nay của bạn<br>!desire : Xâm nhập giấc mơ thầm kín của Phó Kỳ Tâm (NSFW only)"
         >
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Phó Kỳ Tâm</h3>
+              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Trung Quốc / TXVT / Tiền Bối / Đọc Suy Nghĩ / Theo Đuổi / Healing / Soft
@@ -2027,12 +2055,14 @@
                 >Google AI Studio</a
               >
               <a
-                href="https://aistudio.google.com/app/prompts/1kFMYje2E9OJp_bGAGJAbYUWs_pt9Q_P9"
+                data-real-href="https://aistudio.google.com/app/prompts/1kFMYje2E9OJp_bGAGJAbYUWs_pt9Q_P9"
+                data-puzzle-id="tam"
                 class="chip-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                >🔞 Google AI Studio</a
+                style="cursor: pointer;"
               >
+                🔞 Google AI Studio
+                <i class="bi bi-lock-fill inner-lock" style="margin-left: 3px; opacity: 0.7;"></i>
+              </a>
               <a
                 href="https://www.dokichat.club/vi/role/f2ab896c-2c93-43cd-9590-82e80aee88cb"
                 class="chip-btn"
@@ -2367,6 +2397,47 @@
         </div>
       </div>
       </section>
+
+    <!-- ==================== MODAL GIẢI MÃ NHÂN VẬT ĐÃ KHÓA ==================== -->
+    <div class="diploma-modal-overlay" id="puzzleModal" style="z-index: 9999999 !important;" onmousedown="if(event.target === this) closePuzzleModal()">
+      <div class="diploma-modal-card book-modal-card" style="max-width: 420px; padding: 25px;">
+        <button class="modal-close" onclick="closePuzzleModal()" style="position: absolute; top: 12px; right: 18px; background: transparent; border: none; font-size: 26px; color: #7a5230; cursor: pointer;">&times;</button>
+
+        <div class="book-modal-header">
+          <h3 class="modal-title">Vực Sâu Danh Dự</h3>
+          <p class="modal-subtitle">Delmare's Abyss</p>
+        </div>
+
+        <!-- Khung hiển thị câu đố -->
+        <div class="book-hint-box" style="text-align: center; font-style: normal; font-family: 'Merriweather', serif; font-size: 0.9rem; color: #4a3a2c;">
+          <p style="margin-bottom: 12px; line-height: 1.6;">
+            Một kẻ bước đi vội.<br>
+            Chẳng mang an yên nào.<br>
+            Chỉ toàn những nỗi đau.<br>
+            Ký ức nhuộm màu sầu.<br>
+            Chờ đợi giấc mộng tan.<br>
+            Tỉnh lại ám ảnh hoài.
+          </p>
+          <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 12px 0;">
+          <p style="font-style: italic; color: #8b3a3a; font-size: 0.85rem; line-height: 1.4;">
+            "Sự thật về một người không nằm ở khởi đầu, cũng chẳng ở kết cục. Con người thật luôn bị kẹp chặt ở chính giữa những lằn ranh."
+          </p>
+        </div>
+
+        <div class="book-form-group">
+          <input type="text" id="puzzlePasscodeInput" class="book-input" placeholder="ĐÁP ÁN..." style="text-align: center; font-weight: bold; letter-spacing: 1px;" onkeypress="if(event.key === 'Enter') verifyPuzzleCode()">
+          <div style="font-size: 0.75rem; color: #7a6b63; margin-top: 8px; text-align:center;">
+            * Gợi ý định dạng: 6 chữ cái, viết liền không dấu
+          </div>
+        </div>
+
+        <div id="puzzleErrorMsg" class="diploma-error-msg"></div>
+
+        <div class="book-modal-actions" style="justify-content: center; margin-top: 15px;">
+          <button class="btn-book-confirm" onclick="verifyPuzzleCode()" style="width: 100%;">Giải Mã</button>
+        </div>
+      </div>
+    </div>
       
       <!-- ==================== MODAL MỤC LỤC & CẨM NANG LỆNH ==================== -->
       <div class="modal-overlay" id="botModal">

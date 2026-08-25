@@ -42,33 +42,58 @@
 
   <body>
     <nav class="navbar">
-      <!-- Nút 3 gạch góc trái màn hình -->
-      <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <!-- Cụm bên trái: Nút 3 gạch & Logo -->
+      <div class="nav-left-group">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <a href="index.html" class="nav-logo">
+          <span>Tiệm Sách Evans</span>
+        </a>
+      </div>
 
-      <!-- Logo / Brand -->
-      <a href="index.html" class="nav-logo">
-        <span>Tiệm Sách Evans</span>
-      </a>
-
-      <!-- Danh sách các link -->
+      <!-- Menu trượt Mobile / Thanh điều hướng PC -->
       <ul class="nav-menu" id="navMenu">
         <li class="nav-item">
           <a href="index.html" class="nav-link">Trang Chủ</a>
         </li>
         <li class="nav-item">
           <a href="characters.html" class="nav-link">Tủ Sách Nhân Vật</a>
-        </li>
+            </li>
         <li class="nav-item">
           <a href="about.html" class="nav-link">Tác Giả</a>
         </li>
         <li class="nav-item">
           <a href="station.html" class="nav-link">Trạm Dừng Chân</a>
         </li>
+
+        <!-- 1. NÚT ĐÓNG MỘC: Nằm dưới Trạm Dừng Chân khi mở Hamburger -->
+        <li class="nav-item mobile-nav-btn-item">
+          <button type="button" class="nav-auth-btn mobile-menu-btn" onclick="handleNavAuthClick()">
+            <i class="fa-solid fa-feather"></i> <span>Đóng Mộc / Nhận Thẻ</span>
+          </button>
+        </li>
+
+        <!-- 2. NÚT THEME CÓ CHỮ MÔ TẢ: Nằm dưới nút Đóng Mộc khi mở Hamburger -->
+        <li class="nav-item mobile-nav-btn-item">
+          <button type="button" class="theme-mobile-menu-btn mobile-menu-btn" onclick="toggleThemeMode()">
+            <i class="bi bi-moon-stars-fill" id="mobileMenuThemeIcon"></i>
+            <span id="mobileMenuThemeText">Chế Độ Ban Đêm</span>
+          </button>
+        </li>
       </ul>
+
+      <!-- Cụm công cụ bên phải (Dành riêng cho Laptop/Tablet) -->
+      <div class="nav-right-actions">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleThemeMode()" title="Chuyển chế độ Ngày / Đêm">
+          <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+        </button>
+        <button type="button" class="nav-auth-btn" id="navAuthBtn" onclick="handleNavAuthClick()">
+          <i class="fa-solid fa-feather"></i> <span>Đóng Mộc / Nhận Thẻ</span>
+        </button>
+      </div>
     </nav>
 
     <!-- Widget Trình phát nhạc dạng Capsule ngang -->
@@ -410,6 +435,239 @@
         </button>
       </div>
     </footer>
+
+    <!-- ==================== MODAL THẺ ĐỘC GIẢ / AUTH ==================== -->
+    <div class="modal-overlay" id="authModal">
+      <div class="auth-card-vintage">
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+    
+        <!-- GIAO DIỆN 1: KHI CHƯA ĐĂNG NHẬP (FORM DUY NHẤT) -->
+        <div id="authFormState">
+          <div class="auth-header">
+            <div class="auth-stamp"><i class="fa-solid fa-stamp"></i> THẺ ĐỘC GIẢ</div>
+            <h3 class="auth-title" id="authFormTitle">Đăng Nhập Tiệm Sách</h3>
+            <p class="auth-subtitle">Ghi danh lữ khách để lưu giữ hành trình tại Tiệm Sách</p>
+          </div>
+
+          <form id="authForm" onsubmit="handleAuthSubmit(event)">
+            <!-- 1. Tên tài khoản / Username -->
+            <div class="auth-input-group">
+              <label>Tên tài khoản / Biệt danh:</label>
+              <input 
+                type="text" 
+                id="authUsernameInput" 
+                class="auth-input" 
+                required 
+                placeholder="Nhập tên tài khoản (viết liền không dấu)..." 
+              />
+            </div>
+
+            <!-- 2. Mật khẩu có nút xem -->
+            <div class="auth-input-group">
+              <label>Mật khẩu:</label>
+              <div class="password-input-wrapper">
+                <input 
+                  type="password" 
+                  id="authPasswordInput" 
+                  class="auth-input" 
+                  required 
+                  minlength="6" 
+                  placeholder="Tối thiểu 6 ký tự..." 
+                />
+                <button 
+                  type="button" 
+                  class="btn-toggle-pw" 
+                  onclick="togglePasswordVisibility('authPasswordInput', this)" 
+                  title="Ẩn/Hiện mật khẩu"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Xác nhận lại mật khẩu (chỉ hiện khi Đăng Ký) -->
+            <div class="auth-input-group" id="authConfirmPwGroup" style="display: none;">
+              <label>Xác nhận lại mật khẩu:</label>
+              <div class="password-input-wrapper">
+                <input 
+                  type="password" 
+                  id="authConfirmPasswordInput" 
+                  class="auth-input" 
+                  placeholder="Nhập lại mật khẩu..." 
+                />
+                <button 
+                  type="button" 
+                  class="btn-toggle-pw" 
+                  onclick="togglePasswordVisibility('authConfirmPasswordInput', this)" 
+                  title="Ẩn/Hiện mật khẩu"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="auth-input-group" id="authForgotPwGroup" style="text-align: right; margin-top: -6px; margin-bottom: 6px;">
+              <a href="javascript:void(0);" onclick="toggleForgotPasswordNotice()" style="font-size: 0.78rem; color: #8b3a3a; text-decoration: underline; font-family: 'Merriweather', serif;">Quên mật khẩu?</a>
+            </div>
+
+            <div id="forgotPasswordNotice" style="display: none; font-size: 0.8rem; color: #7a6b63; background: rgba(139, 58, 58, 0.05); border: 1px dashed #8b3a3a; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; line-height: 1.4; text-align: left; font-family: 'Merriweather', serif;">
+              <i class="fa-solid fa-circle-info" style="color: #8b3a3a; margin-right: 4px;"></i> Nếu bạn quên mật khẩu, vui lòng liên hệ Chủ tiệm Evans kèm theo minh chứng tài khoản để được cấp lại mật khẩu mới.
+            </div>
+
+            <button type="submit" id="authSubmitBtn" class="auth-submit-btn">
+              <i class="fa-solid fa-key"></i> <span id="authSubmitBtnText">Xác Nhận Đăng Nhập</span>
+            </button>
+          </form>
+
+          <div class="auth-switch-box">
+            <span id="authSwitchText">Chưa có thẻ độc giả?</span>
+            <button type="button" class="auth-switch-btn" id="authSwitchBtn" onclick="toggleAuthMode()">Đăng ký nhận thẻ</button>
+          </div>
+        </div>
+
+        <!-- GIAO DIỆN 2: KHI ĐÃ ĐĂNG NHẬP (HỒ SƠ & SỬA TÊN TRỰC TIẾP) -->
+        <div id="authProfileState" style="display: none;">
+          <div class="auth-header">
+            <div class="auth-stamp"><i class="bi bi-patch-check-fill"></i> ĐÃ CHỨNG THỰC</div>
+            <h3 class="auth-title">Hồ Sơ Lữ Khách</h3>
+            <p class="auth-subtitle">Thông tin lữ khách đồng hành cùng Chủ tiệm Evans</p>
+          </div>
+
+          <div class="profile-avatar-wrapper">
+            <div class="profile-avatar-frame">
+              <img id="userAvatarImg" src="./images/cat_icon.jpg" alt="Avatar" />
+              <label for="avatarFileInput" class="avatar-upload-badge" title="Tải ảnh avatar mới">
+                <i class="fa-solid fa-camera"></i>
+              </label>
+            </div>
+            <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)" />
+          </div>
+
+          <div class="profile-info-box">
+            <!-- Chế độ xem tên -->
+            <div class="profile-info-row" id="nameDisplayRow">
+              <span class="info-label">Danh xưng:</span>
+              <strong id="profileDisplayName" class="info-val">Lữ khách</strong>
+              <button type="button" class="btn-edit-inline" onclick="startEditName()" title="Sửa tên">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+            </div>
+
+            <!-- Chế độ sửa tên trực tiếp Inline -->
+            <div class="profile-info-row edit-mode" id="nameEditRow" style="display: none;">
+              <input type="text" id="inlineNameInput" class="inline-name-input" placeholder="Nhập tên mới..." />
+              <div class="inline-edit-actions">
+                <button type="button" class="btn-inline-save" onclick="saveInlineName()"><i class="bi bi-check-lg"></i> Lưu</button>
+                <button type="button" class="btn-inline-cancel" onclick="cancelEditName()"><i class="bi bi-x-lg"></i> Hủy</button>
+              </div>
+            </div>
+
+            <div class="profile-info-row">
+              <span class="info-label">Tài khoản:</span>
+              <span id="profileDisplayEmail" class="info-val">...</span>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button type="button" class="btn-logout" onclick="handleLogout()">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng Xuất
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL GIẢI MÃ NHÂN VẬT ĐÃ KHÓA ==================== -->
+    <div class="diploma-modal-overlay" id="puzzleModal" style="z-index: 9999999 !important;" onmousedown="if(event.target === this) closePuzzleModal()">
+      <div class="diploma-modal-card book-modal-card" style="max-width: 420px; padding: 25px;">
+        <button class="modal-close" onclick="closePuzzleModal()" style="position: absolute; top: 12px; right: 18px; background: transparent; border: none; font-size: 26px; color: #7a5230; cursor: pointer;">&times;</button>
+
+        <div class="book-modal-header">
+          <h3 class="modal-title">Vực Sâu Danh Dự</h3>
+          <p class="modal-subtitle">Delmare's Abyss</p>
+        </div>
+
+        <!-- Khung hiển thị câu đố -->
+        <div class="book-hint-box" style="text-align: center; font-style: normal; font-family: 'Merriweather', serif; font-size: 0.9rem; color: #4a3a2c;">
+          <p style="margin-bottom: 12px; line-height: 1.6;">
+            Một kẻ bước đi vội.<br>
+            Chẳng mang an yên nào.<br>
+            Chỉ toàn những nỗi đau.<br>
+            Ký ức nhuộm màu sầu.<br>
+            Chờ đợi giấc mộng tan.<br>
+            Tỉnh lại ám ảnh hoài.
+          </p>
+          <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 12px 0;">
+          <p style="font-style: italic; color: #8b3a3a; font-size: 0.85rem; line-height: 1.4;">
+            "Sự thật về một người không nằm ở khởi đầu, cũng chẳng ở kết cục. Con người thật luôn bị kẹp chặt ở chính giữa những lằn ranh."
+          </p>
+        </div>
+
+        <div class="book-form-group">
+          <input type="text" id="puzzlePasscodeInput" class="book-input" placeholder="ĐÁP ÁN CỦA BẠN" style="text-align: center; font-weight: bold; letter-spacing: 1px;" onkeypress="if(event.key === 'Enter') verifyPuzzleCode()">
+          <div style="font-size: 0.75rem; color: #7a6b63; margin-top: 8px; text-align:center;">
+            * Gợi ý định dạng: 6 chữ cái, viết liền không dấu
+          </div>
+        </div>
+
+        <div id="puzzleErrorMsg" class="diploma-error-msg"></div>
+
+        <div class="book-modal-actions" style="justify-content: center; margin-top: 15px;">
+          <button class="btn-book-confirm" onclick="verifyPuzzleCode()" style="width: 100%;">Giải Mã</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL CHI TIẾT NHÂN VẬT (DÙNG CHUNG) ==================== -->
+    <div class="modal-overlay" id="botModal">
+      <div class="modal-card modal-card-wide">
+        <button class="modal-close" id="modalClose">&times;</button>
+
+        <div class="modal-body modal-grid-layout">
+          <!-- CỘT TRÁI: THÔNG TIN NHÂN VẬT & TRIGGER COMMANDS -->
+          <div class="modal-left-col">
+            <div class="modal-header-row">
+              <h2 class="bot-name" id="modalTitle">Tên Sách</h2>
+              <div class="modal-vote-widget" id="modalVoteBtn" onclick="toggleLike(this)" title="Thả tim / Vote nhân vật">
+                <span class="modal-heart-icon"><i class="bi bi-heart-fill"></i></span>
+                <span id="modalVoteCount">0</span>
+              </div>
+            </div>
+
+            <div class="bot-subtitle" id="modalSubtitle">Thể loại</div>
+
+            <div class="modal-scroll-area">
+              <div class="modal-section-box">
+                <h4 class="modal-section-heading" id="modalTocHeading">Trigger Commands</h4>
+                <div id="modalToc" class="modal-text-content"></div>
+              </div>
+
+              <div class="modal-section-box" id="openingSectionBox" style="display: none; margin-top: 14px;">
+                <h4 class="modal-section-heading" id="modalOpeningScenesHeading">Opening Scenes</h4>
+                <div id="modalOpeningScenes" class="modal-text-content"></div>
+              </div>
+            </div>
+
+            <div class="bot-chips" id="modalChipsContainer"></div>
+          </div>
+
+          <!-- CỘT PHẢI: LỜI NHẮN / FEEDBACK & FORM GỬI TRỰC TIẾP -->
+          <div class="modal-right-col" id="modalFeedbackContainer">
+            <h4 class="modal-section-heading">Lời nhắn & Cảm nhận</h4>
+
+            <div class="dynamic-feedback-list" id="dynamicFeedbackList">
+              <p class="no-feedback-text">Chưa có lời nhắn nào cho nhân vật này. Hãy là người đầu tiên gửi feedback!</p>
+            </div>
+
+            <div class="feedback-form-box">
+              <input type="text" id="feedbackAuthor" class="feedback-input" placeholder="Tên lữ khách..." />
+              <textarea id="feedbackContent" class="feedback-textarea" placeholder="Viết đôi lời cảm nhận..."></textarea>
+              <button type="button" id="submitFeedbackBtn" class="feedback-submit-btn">Gửi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="script.js" defer></script>
   </body>

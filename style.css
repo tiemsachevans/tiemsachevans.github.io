@@ -215,6 +215,365 @@ header nav a:not(.nav-logo):hover,
   color: #3b82f6 !important;
 }
 
+/* --- BỐ CỤC CỤM NAVBAR TRÊN MOBILE & PC --- */
+.nav-left-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10002;
+}
+
+/* --- NÚT ĐĂNG NHẬP TRÊN NAVBAR --- */
+.nav-auth-btn {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(139, 58, 58, 0.35)) !important;
+  border: 1px solid rgba(212, 175, 55, 0.7) !important;
+  color: #fff8e7 !important;
+  padding: 6px 15px !important;
+  border-radius: 24px !important;
+  font-family: "Charm", cursive !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.3s ease !important;
+}
+
+.nav-auth-btn:hover {
+  background: #d4af37 !important;
+  color: #1a1410 !important;
+  transform: translateY(-2px);
+}
+
+.nav-auth-avatar-mini {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #d4af37;
+}
+
+/* Mặc định trên Laptop: Ẩn mục theme trong menu */
+.mobile-menu-theme-item {
+  display: none;
+}
+
+/* --- WRAPPER INPUT PASSWORD CÓ NÚT CON MẮT --- */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .auth-input {
+  padding-right: 40px !important;
+}
+
+.btn-toggle-pw {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #7a6b63;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.btn-toggle-pw:hover {
+  color: #8b3a3a;
+}
+
+/* --- CHỈNH SỬA TÊN TRỰC TIẾP INLINE --- */
+.inline-name-input {
+  flex: 1;
+  padding: 6px 10px;
+  background: #fff;
+  border: 1.5px solid #8b3a3a;
+  border-radius: 4px;
+  font-family: "Merriweather", serif;
+  font-size: 0.88rem;
+  color: #2b1c11;
+  outline: none;
+}
+
+.inline-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.btn-inline-save {
+  background: #8b3a3a;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-inline-save:hover {
+  background: #a54343;
+}
+
+.btn-inline-cancel {
+  background: #dcd0bf;
+  color: #2b1c11;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-inline-cancel:hover {
+  background: #c8bca7;
+}
+
+/* --- THẺ ĐỘC GIẢ VINTAGE MODAL --- */
+.auth-card-vintage {
+  position: relative;
+  background: #fdfbf7;
+  border: 1px solid #dcd0bf;
+  border-left: 14px solid #8b3a3a;
+  border-radius: 4px 12px 12px 4px;
+  width: 90%;
+  max-width: 440px;
+  padding: 30px 24px 24px;
+  box-shadow: 3px 0 0 #f0e6d6, 6px 0 0 #e2d4c0, 0 20px 40px rgba(0, 0, 0, 0.6);
+  font-family: "Merriweather", serif;
+  color: #2b1c11;
+  box-sizing: border-box;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-stamp {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #8b3a3a;
+  background: rgba(139, 58, 58, 0.08);
+  border: 1.5px dashed #8b3a3a;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.auth-title {
+  font-family: "Playfair Display", "Charm", serif;
+  font-size: 1.4rem;
+  color: #2b1c11;
+  margin: 0 0 4px;
+}
+
+.auth-subtitle {
+  font-size: 0.8rem;
+  color: #7a6b63;
+  font-style: italic;
+  margin: 0;
+}
+
+.auth-input-group {
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.auth-input-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: bold;
+  color: #4a3b32;
+  margin-bottom: 5px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #faf6f0;
+  border: 1px solid #d4c5b9;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #2c221e;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.auth-input:focus {
+  border-color: #8b3a3a;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(139, 58, 58, 0.15);
+}
+
+.auth-submit-btn {
+  width: 100%;
+  padding: 11px;
+  background: #8b3a3a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  box-shadow: 0 4px 10px rgba(139, 58, 58, 0.25);
+  transition: all 0.2s;
+}
+
+.auth-submit-btn:hover {
+  background: #a54343;
+  transform: translateY(-2px);
+}
+
+.auth-switch-box {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #7a6b63;
+  border-top: 1px dashed #e3d5c6;
+  padding-top: 12px;
+}
+
+.auth-switch-btn {
+  background: none;
+  border: none;
+  color: #8b3a3a;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+/* GIAO DIỆN HỒ SƠ & UPLOAD AVATAR */
+.profile-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.profile-avatar-frame {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 3px solid #d4af37;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.profile-avatar-frame img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-upload-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #8b3a3a;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 2px solid #fdfbf7;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.avatar-upload-badge:hover {
+  transform: scale(1.15);
+  background: #d4af37;
+  color: #1a1a1a;
+}
+
+.profile-info-box {
+  background: #f5eedf;
+  border: 1px dashed #c8bca7;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+}
+
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.profile-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #7a6b63;
+  width: 80px;
+}
+
+.info-val {
+  color: #2b1c11;
+  flex: 1;
+  word-break: break-all;
+}
+
+.btn-edit-inline {
+  background: none;
+  border: none;
+  color: #8b3a3a;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-logout {
+  background: rgba(139, 58, 58, 0.1);
+  color: #8b3a3a;
+  border: 1px solid rgba(139, 58, 58, 0.3);
+  padding: 8px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: #8b3a3a;
+  color: #fff;
+}
+
 /* --- NÚT HAMBURGER --- */
 .menu-toggle {
   display: none;
@@ -3914,6 +4273,1499 @@ body.modal-open {
   }
 }
 
+/* Canvas hạt bụi bay toàn màn hình */
+#dustCanvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none !important; /* Không chặn click chuột vào các nút bên dưới */
+  z-index: 9999 !important;        /* Nổi lên trên nền và các ô card */
+  opacity: 0.85;
+}
+
+/* ==================== VINTAGE DARK MODE THEME (ELEGANT & HIGH CONTRAST) ==================== */
+.theme-toggle-btn {
+  background: rgba(212, 175, 55, 0.15) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  color: #fff8e7 !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 1.1rem !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.theme-toggle-btn:hover {
+  background: #d4af37 !important;
+  color: #1a1410 !important;
+  transform: rotate(20deg) scale(1.08) !important;
+}
+
+/* 1. NÚT CHUYỂN ĐỔI THEME (FIX KHÔNG BỊ TRẮNG/CHỮ NHẬT) */
+body.dark-theme .theme-toggle-btn {
+  background: rgba(212, 175, 55, 0.25) !important;
+  border: 1.5px solid #d4af37 !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4) !important;
+}
+
+body.dark-theme .theme-toggle-btn i {
+  color: #ffd700 !important;
+}
+
+/* 2. NỀN CHÍNH & VĂN BẢN TOÀN TRANG */
+body.dark-theme {
+  background-color: #140f0c !important;
+  color: #f7ede2 !important;
+}
+
+/* 3. KHỐI TÂM THƯ, TOP 3 & KHÁM PHÁ (BỐ CỤC 3 CỘT TRANG CHỦ) */
+body.dark-theme .owner-letter-col,
+body.dark-theme .ranking-center-highlight,
+body.dark-theme .ranking-right,
+body.dark-theme .cfs-form-box {
+  background: linear-gradient(145deg, #241a14, #1a120d) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body.dark-theme .ranking-center-highlight {
+  border: 2px solid #d4af37 !important;
+  box-shadow: 0 10px 35px rgba(212, 175, 55, 0.3) !important;
+}
+
+body.dark-theme .letter-header h3,
+body.dark-theme .ranking-center-highlight > h3,
+body.dark-theme .ranking-right > h3,
+body.dark-theme .cfs-title {
+  color: #ffd700 !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* FIX ẢNH 3: CHỮ "THÂN ÁI" & TÂM THƯ CHỦ TIỆM */
+body.dark-theme .letter-scroll-paper {
+  background: #1c140f !important;
+  border: 1px dashed rgba(212, 175, 55, 0.4) !important;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.dark-theme .letter-greeting,
+body.dark-theme .letter-body p {
+  color: #fcefdc !important;
+}
+
+body.dark-theme .letter-date {
+  color: #e5b95d !important;
+}
+
+body.dark-theme .letter-signature span {
+  color: #e5cdb3 !important; /* Fix chữ "Thân ái" sáng rõ ràng */
+  font-size: 0.95rem !important;
+}
+
+body.dark-theme .signature-name {
+  color: #ffd700 !important;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* FIX ẢNH 2: NỀN TOP 3 RANKING NỊNH MẮT */
+body.dark-theme .ranking-card {
+  background: linear-gradient(135deg, #2b1f18 0%, #1f1611 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-theme .ranking-card:hover {
+  background: linear-gradient(135deg, #38281f 0%, #291d16 100%) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.25) !important;
+}
+
+body.dark-theme .ranking-card .char-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .ranking-card .char-title {
+  color: #d1b89d !important;
+}
+
+body.dark-theme .ranking-card .vote-count {
+  color: #ff7b7b !important;
+}
+
+/* FIX KHỐI RANDOM NHÂN VẬT */
+body.dark-theme .random-card-box {
+  background: linear-gradient(135deg, #261b14 0%, #1c130e 100%) !important;
+  border: 1px dashed rgba(212, 175, 55, 0.4) !important;
+}
+
+body.dark-theme .random-char-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .random-char-stats {
+  color: #ff8e8e !important;
+}
+
+body.dark-theme .random-feedbacks,
+body.dark-theme .random-hint-text {
+  color: #d1b89d !important;
+}
+
+/* FIX ẢNH 5: THẺ BOT SÁCH & HÀNG NÚT VOTE / FEEDBACK */
+body.dark-theme .bot-card {
+  background: linear-gradient(145deg, #33241c, #241a13) !important;
+  border: 1px solid #634733 !important;
+  border-left: 14px solid #c74141 !important;
+  box-shadow: 3px 0 0 #1b120e, 6px 0 0 #120c09, 8px 14px 28px rgba(0, 0, 0, 0.65) !important;
+}
+
+body.dark-theme .bot-card:hover {
+  border-color: #d4af37 !important;
+  box-shadow: 4px 0 0 #120c08, 8px 0 0 #0a0705, 12px 20px 35px rgba(212, 175, 55, 0.2) !important;
+}
+
+body.dark-theme .bot-body {
+  border-color: #543d2c !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+body.dark-theme .bot-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .bot-tags {
+  color: #e5b95d !important;
+}
+
+body.dark-theme .bot-desc {
+  color: #f7ede2 !important;
+}
+
+body.dark-theme .chip-btn {
+  background-color: #2e2017 !important;
+  color: #faebd7 !important;
+  border: 1px solid #5a3f2c !important;
+}
+
+body.dark-theme .chip-btn:hover {
+  background-color: #8b3a3a !important;
+  color: #ffffff !important;
+  border-color: #ffd700 !important;
+}
+
+body.dark-theme .lock-icon.bi-lock-fill,
+body.dark-theme .lock-icon.bi-lock {
+  color: #ffd700 !important;
+}
+
+/* SÁNG RÕ HÀNG VOTE VÀ GỬI THƯ / FEEDBACK DƯỚI CARD */
+body.dark-theme .bot-actions {
+  border-top: 1px solid rgba(212, 175, 55, 0.25) !important;
+}
+
+body.dark-theme .action-btn {
+  color: #e8d5c4 !important; /* Nâng sáng rõ ràng */
+}
+
+body.dark-theme .action-btn i {
+  color: #ff6b6b !important;
+}
+
+body.dark-theme .action-btn:hover {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .action-btn.btn-like {
+  color: #c7b39f !important;
+  opacity: 0.85;
+  transition: all 0.25s ease;
+}
+
+body.dark-theme .action-btn.btn-like .icon,
+body.dark-theme .action-btn.btn-like i {
+  color: #7d6556 !important; /* Tim màu xám gỗ mờ */
+  transition: all 0.25s ease;
+}
+
+body.dark-theme .action-btn.btn-like .like-count {
+  color: #c7b39f !important;
+}
+
+body.dark-theme .action-btn.btn-like .like-count {
+  color: #c7b39f !important;
+}
+
+/* Hover khi chưa like */
+body.dark-theme .action-btn.btn-like:hover .icon,
+body.dark-theme .action-btn.btn-like:hover i {
+  color: #ff8585 !important;
+  transform: scale(1.15);
+}
+
+/* Trạng thái ĐÃ LIKE: Đỏ Ruby Neon sáng rực + Viền phát sáng */
+body.dark-theme .action-btn.btn-like.liked {
+  color: #ff4d4d !important;
+  opacity: 1 !important;
+}
+
+body.dark-theme .action-btn.btn-like.liked .icon,
+body.dark-theme .action-btn.btn-like.liked i {
+  color: #ff3333 !important; /* Đỏ tươi rực rỡ */
+  filter: drop-shadow(0 0 6px rgba(255, 51, 51, 0.8)) !important; /* Hiệu ứng tỏa sáng */
+  transform: scale(1.12);
+}
+
+body.dark-theme .action-btn.btn-like.liked .like-count {
+  color: #ff6b6b !important;
+  font-weight: 800 !important;
+}
+
+
+/* --- 2. NÚT VOTE / THẢ TIM TRONG MODAL CARD --- */
+/* Trạng thái CHƯA LIKE trong Modal */
+body.dark-theme .modal-vote-widget {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  color: #c7b39f !important;
+  transition: all 0.25s ease;
+}
+
+body.dark-theme .modal-vote-widget .modal-heart-icon,
+body.dark-theme .modal-vote-widget .modal-heart-icon i {
+  color: #8c7362 !important; /* Trái tim xám bạc chìm */
+}
+
+body.dark-theme .modal-vote-widget #modalVoteCount {
+  color: #d1b89d !important;
+}
+
+/* Trạng thái ĐÃ LIKE trong Modal: Nổi bật với nền đỏ sẫm viền phát sáng */
+body.dark-theme .modal-vote-widget.liked {
+  background: rgba(255, 51, 51, 0.18) !important;
+  border: 1.5px solid #ff4d4d !important;
+  box-shadow: 0 0 14px rgba(255, 77, 77, 0.45), inset 0 0 8px rgba(255, 77, 77, 0.2) !important;
+}
+
+body.dark-theme .modal-vote-widget.liked .modal-heart-icon,
+body.dark-theme .modal-vote-widget.liked .modal-heart-icon i {
+  color: #ff3333 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 51, 51, 0.9)) !important;
+  transform: scale(1.15);
+}
+
+body.dark-theme .modal-vote-widget.liked #modalVoteCount {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 6px rgba(255, 77, 77, 0.6);
+}
+
+
+/* --- 3. NÚT GỬI THƯ / FEEDBACK TRÊN BOT-CARD --- */
+body.dark-theme .action-btn.btn-toggle-feedback {
+  color: #d8c2af !important;
+}
+
+body.dark-theme .action-btn.btn-toggle-feedback i {
+  color: #d4af37 !important; /* Icon thư màu vàng gold */
+}
+
+body.dark-theme .action-btn.btn-toggle-feedback:hover {
+  color: #ffd700 !important;
+}
+
+/* 4. MODAL POPUP & FORM NHẬP TRONG DARK MODE */
+body.dark-theme .modal-card,
+body.dark-theme .modal-card.modal-card-wide,
+body.dark-theme .auth-card-vintage {
+  background: linear-gradient(145deg, #241a13, #19110c) !important;
+  border: 1.5px solid #5c4330 !important;
+  border-left: 16px solid #b83a3a !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.15) !important;
+  color: #f7ede2 !important;
+}
+
+body.dark-theme #modalTitle {
+  color: #ffffff !important;
+}
+
+body.dark-theme #modalSubtitle {
+  color: #e5b95d !important;
+}
+
+body.dark-theme .modal-section-heading {
+  color: #ffd700 !important;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.35) !important;
+}
+
+body.dark-theme #modalToc,
+body.dark-theme #modalOpeningScenes {
+  color: #fcefdc !important;
+}
+
+body.dark-theme .modal-vote-widget {
+  background: rgba(212, 175, 55, 0.15) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+}
+
+body.dark-theme #modalVoteCount {
+  color: #ffffff !important;
+}
+
+body.dark-theme .feedback-item {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-left: 3px solid #d4af37 !important;
+  color: #fcefdc !important;
+}
+
+body.dark-theme .feedback-item strong {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .no-feedback-text {
+  color: #cbb49e !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+body.dark-theme .feedback-input,
+body.dark-theme .feedback-textarea,
+body.dark-theme .book-input,
+body.dark-theme .auth-input,
+body.dark-theme .cfs-form-box input,
+body.dark-theme .cfs-form-box textarea,
+body.dark-theme .passport-name-input,
+body.dark-theme .passport-bio-textarea {
+  background: #2e2017 !important;
+  border: 1.5px solid #634733 !important;
+  color: #ffffff !important;
+}
+
+body.dark-theme .feedback-input::placeholder,
+body.dark-theme .feedback-textarea::placeholder,
+body.dark-theme .book-input::placeholder,
+body.dark-theme .cfs-form-box input::placeholder,
+body.dark-theme .cfs-form-box textarea::placeholder {
+  color: #b09985 !important;
+}
+
+body.dark-theme .feedback-submit-btn,
+body.dark-theme #cfsSubmitBtn,
+body.dark-theme .btn-send {
+  background: linear-gradient(135deg, #a83232 0%, #802222 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #d4af37 !important;
+}
+
+/* FIX ẢNH 4: TRANG PROFILE & HỒ SƠ ĐỘC GIẢ */
+body.dark-theme .passport-cover,
+body.dark-theme .journal-content-col {
+  background: linear-gradient(145deg, #241a13, #18100b) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 2. HUY HIỆU ĐỘC GIẢ CHÍNH THỨC & ICON BÚT SỬA */
+body.dark-theme .passport-stamp-badge {
+  background: rgba(212, 175, 55, 0.18) !important;
+  border: 1.5px dashed #ffd700 !important;
+  color: #ffd700 !important;
+}
+
+body.dark-theme .btn-passport-edit,
+body.dark-theme .btn-edit-bio {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .btn-passport-edit:hover,
+body.dark-theme .btn-edit-bio:hover {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+}
+
+/* 3. TÊN, USERNAME & BIO DÒNG TRẠNG THÁI */
+body.dark-theme .passport-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .passport-handle {
+  color: #e5b95d !important; /* Vàng gold sáng thay vì xám chìm */
+  font-weight: 600;
+}
+
+body.dark-theme .passport-bio-box {
+  background: rgba(212, 175, 55, 0.1) !important;
+  border: 1px dashed rgba(212, 175, 55, 0.5) !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-theme .passport-bio-text {
+  color: #fcefdc !important; /* Chữ kem sáng rõ ràng */
+}
+
+/* 4. DÒNG THÔNG TIN CHI TIẾT (NGÀY CẤP THẺ, TRI KỶ, TÂM THƯ) */
+body.dark-theme .passport-details-list li {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+body.dark-theme .detail-label {
+  color: #e8d5c4 !important; /* Màu kem sáng chuẩn feedback */
+  font-weight: 500 !important;
+}
+
+body.dark-theme .detail-label i {
+  color: #ffd700 !important; /* Icon màu vàng sáng bóng */
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
+}
+
+body.dark-theme .detail-value {
+  color: #ffd700 !important; /* Số đếm nổi bật */
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
+}
+
+body.dark-theme .btn-passport-logout {
+  background: rgba(139, 58, 58, 0.25) !important;
+  border: 1px solid #d4af37 !important;
+  color: #fcefdc !important;
+}
+
+body.dark-theme .btn-passport-logout:hover {
+  background: #a83232 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.35) !important;
+}
+
+/* 5. CỘT PHẢI: TAB NỘI DUNG, MINI CARDS & HUY HIỆU */
+body.dark-theme .journal-tabs-bar {
+  border-bottom: 2px solid rgba(212, 175, 55, 0.35) !important;
+}
+
+body.dark-theme .journal-tab-btn {
+  color: #e8d5c4 !important;
+}
+
+body.dark-theme .journal-tab-btn i {
+  color: #ff8585 !important;
+}
+
+body.dark-theme .journal-tab-btn:hover {
+  background: rgba(212, 175, 55, 0.2) !important;
+  color: #ffd700 !important;
+}
+
+body.dark-theme .journal-tab-btn.active {
+  background: linear-gradient(135deg, #a83232 0%, #802222 100%) !important;
+  border: 1px solid #d4af37 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.dark-theme .journal-tab-btn.active i {
+  color: #ffffff !important;
+}
+
+body.dark-theme .tab-pane-header h4 {
+  color: #ffffff !important;
+}
+
+body.dark-theme .tab-subtitle {
+  color: #e5b95d !important;
+}
+
+/* Thẻ Mini Tri Kỷ */
+body.dark-theme .fav-char-mini-card {
+  background: linear-gradient(135deg, #2b1f18 0%, #1f1611 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  border-left: 6px solid #b83a3a !important;
+}
+
+body.dark-theme .fav-char-mini-card:hover {
+  background: linear-gradient(135deg, #38281f 0%, #291d16 100%) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.25) !important;
+}
+
+body.dark-theme .fav-char-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .fav-char-tag {
+  color: #e8d5c4 !important;
+}
+
+/* Thẻ Huy Hiệu Vinh Danh */
+body.dark-theme .showcase-medal-card {
+  background: linear-gradient(135deg, #2d1f17 0%, #1e140e 100%) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.dark-theme .showcase-medal-card:hover {
+  border-color: #ffd700 !important;
+  box-shadow: 0 8px 22px rgba(212, 175, 55, 0.3) !important;
+}
+
+body.dark-theme .medal-title-text {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .medal-desc-text {
+  color: #fcefdc !important;
+}
+
+/* FIX TOÀN DIỆN: TRANG TÁC GIẢ (ABOUT.HTML) TRONG DARK MODE */
+body.dark-theme .author-profile-card {
+  background: linear-gradient(145deg, #241a13, #18100b) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85) !important;
+  color: #fcefdc !important;
+}
+
+body.dark-theme .author-badge {
+  background: rgba(212, 175, 55, 0.18) !important;
+  color: #ffd700 !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+}
+
+body.dark-theme .author-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .author-portrait-frame {
+  background: #1f150f !important;
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
+}
+
+body.dark-theme .author-pen-name {
+  color: #e5b95d !important;
+}
+
+body.dark-theme .author-bio-text {
+  color: #faebd7 !important;
+}
+
+body.dark-theme .author-quote-box {
+  background: linear-gradient(135deg, #2e1f17 0%, #1e140e 100%) !important;
+  border-left: 4px solid #ffd700 !important; /* Viền vàng sáng rõ nét */
+  border-top: 1px solid rgba(212, 175, 55, 0.25) !important;
+  border-right: 1px solid rgba(212, 175, 55, 0.25) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(212, 175, 55, 0.06) !important;
+}
+
+body.dark-theme .author-quote-box span {
+  color: #fff4e0 !important;
+  line-height: 1.6;
+}
+
+body.dark-theme .author-quote-box i,
+body.dark-theme .author-quote-box .fa-quote-left,
+body.dark-theme .author-quote-box .fa-quote-right {
+  color: #ffd700 !important;
+  opacity: 1 !important;
+  font-size: 1.3rem !important;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.45)) !important;
+}
+
+body.dark-theme .social-stamp,
+body.dark-theme .extra-btn {
+  background: #2b1e16 !important;
+  border: 1px solid #543b29 !important;
+  color: #f7ede2 !important;
+}
+
+body.dark-theme .social-stamp i {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .social-stamp:hover {
+  background: #8b3a3a !important;
+  border-color: #ffd700 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4) !important;
+}
+
+body.dark-theme .social-stamp:hover i {
+  color: #ffffff !important;
+}
+
+/* 6. CÁC NÚT PHỤ (NGL & DONATE) NỔI BẬT */
+body.dark-theme .extra-btn {
+  background: linear-gradient(135deg, #2d1f17 0%, #1f150f 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.45) !important;
+  color: #faebd7 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-theme .extra-btn i {
+  color: #ff8585 !important; /* Icon đỏ/hồng sáng dịu mắt */
+}
+
+body.dark-theme .extra-btn:hover {
+  background: #8b3a3a !important;
+  border-color: #ffd700 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
+}
+
+body.dark-theme .extra-btn:hover i {
+  color: #ffffff !important;
+}
+
+/* 7. DÒNG TRẠNG THÁI HIỆN TẠI & HỘP QR */
+body.dark-theme .author-current-status {
+  color: #e5cdb3 !important;
+  border-top: 1px dashed rgba(212, 175, 55, 0.35) !important;
+}
+
+body.dark-theme .qr-popup-box {
+  background: #1e140e !important;
+  border: 1px dashed rgba(212, 175, 55, 0.5) !important;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.dark-theme .qr-title {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .qr-sub {
+  color: #d8c2af !important;
+}
+
+.mobile-menu-action-item {
+  display: none !important;
+}
+
+.mobile-nav-btn-item {
+  display: none !important;
+}
+
+/* ==================== VINTAGE PROFILE & JOURNAL PAGE ==================== */
+.profile-page-container {
+  max-width: 1280px;
+  margin: 40px auto 60px;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+/* CỘT TRÁI: HỘ CHIẾU ĐỘC GIẢ (VINTAGE PASSPORT) */
+.passport-cover {
+  background: #fdfbf7;
+  border: 1px solid #dcd0bf;
+  border-left: 14px solid #8b3a3a;
+  border-radius: 6px 14px 14px 6px;
+  padding: 30px 22px 24px;
+  box-shadow: 3px 0 0 #f0e6d6, 6px 0 0 #e2d4c0, 0 16px 35px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  position: relative;
+}
+
+.passport-stamp-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #8b3a3a;
+  background: rgba(139, 58, 58, 0.08);
+  border: 1.5px dashed #8b3a3a;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.passport-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.passport-avatar-frame {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #d4af37;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.passport-avatar-frame img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-upload-trigger {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #8b3a3a;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: 2px solid #fdfbf7;
+  transition: all 0.2s;
+}
+
+.avatar-upload-trigger:hover {
+  background: #d4af37;
+  color: #1a1a1a;
+  transform: scale(1.15);
+}
+
+.passport-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.passport-name {
+  font-family: "Merriweather", serif;
+  font-size: 1.35rem;
+  color: #2b1c11;
+  margin: 0;
+  font-weight: 700;
+}
+
+.btn-passport-edit, .btn-edit-bio {
+  background: none;
+  border: none;
+  color: #8b3a3a;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  transition: transform 0.2s;
+}
+
+.btn-passport-edit:hover, .btn-edit-bio:hover {
+  transform: scale(1.2);
+}
+
+.passport-handle {
+  font-family: monospace;
+  color: #7a6b63;
+  font-size: 0.85rem;
+  display: block;
+  margin-top: 2px;
+}
+
+.passport-bio-box {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 15px 0 10px;
+  position: relative;
+  text-align: center;
+}
+
+.passport-bio-text {
+  font-family: "Charm", cursive;
+  font-size: 0.95rem;
+  color: #4a3a2c;
+  margin: 0;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.passport-divider {
+  border: none;
+  border-top: 1px dashed #dcd0bf;
+  margin: 16px 0;
+}
+
+.passport-details-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.86rem;
+}
+
+.passport-details-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  padding-bottom: 6px;
+}
+
+.detail-label {
+  color: #6c584c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-label i {
+  color: #8b3a3a;
+}
+
+.detail-value {
+  color: #2b1c11;
+  font-weight: 700;
+}
+
+.btn-passport-logout {
+  width: 100%;
+  background: rgba(139, 58, 58, 0.1);
+  color: #8b3a3a;
+  border: 1px solid rgba(139, 58, 58, 0.3);
+  padding: 9px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-passport-logout:hover {
+  background: #8b3a3a;
+  color: #fff;
+}
+
+/* Sửa tên inline */
+.passport-edit-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.passport-name-input {
+  padding: 5px 10px;
+  border: 1.5px solid #8b3a3a;
+  border-radius: 6px;
+  font-family: "Merriweather", serif;
+  font-size: 0.95rem;
+  color: #2b1c11;
+  outline: none;
+  background: #fff;
+  width: 170px;
+  text-align: center;
+}
+
+.passport-bio-textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1.5px solid #8b3a3a;
+  border-radius: 6px;
+  font-family: "Charm", cursive;
+  font-size: 1rem;
+  color: #2b1c11;
+  background: #fff;
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.passport-edit-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-save-inline, .btn-cancel-inline {
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-save-inline {
+  background: #8b3a3a;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-save-inline:hover {
+  background: #a54343;
+}
+
+.btn-cancel-inline {
+  background: #dcd0bf;
+  color: #2b1c11;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-cancel-inline:hover {
+  background: #c8bca7;
+}
+
+/* CỘT PHẢI: SỔ TAY HÀNH TRÌNH */
+.journal-content-col {
+  background: #fdfbf7;
+  border: 1px solid #dcd0bf;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  min-height: 520px;
+}
+
+.journal-tabs-bar {
+  display: flex;
+  gap: 12px;
+  border-bottom: 2px solid #e5d8c5;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.journal-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-family: "Charm", cursive;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #6c584c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+
+.journal-tab-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: #8b3a3a;
+}
+
+.journal-tab-btn.active {
+  background: #8b3a3a;
+  color: #fff !important;
+  box-shadow: 0 4px 10px rgba(139, 58, 58, 0.3);
+}
+
+.tab-pane-header {
+  margin-bottom: 18px;
+}
+
+.tab-pane-header h4 {
+  font-family: "Merriweather", serif;
+  font-size: 1.1rem;
+  color: #2b1c11;
+  margin: 0 0 2px 0;
+  font-weight: 700;
+}
+
+.tab-subtitle {
+  font-size: 0.8rem;
+  color: #7a6b63;
+  font-style: italic;
+}
+
+/* Lưới hiển thị Nhân vật yêu thích */
+.favorites-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.fav-char-mini-card {
+  background: #faf6f0;
+  border: 1px solid #e2d7c5;
+  border-left: 6px solid #8b3a3a;
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.fav-char-mini-card:hover {
+  transform: translateY(-3px);
+  background: #fff;
+  border-color: #d4af37;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.fav-char-name {
+  font-family: "Merriweather", serif;
+  font-size: 0.95rem;
+  color: #2b1c11;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.fav-char-tag {
+  font-size: 0.75rem;
+  color: #8c7a6b;
+  font-style: italic;
+}
+
+.btn-remove-fav {
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.btn-remove-fav:hover {
+  transform: scale(1.25);
+}
+
+/* Lưới hiển thị Tâm thư CFS của người dùng */
+.user-notes-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* Lưới Huy Hiệu Danh Dự */
+.medals-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.showcase-medal-card {
+  background: linear-gradient(135deg, #fffdfa 0%, #f7f0e4 100%);
+  border: 1.5px solid #d4af37;
+  border-radius: 10px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.2);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.showcase-medal-card:hover {
+  transform: translateY(-4px);
+  border-color: #8b3a3a;
+  box-shadow: 0 8px 20px rgba(139, 58, 58, 0.25);
+}
+
+.medal-emblem-circle {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe79e 0%, #d4af37 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.medal-info-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.medal-title-text {
+  font-family: "Merriweather", serif;
+  font-size: 0.92rem;
+  color: #2b1c11;
+  font-weight: 700;
+}
+
+.medal-desc-text {
+  font-size: 0.76rem;
+  color: #6c584c;
+  margin-top: 2px;
+}
+
+.loading-text, .empty-state-text {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px;
+  color: #8c7a6b;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* ==================== DARKMODE THEME CHO PROFILE PAGE ==================== */
+body.dark-theme .passport-cover,
+body.dark-theme .journal-content-col {
+  background: #191411 !important;
+  border-color: #4a3a2c !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+body.dark-theme .passport-name,
+body.dark-theme .tab-pane-header h4,
+body.dark-theme .fav-char-name,
+body.dark-theme .medal-title-text {
+  color: #fce8c7 !important;
+}
+
+body.dark-theme .passport-bio-box {
+  background: rgba(212, 175, 55, 0.05) !important;
+  border-color: rgba(212, 175, 55, 0.25) !important;
+}
+
+body.dark-theme .passport-bio-text {
+  color: #ede2d3 !important;
+}
+
+body.dark-theme .detail-value {
+  color: #fff8e7 !important;
+}
+
+body.dark-theme .fav-char-mini-card {
+  background: #231b16 !important;
+  border-color: #4d3b2e !important;
+}
+
+body.dark-theme .fav-char-mini-card:hover {
+  background: #2c221c !important;
+  border-color: #d4af37 !important;
+}
+
+body.dark-theme .showcase-medal-card {
+  background: linear-gradient(135deg, #241c17 0%, #1a1411 100%) !important;
+  border-color: #6b5522 !important;
+}
+
+body.dark-theme .passport-name-input,
+body.dark-theme .passport-bio-textarea {
+  background: #241c17 !important;
+  color: #fce8c7 !important;
+  border-color: #d4af37 !important;
+}
+
+/* ==================== ĐỒNG BỘ MÀU SẮC PROFILE & HUY HIỆU (DARK MODE) ==================== */
+/* Trạng thái Huy hiệu đang bị khóa */
+.showcase-medal-card.locked-medal {
+  opacity: 0.65;
+  border: 1px dashed rgba(212, 175, 55, 0.25) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  filter: grayscale(80%);
+  cursor: not-allowed;
+}
+
+.showcase-medal-card.locked-medal .medal-emblem-circle {
+  background: #2a221b !important;
+  border-color: #5a4738 !important;
+  color: #a08d7c;
+}
+
+.showcase-medal-card.locked-medal .medal-title-text {
+  color: #b09f8f !important;
+}
+
+.showcase-medal-card.locked-medal .medal-desc-text {
+  color: #8c7a6b !important;
+  font-style: italic;
+}
+
+/* Trạng thái Huy hiệu Kẻ Vén Màn Bí Mật đã mở khóa */
+body.dark-theme .showcase-medal-card.unlocked-secret {
+  background: linear-gradient(135deg, #332319 0%, #1f140e 100%) !important;
+  border: 1.5px solid #ffd700 !important;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.25), inset 0 0 8px rgba(212, 175, 55, 0.1) !important;
+}
+
+body.dark-theme .showcase-medal-card.unlocked-secret .medal-title-text {
+  color: #ffd700 !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+/* Các chi tiết nhỏ trong Passport & Sổ tay */
+body.dark-theme .passport-cover,
+body.dark-theme .journal-content-col {
+  background: linear-gradient(145deg, #241a13, #18100b) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85) !important;
+}
+
+body.dark-theme .detail-label {
+  color: #e8d5c4 !important;
+  font-weight: 500 !important;
+}
+
+body.dark-theme .detail-label i {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .detail-value {
+  color: #ffd700 !important;
+  font-weight: 800 !important;
+}
+
+body.dark-theme .passport-handle {
+  color: #e5b95d !important;
+}
+
+body.dark-theme .passport-bio-text {
+  color: #fcefdc !important;
+}
+
+body.dark-theme .fav-char-name {
+  color: #ffffff !important;
+}
+
+body.dark-theme .fav-char-tag {
+  color: #e8d5c4 !important;
+}
+
+/* Nhãn hiển thị ngày đạt được thành tựu */
+.medal-date-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #8c7a6b;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.medal-date-tag i {
+  font-size: 0.75rem;
+  color: #d4af37;
+}
+
+/* Nhãn khi danh hiệu bị khóa */
+.medal-date-tag.locked-tag {
+  color: #7d6b5c !important;
+}
+
+.medal-date-tag.locked-tag i {
+  color: #7d6b5c !important;
+}
+
+/* Khi ở Dark Mode */
+body.dark-theme .medal-date-tag {
+  color: #e8d5c4 !important;
+}
+
+body.dark-theme .medal-date-tag i {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .showcase-medal-card.unlocked-secret .medal-date-tag {
+  color: #ffe082 !important;
+}
+
+body.dark-theme .showcase-medal-card.locked-medal .medal-date-tag.locked-tag {
+  color: #807062 !important;
+}
+
+/* ==================== KHUNG & HUY HIỆU HOÀNG GIA ĐỘC QUYỀN CHỦ TIỆM ==================== */
+
+/* 1. KHUNG AVATAR HOÀNG GIA */
+.passport-avatar-frame.owner-avatar-frame {
+  position: relative !important;
+  border: none !important;
+  padding: 3.5px !important;
+  background: linear-gradient(135deg, #ffe082 0%, #d4af37 40%, #8a6524 70%, #ffd700 100%) !important;
+  border-radius: 50% !important;
+  box-shadow: 
+    0 0 0 2px #fdfbf7,
+    0 0 0 4.5px #d4af37,
+    0 8px 25px rgba(212, 175, 55, 0.35) !important;
+}
+
+.passport-avatar-frame.owner-avatar-frame img {
+  border-radius: 50% !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 2. ICON VƯƠNG MIỆN FONTAWESOME LỆCH PHẢI (TĨNH, KHÔNG BOUNCE) */
+.owner-crown-badge {
+  display: none; /* Mặc định ẩn đối với độc giả */
+}
+
+.passport-avatar-frame.owner-avatar-frame .owner-crown-badge {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -10px;
+  right: -2px; /* Đặt lệch sang góc trên bên phải */
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #fff3a1 0%, #ffd700 50%, #d4af37 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  transform: rotate(20deg); /* Nghiêng nhẹ sang phải tự nhiên */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), 0 0 8px rgba(255, 215, 0, 0.6);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.passport-avatar-frame.owner-avatar-frame .owner-crown-badge i {
+  color: #78350f; /* Màu vàng đồng đậm tương phản cao */
+  font-size: 0.85rem;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.5));
+}
+
+/* Bỏ các pseudo-elements cũ */
+.passport-avatar-frame.owner-avatar-frame::before,
+.passport-avatar-frame.owner-avatar-frame::after {
+  content: none !important;
+}
+
+/* 3. HUY HIỆU TAG CHỦ TIỆM TRÊN ĐẦU */
+.passport-stamp-badge.owner-stamp-badge {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(139, 58, 58, 0.15) 100%) !important;
+  color: #b8860b !important;
+  border: 1.5px solid #d4af37 !important;
+  border-radius: 20px !important;
+  padding: 5px 16px !important;
+  font-family: "Merriweather", serif !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.25), inset 0 0 8px rgba(255, 215, 0, 0.1) !important;
+  text-transform: uppercase;
+}
+
+.passport-stamp-badge.owner-stamp-badge i {
+  color: #d4af37 !important;
+  font-size: 0.85rem !important;
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.6));
+}
+
+/* 4. HIỂN THỊ DARK MODE */
+body.dark-theme .passport-avatar-frame.owner-avatar-frame {
+  box-shadow: 
+    0 0 0 2px #191411,
+    0 0 0 4.5px #ffd700,
+    0 0 25px rgba(255, 215, 0, 0.35) !important;
+}
+
+body.dark-theme .passport-avatar-frame.owner-avatar-frame .owner-crown-badge {
+  border-color: #191411;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 215, 0, 0.7);
+}
+
+body.dark-theme .passport-stamp-badge.owner-stamp-badge {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(30, 20, 15, 0.6) 100%) !important;
+  border-color: #ffd700 !important;
+  color: #ffd700 !important;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.25), inset 0 0 10px rgba(212, 175, 55, 0.15) !important;
+}
+
+body.dark-theme .passport-stamp-badge.owner-stamp-badge i {
+  color: #ffd700 !important;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
+}
+
+/* --- FIX DARK MODE CHO KHUNG ĐĂNG NHẬP & QUÊN MẬT KHẨU --- */
+body.dark-theme .auth-card-vintage {
+  background: linear-gradient(145deg, #241a13, #19110c) !important;
+  border: 1.5px solid #5c4330 !important;
+  border-left: 16px solid #b83a3a !important;
+  color: #f7ede2 !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-title {
+  color: #ffffff !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-subtitle {
+  color: #d1b89d !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-input-group label {
+  color: #e8d5c4 !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-input {
+  background: #2e2017 !important;
+  border: 1.5px solid #634733 !important;
+  color: #ffffff !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-input::placeholder {
+  color: #b09985 !important;
+}
+
+body.dark-theme .auth-card-vintage .btn-toggle-pw {
+  color: #d1b89d !important;
+}
+
+body.dark-theme .auth-card-vintage .btn-toggle-pw:hover {
+  color: #ffd700 !important;
+}
+
+body.dark-theme .auth-card-vintage #authForgotPwGroup a {
+  color: #ffd700 !important;
+  text-decoration: underline !important;
+}
+
+body.dark-theme .auth-card-vintage #forgotPasswordNotice {
+  background: rgba(212, 175, 55, 0.08) !important;
+  border: 1px dashed #d4af37 !important;
+  color: #fcefdc !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-switch-box {
+  color: #d1b89d !important;
+  border-top: 1px dashed #4a3a2c !important;
+}
+
+body.dark-theme .auth-card-vintage .auth-switch-btn {
+  color: #ffd700 !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .profile-page-container {
+    grid-template-columns: 1fr;
+  }
+  .passport-cover {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
 /* --- MEDIA QUERIES --- */
 @media (min-width: 992px) {
   .banner-bg {
@@ -3974,6 +5826,7 @@ body.modal-open {
   .banner-title {
     font-size: 20px;
   }
+
   .navbar {
     padding: 15px 20px;
     justify-content: flex-start;
@@ -4177,5 +6030,226 @@ body.modal-open {
   .cat-speech-bubble::after {
     right: 18px !important;
     left: auto !important;
+  }
+
+  .navbar {
+    padding: 10px 16px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  .nav-left-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .nav-logo span {
+    font-size: 20px !important;
+  }
+
+  /* Ẩn thanh công cụ ngoài khi menu mở để không bị trùng lặp ở góc trên */
+  body.menu-open .nav-right-actions {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Menu trượt toàn màn hình */
+  .nav-menu {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(20, 20, 20, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 20px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    z-index: 10001 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .nav-menu.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .nav-link {
+    font-size: 22px !important;
+  }
+
+  /* HIỂN THỊ CẢ 2 NÚT BÊN DƯỚI TRẠM DỪNG CHÂN */
+  .mobile-nav-btn-item {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+
+  .mobile-menu-btn {
+    width: 250px !important;
+    min-width: 250px !important;
+    height: 44px !important;
+    padding: 0 18px !important;
+    border-radius: 25px !important;
+    font-family: "Charm", cursive !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
+  }
+
+  .theme-mobile-menu-btn {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(139, 58, 58, 0.3)) !important;
+    border: 1px solid rgba(212, 175, 55, 0.6) !important;
+    color: #fff8e7 !important;
+  }
+
+  .theme-mobile-menu-btn i {
+    font-size: 1.1rem !important;
+  }
+
+  /* 1. KHUNG CONTAINER CHÍNH */
+  .profile-page-container {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    margin: 20px auto 40px !important;
+    padding: 0 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 2. CỘT HỘ CHIẾU (PASSPORT) */
+  .passport-cover {
+    max-width: 100% !important;
+    padding: 24px 16px 20px !important;
+    border-left-width: 10px !important;
+    border-radius: 4px 12px 12px 4px !important;
+    box-shadow: 2px 0 0 #f0e6d6, 4px 0 0 #e2d4c0, 0 10px 25px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .passport-avatar-frame {
+    width: 84px !important;
+    height: 84px !important;
+  }
+
+  .passport-name {
+    font-size: 1.2rem !important;
+  }
+
+  .passport-bio-box {
+    padding: 8px 12px !important;
+    margin: 12px 0 8px !important;
+  }
+
+  .passport-bio-text {
+    font-size: 0.88rem !important;
+  }
+
+  .passport-details-list {
+    gap: 8px !important;
+    font-size: 0.82rem !important;
+    margin-bottom: 16px !important;
+  }
+
+  .passport-details-list li {
+    padding-bottom: 5px !important;
+  }
+
+  /* 3. CỘT SỔ TAY HÀNH TRÌNH */
+  .journal-content-col {
+    padding: 18px 14px !important;
+    border-radius: 10px !important;
+    min-height: auto !important;
+  }
+
+  /* Thanh chuyển Tab nằm ngang vuốt mượt mà */
+  .journal-tabs-bar {
+    gap: 8px !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 16px !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important; /* Ẩn scrollbar trên Firefox */
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .journal-tabs-bar::-webkit-scrollbar {
+    display: none !important; /* Ẩn scrollbar trên Chrome/Safari */
+  }
+
+  .journal-tab-btn {
+    padding: 6px 14px !important;
+    font-size: 0.92rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .tab-pane-header h4 {
+    font-size: 1rem !important;
+  }
+
+  .tab-subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  /* 4. LƯỚI DANH SÁCH & THẺ TRONG CÁC TAB */
+  .medals-showcase-grid,
+  .favorites-grid-container,
+  .user-notes-grid-container {
+    grid-template-columns: 1fr !important; /* Hiển thị 1 cột dạng danh sách vừa vặn */
+    gap: 12px !important;
+  }
+
+  /* Thẻ Huy Hiệu */
+  .showcase-medal-card {
+    padding: 14px 12px !important;
+    gap: 12px !important;
+  }
+
+  .medal-emblem-circle {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1.3rem !important;
+  }
+
+  .medal-title-text {
+    font-size: 0.88rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .medal-desc-text {
+    font-size: 0.74rem !important;
+  }
+
+  .medal-date-tag {
+    font-size: 0.68rem !important;
+    margin-top: 3px !important;
+  }
+
+  /* Thẻ Mini Tri Kỷ */
+  .fav-char-mini-card {
+    padding: 10px 12px !important;
+  }
+
+  .fav-char-name {
+    font-size: 0.9rem !important;
+  }
+
+  .fav-char-tag {
+    font-size: 0.72rem !important;
   }
 }
