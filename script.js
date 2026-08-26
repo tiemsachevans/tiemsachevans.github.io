@@ -32,6 +32,7 @@ async function getSupabase() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await checkMaintenanceMode();
   initThemeMode();
   await initProfilePage();
   const supabase = await getSupabase();
@@ -3728,4 +3729,97 @@ function autofillUserNames() {
       input.value = displayName;
     }
   });
+}
+
+async function checkMaintenanceMode() {
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  try {
+    // 🌟 Lấy trực tiếp session hiện tại để nhận diện chính xác chủ tiệm ngay từ giây đầu tiên
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session ? session.user : null;
+
+    const { data } = await supabase.from("settings").select("value").eq("key", "maintenance").maybeSingle();
+    
+    if (data && data.value === true) {
+      const email = user?.email || "";
+      const username = email.split("@")[0].toLowerCase();
+      const cleanUser = username.trim();
+      
+      // Kiểm tra đặc quyền chủ tiệm
+      const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) || 
+                      ["fevans", "evans", "iamevans"].includes(cleanUser);
+
+      // Nếu không phải chủ tiệm thì mới hiển thị màn hình bảo trì
+      if (!isOwner) {
+        document.body.innerHTML = `
+        <style>
+          @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)); }
+            50% { opacity: 0.9; filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.8)); }
+          }
+          .maintenance-bg-video {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: 0; filter: brightness(0.4);
+          }
+          .maintenance-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(28, 17, 11, 0.65);
+            color: #fdfbf7; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 999999; font-family: 'Merriweather', serif; text-align: center; padding: 25px; box-sizing: border-box;
+          }
+          .maintenance-card {
+            background: rgba(43, 28, 17, 0.85);
+            border: 2px solid #d4af37;
+            padding: 40px 30px;
+            border-radius: 16px;
+            max-width: 480px; width: 100%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            animation: floatSlow 5s ease-in-out infinite;
+            position: relative;
+          }
+          .maintenance-icon { font-size: 3.2rem; color: #d4af37; margin-bottom: 15px; animation: pulseGlow 3s ease-in-out infinite; }
+          .maintenance-title { font-family: 'Cormorant Garamond', serif; color: #d4af37; font-size: 2.3rem; margin-bottom: 12px; letter-spacing: 1px; }
+          .maintenance-desc { font-size: 0.95rem; opacity: 0.85; line-height: 1.6; color: #e2d7c7; margin-bottom: 20px; }
+          .maintenance-note { font-size: 0.85rem; font-style: italic; color: #b89848; opacity: 0.9; border-top: 1px dashed rgba(212, 175, 55, 0.3); padding-top: 15px; }
+          #dustCanvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2; /* Nằm trên video nhưng dưới khung card */
+          }
+          .maintenance-card-inner { position: relative; z-index: 3; }
+        </style>
+
+        <canvas id="dustCanvas"></canvas>
+
+        <div class="maintenance-container">
+          <div class="maintenance-card">
+            <div class="maintenance-card-inner">
+              <div class="maintenance-icon">
+                <i class="fa-solid fa-feather-pointed"></i>
+              </div>
+              <h1 class="maintenance-title">Tiệm Sách Đang Tạm Đóng Cửa</h1>
+              <p class="maintenance-desc">
+                Evans đang sắp xếp lại những kệ sách và cập nhật thêm vài điều kỳ diệu mới.
+              </p>
+              <div class="maintenance-note">
+                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau ít phút nữa nhé! <i class='fa-solid fa-paw'></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+
+        if (typeof initDustParticles === "function") {
+          initDustParticles();
+        }
+        
+        // Dừng toàn bộ các tiến trình tiếp theo của trang khi đang bảo trì
+        throw new Error("Website is under maintenance.");
+      }
+    }
+  } catch (err) {
+    if (err.message !== "Website is under maintenance.") {
+      console.warn("Lỗi kiểm tra trạng thái bảo trì:", err);
+    }
+  }
 }

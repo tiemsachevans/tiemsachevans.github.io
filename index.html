@@ -679,6 +679,22 @@
       </div>
     </div>
 
+    <script>
+    // Ghi đè hàm getSupabase để không gọi thật lên cloud
+    window.getSupabase = async () => ({
+      auth: {
+        getSession: async () => ({ data: { session: null } }) // Chưa đăng nhập
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: { value: true } }) // Ép trạng thái bảo trì = TRUE
+          })
+        })
+      })
+    });
+    </script>
+    
     <script src="script.js" defer></script>
   </body>
 </html>
