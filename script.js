@@ -3249,7 +3249,7 @@ async function loadUserMedals(user) {
       // 1. Lấy thông tin badges & title từ bảng profiles
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("title, badges, created_at")
+        .select("title, created_at")
         .eq("id", user.id)
         .maybeSingle();
 
