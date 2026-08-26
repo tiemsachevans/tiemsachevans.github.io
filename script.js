@@ -3242,20 +3242,15 @@ async function loadUserMedals(user) {
   let isDiplomaUnlocked = false;
   let solverOrder = null;
   let unlockedDateStr = "";
-  let customBadges = []; // Danh hiệu tùy chỉnh từ bảng profiles
 
   if (supabase && user) {
     try {
-      // 1. Lấy thông tin badges & title từ bảng profiles
+      // 1. Lấy thông tin từ bảng profiles (chỉ cần lấy các cột thực tế đang dùng)
       const { data: profileData } = await supabase
         .from("profiles")
         .select("title, created_at")
         .eq("id", user.id)
         .maybeSingle();
-
-      if (profileData && Array.isArray(profileData.badges)) {
-        customBadges = profileData.badges;
-      }
 
       // 2. Kiểm tra tiến trình giải đố từ bảng puzzle_solvers
       const { data: solverData } = await supabase
@@ -3293,11 +3288,16 @@ async function loadUserMedals(user) {
     joinDateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
   }
 
+  // --- KIỂM TRA QUYỀN CHỦ TIỆM SÁCH ---
+  const username = user.email ? user.email.split("@")[0] : "";
+  const cleanUser = (username || "").toLowerCase().trim();
+  const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) || 
+                  ["fevans", "evans", "iamevans"].includes(cleanUser);
+
   // --- TEMPLATE HUY HIỆU ---
-  // 1. Kẻ Vén Màn Bí Mật
   const secretUnlockedHTML = `
     <div class="showcase-medal-card unlocked-secret" onclick="viewSavedDiploma()" title="Nhấp để xem lại Bằng Chứng Nhận">
-      <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%);">🎓</div>
+      <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%);"><i class="fa-solid fa-skeleton-key"></i></div>
       <div class="medal-info-wrap">
         <strong class="medal-title-text">Kẻ Vén Màn Bí Mật #${solverOrder}</strong>
         <span class="medal-desc-text">Đã giải mã thành công toàn bộ Két Sách Bí Mật</span>
@@ -3308,7 +3308,7 @@ async function loadUserMedals(user) {
 
   const secretLockedHTML = `
     <div class="showcase-medal-card locked-medal" title="Thành tựu ẩn">
-      <div class="medal-emblem-circle locked-icon">🔒</div>
+      <div class="medal-emblem-circle locked-icon"><i class="fa-solid fa-lock"></i></div>
       <div class="medal-info-wrap">
         <strong class="medal-title-text">Kẻ Vén Màn Bí Mật</strong>
         <span class="medal-desc-text">??? (Chưa mở khóa)</span>
@@ -3317,35 +3317,32 @@ async function loadUserMedals(user) {
     </div>
   `;
 
-  // 2. Độc Giả Thân Thiết
-  const memberMedalHTML = `
-    <div class="showcase-medal-card">
-      <div class="medal-emblem-circle" style="background: radial-gradient(circle, #e2d7c7 0%, #8c7a6b 100%);">📜</div>
-      <div class="medal-info-wrap">
-        <strong class="medal-title-text">Độc Giả Thân Thiết</strong>
-        <span class="medal-desc-text">Đã đăng ký Thẻ Độc Giả chính thức của Evans</span>
-        <span class="medal-date-tag"><i class="bi bi-calendar-check"></i> Cấp ngày: ${joinDateStr}</span>
-      </div>
-    </div>
-  `;
-
-  // 3. Render các danh hiệu tùy chỉnh thêm từ cột `badges` trên Supabase
-  let customBadgesHTML = "";
-  if (customBadges.length > 0) {
-    customBadgesHTML = customBadges.map((badgeName) => `
-      <div class="showcase-medal-card custom-badge-card">
-        <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffd700 0%, #b8860b 100%);">👑</div>
+  let memberMedalHTML = "";
+  if (isOwner) {
+    memberMedalHTML = `
+      <div class="showcase-medal-card owner-exclusive-medal" style="border: 1px solid #d4af37; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(139, 58, 58, 0.05));">
+        <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%); color: #8b3a3a;"><i class="fa-solid fa-feather-pointed"></i></div>
         <div class="medal-info-wrap">
-          <strong class="medal-title-text">${escapeHTML(badgeName)}</strong>
-          <span class="medal-desc-text">Danh hiệu vinh dự được cấp bởi Tiệm Sách</span>
-          <span class="medal-date-tag"><i class="bi bi-patch-check-fill"></i> Đã kích hoạt</span>
+          <strong class="medal-title-text" style="color: #8b3a3a;"><i class="fa-solid fa-crown" style="color: #d4af37; margin-right: 4px;"></i> Chủ Tiệm Sách Evans</strong>
+          <span class="medal-desc-text">Người kiến tạo và gìn giữ từng trang ký ức tại đây</span>
+          <span class="medal-date-tag" style="color: #d4af37; font-weight: bold;"><i class="bi bi-shield-check"></i> Đặc quyền tối cao</span>
         </div>
       </div>
-    `).join("");
+    `;
+  } else {
+    memberMedalHTML = `
+      <div class="showcase-medal-card">
+        <div class="medal-emblem-circle" style="background: radial-gradient(circle, #e2d7c7 0%, #8c7a6b 100%);"><i class="bi bi-ticket-perforated-fill"></i></div>
+        <div class="medal-info-wrap">
+          <strong class="medal-title-text">Độc Giả Thân Thiết</strong>
+          <span class="medal-desc-text">Đã đăng ký Thẻ Độc Giả chính thức của Evans</span>
+          <span class="medal-date-tag"><i class="bi bi-calendar-check"></i> Cấp ngày: ${joinDateStr}</span>
+        </div>
+      </div>
+    `;
   }
 
-  // Sắp xếp: Custom badges & Mở khóa -> Độc giả thân thiết -> Khóa (xếp cuối)
-  let finalMedalsHTML = customBadgesHTML;
+  let finalMedalsHTML = "";
   if (isDiplomaUnlocked && solverOrder) {
     finalMedalsHTML += secretUnlockedHTML + memberMedalHTML;
   } else {
