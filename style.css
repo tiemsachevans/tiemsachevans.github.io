@@ -6313,7 +6313,20 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     font-size: 0.72rem !important;
   }
 
+  .new-char-banner-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 16px;
+    position: relative;
+  }
+
+  .new-badge {
+    align-self: flex-start;
+  }
+
   .new-char-banner-content .new-char-text {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -6323,5 +6336,11 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     display: block;
     margin-top: 3px;
     font-size: 0.75rem;
+  }
+
+  .new-char-banner-content .bi-chevron-right {
+    position: absolute;
+    top: 16px;
+    right: 16px;
   }
 }

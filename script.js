@@ -1723,9 +1723,21 @@ window.submitCfsNote = async function () {
   // 2. Thử lưu vào Supabase (nếu lỗi chỉ thông báo console, không chặn Modal)
   const supabase = await getSupabase();
   if (supabase) {
+    const noteData = { 
+      author: author, 
+      content: content, 
+      bg_color: color 
+    };
+    
+    // Nếu user đã đăng nhập, gắn thêm user_id vào để sau này load lên Profile cá nhân chính xác tuyệt đối
+    if (currentUser) {
+      noteData.user_id = currentUser.id;
+    }
+
     const { error } = await supabase
       .from("cfs_notes")
-      .insert([{ author: author, content: content, bg_color: color }]);
+      .insert([noteData]);
+      
     if (error) console.error("❌ Lỗi lưu Supabase:", error);
   }
 
@@ -2295,6 +2307,7 @@ async function checkUserSession() {
   if (session && session.user) {
     currentUser = session.user;
     updateNavUserUI(currentUser);
+    autofillUserNames();
     await syncAllUserData(currentUser);
   } else {
     currentUser = null;
@@ -3691,4 +3704,28 @@ async function checkNewCharacter() {
     console.warn("Lỗi kiểm tra nhân vật mới:", err);
     bannerContainer.style.display = "none";
   }
+}
+
+// Hàm tự động điền tên tài khoản vào các ô nhập tên (CFS và Feedback) nếu user đã đăng nhập
+function autofillUserNames() {
+  if (!currentUser) return;
+  
+  // Lấy tên hiển thị ưu tiên từ metadata hoặc email
+  const displayName = currentUser.user_metadata?.display_name || 
+                      (currentUser.email ? currentUser.email.split("@")[0] : "");
+
+  if (!displayName) return;
+
+  // 1. Tự động điền vào ô nhập tên của bảng CFS (trang chủ)
+  const cfsAuthorInput = document.getElementById("cfsAuthorInput");
+  if (cfsAuthorInput && !cfsAuthorInput.value.trim()) {
+    cfsAuthorInput.value = displayName;
+  }
+
+  // 2. Tự động điền vào tất cả các ô nhập tên Feedback trên trang
+  document.querySelectorAll(".input-name").forEach((input) => {
+    if (!input.value.trim()) {
+      input.value = displayName;
+    }
+  });
 }
