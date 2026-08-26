@@ -394,7 +394,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Arashi「嵐」</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">Nhật Bản / R21 / Khiêu Dâm / SEX / NSFW</div>
             <p class="bot-desc">"Góc quay này, tuyệt đẹp."</p>
@@ -470,7 +469,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Delmare's Abyss</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">Tâm Lý / Đấu Trí / Sinh Tồn</div>
             <p class="bot-desc">
@@ -610,7 +608,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Dương Khắc Huy</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Việt Nam / R21 / FwB / Playboy / Badboy / Redflag / Trêu Đùa / Tâm Lý / NSFW
@@ -979,7 +976,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Khương Tịch Ngôn</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Trung Quốc / TXVT / Bạn Thân Anh Trai / Healing / Soft
@@ -1652,7 +1648,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Salfozziel</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Hệ Thống / Đấu Trí / Tâm Lý / Trò Chơi / Cá Cược
@@ -1744,7 +1739,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Seol Min-Jae</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">Hàn Quốc / Tội Phạm / Cảnh Sát / Đấu Trí / Điều Tra</div>
             <p class="bot-desc">
@@ -2030,7 +2024,6 @@
           <div class="bot-body">
             <div class="bot-title-wrap">
               <h3 class="bot-name">Phó Kỳ Tâm</h3>
-              <i class="bi bi-lock-fill lock-icon" title="Cần giải mã để xem" style="color: #8b3a3a; font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"></i>
             </div>
             <div class="bot-tags">
               Trung Quốc / TXVT / Tiền Bối / Đọc Suy Nghĩ / Theo Đuổi / Healing / Soft
@@ -2152,6 +2145,89 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 >Google AI Studio</a
+              >
+            </div>
+
+            <div class="bot-actions">
+              <button class="action-btn btn-like" onclick="toggleLike(this)">
+                <i class="bi bi-heart-fill icon"></i>
+                <span class="like-count">0</span>
+              </button>
+              <button
+                class="action-btn btn-toggle-feedback"
+                onclick="toggleFeedback(this)"
+              >
+                <i class="bi bi-chat-square-text"></i> Gửi Thư / Feedback
+              </button>
+            </div>
+
+            <div class="feedback-section">
+              <div class="feedback-list">
+              </div>
+              <div class="feedback-input-box">
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-name"
+                    placeholder="Tên lữ khách..."
+                  />
+                </div>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    class="book-input input-content"
+                    placeholder="Viết đôi lời cảm nhận..."
+                  />
+                  <button class="btn-send" onclick="sendFeedback(this)">
+                    Gửi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- THEOPHILUS CHRISTOPHER  -->
+        <div
+          class="bot-card"
+          data-toc="!tieptuc : Tiếp tục cốt truyện<br>!phone : Kiểm tra điện thoại của Theophilus Christopher.<br>!grchat : Đọc tin nhắn nhóm F4.<br>!diendan : Truy cập diễn đàn của Trường Đại học LSE.<br>!cfs : Truy cập trang Confession của Trường Đại học LSE."
+        >
+          <div class="bot-body">
+            <div class="bot-title-wrap">
+              <h3 class="bot-name">Theophilus Christopher</h3>
+            </div>
+            <div class="bot-tags">
+              Anh Quốc / F4 LSE / TXVT / Tâm lý
+            </div>
+            <p class="bot-desc">"Có điều gì băn khoăn sao? Cứ nói đi, tôi nghe, đừng ngại."</p>
+            <div class="bot-divider"></div>
+            <div class="bot-chips">
+              <a
+                href="https://ellipsus.com/read/2kg2M5ptIMyaj6Ey7qZYmR/Theophilus-Christopher"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Story</a
+              >
+              <a
+                href="https://aistudio.google.com/app/prompts/1kqaWZzHQNYw0Vkqc4mBUO9tuz--Eyfrp"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+              <a
+                href="https://t.melting.chat/hlfe0z"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Melting</a
+              >
+              <a
+                href="https://imely.ai/character/Theophilus-Christopher-52nwp0"
+                class="chip-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                >iMely</a
               >
             </div>
 
@@ -2395,7 +2471,7 @@
             </div>
           </div>
         </div>
-      </div>
+        </div>
       </section>
 
     <!-- ==================== MODAL GIẢI MÃ NHÂN VẬT ĐÃ KHÓA ==================== -->

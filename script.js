@@ -38,9 +38,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (supabase) {
     console.log("Supabase đã sẵn sàng!");
   }
-
   await syncCharacterVotes();
   await loadFeedbacks();
+  await checkNewCharacter();
   loadRandomDailyQuote();
   loadTopRanking();
   loadCfsNotes();
@@ -622,6 +622,7 @@ function reinitializePageScripts() {
   loadRandomDailyQuote();
   initDustParticles();
   checkUnlockedPuzzles();
+  checkNewCharacter();
   
   if (document.querySelector(".profile-page-container")) {
     initProfilePage();
@@ -3467,12 +3468,18 @@ window.openPuzzleModal = function(puzzleId) {
         if (hintBox) {
           hintBox.innerHTML = `
             <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.9rem; font-style: italic; color: #8b3a3a;">
-              「もっと痛くしてよ 君の体温を感じたいんだ<br>
-              めいっぱい愛してよ 壊れるくらいに」
+              「こんばんは、今平気かな？<br>
+              特に言いたいこともないんだけど<br>
+              もうあれやこれや浮かぶ「いいな」<br>
+              君が居なくちゃどれでもないや<br>
+              仮面同士でイチャついてら」
             </p>
             <p style="font-size: 0.85rem; color: #4a3a2c; margin-bottom: 10px;">
-              "Motto itaku shite yo, kimi no taion o kanjitain da<br>
-              Meippai aishite yo, kowareru kurai ni"
+              "Good evening, is now a good time?<br>
+              I didn't really have anything specific I wanted to say, but<br>
+              Now there's this and that, and an "it's alright" comes to mind<br>
+              Without you, none of that matters<br>
+              Both of us with our masks on, we flirted"
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
             <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
@@ -3605,26 +3612,20 @@ if (validAnswers.includes(code)) {
 
 // Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
 window.unlockCharacterLinks = function(puzzleId) {
-    // Đổi màu ổ khóa ở Header card bên ngoài
-    const cards = document.querySelectorAll(`.bot-card[data-puzzle-id="${puzzleId}"]`);
-    cards.forEach(card => {
-        const icon = card.querySelector(".bot-title-wrap .lock-icon");
-        if(icon) {
-            icon.className = "bi bi-unlock-fill lock-icon";
-            icon.style.color = "#2ecc71"; 
-            icon.title = "Đã mở khóa";
-        }
-    });
-
-    // Trả lại đường dẫn thật cho nút Google AI Studio
+    // Trả lại đường dẫn thật cho nút Google AI Studio và đổi ổ khóa thành mở khóa màu xanh
     const lockedLinks = document.querySelectorAll(`a[data-real-href][data-puzzle-id="${puzzleId}"]`);
     lockedLinks.forEach(link => {
         link.href = link.getAttribute("data-real-href"); 
         link.removeAttribute("data-real-href");          
         link.target = "_blank";
         
-        const innerLock = link.querySelector(".inner-lock"); 
-        if(innerLock) innerLock.remove();
+        const innerLock = link.querySelector(".inner-lock") || link.querySelector(".lock-icon"); 
+        if (innerLock) {
+            innerLock.className = "bi bi-unlock-fill inner-lock";
+            innerLock.style.color = "#2ecc71";
+            innerLock.style.opacity = "1";
+            innerLock.title = "Đã mở khóa";
+        }
     });
 }
 
@@ -3636,4 +3637,56 @@ window.checkUnlockedPuzzles = function() {
           unlockCharacterLinks(puzzleId);
       }
   });
+}
+
+// ==================== KIỂM TRA NHÂN VẬT MỚI TỪ SUPABASE ====================
+async function checkNewCharacter() {
+  const bannerContainer = document.getElementById("newCharBannerContainer");
+  const bannerText = document.getElementById("newCharBannerText");
+  if (!bannerContainer || !bannerText) return;
+
+  const supabase = await getSupabase();
+  if (!supabase) {
+    bannerContainer.style.display = "none";
+    return;
+  }
+
+  try {
+    // Truy vấn trực tiếp nhân vật mới nhất dựa vào thời gian tạo (created_at) trên Supabase
+    const { data, error } = await supabase
+      .from("characters")
+      .select("*")
+      .neq("name", "Coming Soon...")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      bannerContainer.style.display = "none";
+      return;
+    }
+
+    const latestChar = data[0];
+    const createdAt = latestChar.created_at ? new Date(latestChar.created_at) : null;
+    const now = new Date();
+    
+    // Hiển thị nếu nhân vật được tạo trong vòng 15 ngày gần đây
+    const isRecent = createdAt ? (now - createdAt) / (1000 * 60 * 60 * 24) <= 15 : true;
+
+    if (latestChar && latestChar.name && isRecent) {
+      bannerText.innerHTML = `Nhân vật mới vừa ra mắt: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
+      bannerContainer.style.display = "block";
+
+      const bannerBtn = document.getElementById("newCharBannerBtn");
+      if (bannerBtn) {
+        bannerBtn.onclick = () => {
+          openBotModalByName(latestChar.name);
+        };
+      }
+    } else {
+      bannerContainer.style.display = "none";
+    }
+  } catch (err) {
+    console.warn("Lỗi kiểm tra nhân vật mới:", err);
+    bannerContainer.style.display = "none";
+  }
 }

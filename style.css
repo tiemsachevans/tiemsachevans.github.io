@@ -985,6 +985,10 @@ header nav a:not(.nav-logo):hover,
   border-color: #a88c70;
 }
 
+.chip-btn .inner-lock, .chip-btn .lock-icon {
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
 .bot-actions {
   display: flex;
   justify-content: space-between;
@@ -3400,8 +3404,8 @@ body.modal-open {
 
 .art-image-wrapper img {
   width: 100%;
-  height: auto; /* Giữ nguyên tỉ lệ gốc của ảnh, không bị méo hay mất chi tiết */
-  object-fit: contain; /* Hiển thị trọn vẹn bức ảnh trong khung */
+  height: auto;
+  object-fit: contain;
   transition: transform 0.5s ease;
 }
 
@@ -3533,11 +3537,10 @@ body.modal-open {
   transform: translateY(8px);
   transition:
     opacity 0.3s ease,
-    transform 0.3s ease; /* Bỏ bớt hiệu ứng bounce của transition gây giật mũi nhọn */
+    transform 0.3s ease;
   pointer-events: none;
 }
 
-/* 2. Tạo mũi nhọn cố định vị trí theo mép phải của Bong Bóng */
 .cat-speech-bubble::before,
 .cat-speech-bubble::after {
   content: "";
@@ -3547,21 +3550,18 @@ body.modal-open {
   pointer-events: none;
 }
 
-/* Viền mũi nhọn (Màu vàng) - Cố định cách lề phải 18px */
 .cat-speech-bubble::before {
   right: 18px;
   border-width: 7px 6px 0 6px;
   border-color: #d4af37 transparent transparent transparent;
 }
 
-/* Ruột mũi nhọn (Màu kem) - Cố định cách lề phải 19px */
 .cat-speech-bubble::after {
   right: 19px;
   border-width: 6px 5px 0 5px;
   border-color: #fff8e7 transparent transparent transparent;
 }
 
-/* Hiển thị bong bóng thoại khi rê chuột hoặc kích hoạt */
 .cat-speech-bubble.show {
   opacity: 1;
   transform: translateY(0);
@@ -5755,6 +5755,66 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   color: #ffd700 !important;
 }
 
+.new-char-banner-wrapper {
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+  padding: 0 20px;
+}
+
+.new-char-banner-content {
+  background: linear-gradient(135deg, rgba(139, 58, 58, 0.1) 0%, rgba(212, 175, 55, 0.15) 100%);
+  border: 1px solid #d4af37;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.new-char-banner-content:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
+}
+
+.new-badge {
+  background: #8b3a3a;
+  color: #fff2c2;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.new-char-text {
+  flex: 1;
+  font-family: 'Merriweather', serif;
+  font-size: 0.95rem;
+  color: #f5f0eb;
+}
+
+.new-char-banner-content .bi-chevron-right {
+  color: #f5f0eb;
+  font-weight: bold;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.new-char-banner-content:hover .bi-chevron-right {
+  transform: translateX(4px);
+}
+
+.dark-theme .new-char-banner-content .bi-chevron-right {
+  color: #d4af37;
+}
+
+.dark-theme .new-char-text {
+  color: #f5f0eb;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .profile-page-container {
@@ -6251,5 +6311,17 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
 
   .fav-char-tag {
     font-size: 0.72rem !important;
+  }
+
+  .new-char-banner-content .new-char-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .new-char-banner-content .new-char-sub {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.75rem;
   }
 }
