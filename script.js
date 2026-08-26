@@ -373,12 +373,17 @@ function initMusicPlayer() {
 
   if (!audio) return;
 
-  function loadTrack(index) {
+function loadTrack(index) {
     if (playlist.length === 0) return;
     currentTrackIndex = index;
     const track = playlist[currentTrackIndex];
     audio.src = track.src;
-    if (trackTitle) trackTitle.textContent = track.title;
+    
+    if (trackTitle) {
+      trackTitle.textContent = track.title;
+      trackTitle.dataset.originalTitle = track.title; 
+    }
+    
     audio.load();
     updatePlaylistUI();
   }
@@ -3371,7 +3376,7 @@ const puzzleConfigs = {
   huy: {
     answer: "candyland",
     title: "Một Cơn Say",
-    subtitle: "Dương Khắc Huy (@_hyvq.ft)",
+    subtitle: "Dương Khắc Huy",
     toastMsg: "Giỏi lắm. Giờ thì đến đây, đừng để tôi phải đợi lâu."
   },
   seol: {
@@ -3422,7 +3427,7 @@ window.openPuzzleModal = function(puzzleId) {
       
       if (puzzleId === "huy") {
         if (modalTitle) modalTitle.textContent = "Một Đêm Say";
-        if (modalSubtitle) modalSubtitle.textContent = "Dương Khắc Huy (@_hyvq.ft)";
+        if (modalSubtitle) modalSubtitle.textContent = "Dương Khắc Huy";
         if (hintBox) {
           hintBox.innerHTML = `
             <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.88rem;">
@@ -3433,7 +3438,7 @@ window.openPuzzleModal = function(puzzleId) {
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
             <p style="font-style: italic; color: #8b3a3a; font-size: 0.82rem; line-height: 1.4;">
-              "Nơi chốn ngập tràn sự ngọt ngào giả tạo, nơi những viên kẹo đủ màu sắc che giấu cạm bẫy phía sau ánh đèn mập mờ."
+              "Thung lũng của những cạm bẫy."
             </p>
           `;
         }
