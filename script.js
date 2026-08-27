@@ -851,6 +851,8 @@ window.openBotModalByName = async function (name) {
 
     modal.classList.add("show");
     await syncModalFeedbacksByName(char.name);
+
+    autofillUserNames();
     
     // GỌI HÀM QUÉT KIỂM TRA MỞ KHÓA NGAY SAU KHI MODAL TẠO XONG NÚT
     checkUnlockedPuzzles();
@@ -3724,7 +3726,13 @@ function autofillUserNames() {
     cfsAuthorInput.value = displayName;
   }
 
-  // 2. Tự động điền vào tất cả các ô nhập tên Feedback trên trang
+  // 2. Tự động điền vào ô nhập tên trong Modal chi tiết nhân vật (#feedbackAuthor)
+  const modalAuthorInput = document.getElementById("feedbackAuthor");
+  if (modalAuthorInput && !modalAuthorInput.value.trim()) {
+    modalAuthorInput.value = displayName;
+  }
+
+  // 3. Tự động điền vào tất cả các ô nhập tên Feedback ngoài card trên trang
   document.querySelectorAll(".input-name").forEach((input) => {
     if (!input.value.trim()) {
       input.value = displayName;
