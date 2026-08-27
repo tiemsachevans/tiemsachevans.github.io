@@ -629,6 +629,7 @@ function reinitializePageScripts() {
   initDustParticles();
   checkUnlockedPuzzles();
   checkNewCharacter();
+  autofillUserNames();
   
   if (document.querySelector(".profile-page-container")) {
     initProfilePage();
