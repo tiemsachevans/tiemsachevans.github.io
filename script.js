@@ -854,7 +854,6 @@ window.openBotModalByName = async function (name) {
 
     autofillUserNames();
     
-    // GỌI HÀM QUÉT KIỂM TRA MỞ KHÓA NGAY SAU KHI MODAL TẠO XONG NÚT
     checkUnlockedPuzzles();
   }
 };
@@ -3649,13 +3648,14 @@ window.unlockCharacterLinks = function(puzzleId) {
 
 // Kiểm tra khi vừa tải trang, nếu đã giải mã rồi thì thả link ra luôn
 window.checkUnlockedPuzzles = function() {
-  document.querySelectorAll("a[data-real-href]").forEach(link => {
-      const puzzleId = link.dataset.puzzleId;
-      if (puzzleId && localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
-          unlockCharacterLinks(puzzleId);
-      }
+  const puzzleIds = ["delmare", "huy", "seol", "arashi", "tam", "ngon", "salfozziel"];
+  
+  puzzleIds.forEach(puzzleId => {
+    if (localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
+      unlockCharacterLinks(puzzleId);
+    }
   });
-}
+};
 
 // ==================== KIỂM TRA NHÂN VẬT MỚI TỪ SUPABASE ====================
 async function checkNewCharacter() {
