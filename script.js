@@ -3642,20 +3642,19 @@ window.verifyPuzzleCode = async function() {
   if (puzzleId === "salfozziel") validAnswers = ["1", "2", "3"];
 
   if (validAnswers.includes(code)) {
-    // 1. Lưu cục bộ
+    // 1. Lưu cục bộ trên thiết bị
     localStorage.setItem(`unlocked_${puzzleId}`, "true");
 
-    // 2. Đồng bộ lên Supabase profiles nếu user đã đăng nhập
+    // 2. Đồng bộ lên Supabase profiles bằng đúng tên cột unlocked_achievements
     if (currentUser) {
       const supabase = await getSupabase();
       if (supabase) {
-        // Lấy danh sách đang có trên localStorage để gom lại đẩy lên
         const currentUnlocked = getLocalUnlockedPuzzlesMap();
         await supabase
           .from("profiles")
           .upsert({
             id: currentUser.id,
-            unlocked_puzzles: currentUnlocked, // Lưu dạng object/JSON {"delmare": true, "huy": true,...}
+            unlocked_achievements: currentUnlocked,
             updated_at: new Date().toISOString()
           });
       }
@@ -3719,7 +3718,7 @@ async function syncAccountPuzzles(user) {
   if (!supabase) return;
 
   try {
-    // 1. Lấy dữ liệu unlocked_puzzles từ bảng profiles trên Supabase
+    // Lấy dữ liệu từ cột unlocked_puzzles trên Supabase
     const { data: profileData, error } = await supabase
       .from("profiles")
       .select("unlocked_puzzles")
@@ -3736,7 +3735,6 @@ async function syncAccountPuzzles(user) {
         }
       });
     } else {
-      // Nếu trên cloud chưa có mà máy có sẵn -> đẩy ngược lên cloud cho tài khoản này
       const localMap = getLocalUnlockedPuzzlesMap();
       if (Object.keys(localMap).length > 0) {
         await supabase
@@ -3749,7 +3747,6 @@ async function syncAccountPuzzles(user) {
       }
     }
 
-    // Quét và mở khóa giao diện ngay lập tức
     checkUnlockedPuzzles();
   } catch (err) {
     console.warn("Lỗi đồng bộ trạng thái puzzle tài khoản:", err);
