@@ -3624,7 +3624,7 @@ if (validAnswers.includes(code)) {
 } else {
       input.classList.add("error-shake");
       setTimeout(() => input.classList.remove("error-shake"), 400);
-      errorMsg.innerHTML = "❌ Đáp án chưa chính xác. Vui lòng thử lại!";
+      errorMsg.innerHTML = `<span style="color: #991b1b; font-weight: 600;">❌ Đáp án chưa chính xác. Vui lòng thử lại!</span>`;
       errorMsg.classList.add("show");
   }
 }
