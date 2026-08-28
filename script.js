@@ -6,17 +6,54 @@ const SUPABASE_ANON_KEY =
 
 let _supabaseInstance = null;
 
+async function ensureSupabaseScriptLoaded() {
+  if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
+    return true;
+  }
+
+  // Danh sách CDN dự phòng (jsDelivr và unpkg)
+  const cdnSources = [
+    "https://cdn.jsdelivr.532799.cn/npm/@supabase/supabase-js@2", // Hoặc cdn.jsdelivr.net chính hãng
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+    "https://unpkg.com/@supabase/supabase-js@2"
+  ];
+
+  for (const src of cdnSources) {
+    try {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
+        return true;
+      }
+    } catch (e) {
+      console.warn(`⚠️ Không thể tải Supabase từ nguồn: ${src}`);
+    }
+  }
+  return false;
+}
+
 // Hàm kiểm tra và chờ thư viện Supabase CDN nạp hoàn tất (chờ tối đa 3 giây)
 async function getSupabase() {
   if (_supabaseInstance) return _supabaseInstance;
 
-  let retries = 30; // Chờ tối đa 30 lần x 100ms = 3 giây
+  // Tăng thời gian chờ lên 6 giây và chủ động kiểm tra/nạp lại script dự phòng
+  let retries = 60; // 60 lần x 100ms = 6 giây
   while (
     retries > 0 &&
     (typeof window.supabase === "undefined" || !window.supabase.createClient)
   ) {
     await new Promise((resolve) => setTimeout(resolve, 100));
     retries--;
+  }
+
+  if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+    await ensureSupabaseScriptLoaded();
   }
 
   if (typeof window.supabase !== "undefined" && window.supabase.createClient) {
@@ -27,7 +64,7 @@ async function getSupabase() {
     return _supabaseInstance;
   }
 
-  console.warn("⚠️ Thư viện Supabase CDN chưa nạp kịp sau 3 giây.");
+  console.warn("⚠️ Không thể khởi tạo Supabase sau khi đã thử mọi nguồn CDN.");
   return null;
 }
 
@@ -2332,6 +2369,7 @@ async function syncAllUserData(user) {
   if (!user) return;
   await syncAccountFavorites(user);
   await syncAccountProgress(user);
+  await syncAccountPuzzles(user);
 }
 
 // 2. Cập nhật giao diện Navbar (Avatar + Tên lữ khách)
@@ -3587,7 +3625,7 @@ window.closePuzzleModal = function() {
 }
 
 // Kiểm tra mã nhập vào
-window.verifyPuzzleCode = function() {
+window.verifyPuzzleCode = async function() {
   const modal = document.getElementById("puzzleModal");
   const input = document.getElementById("puzzlePasscodeInput");
   const errorMsg = document.getElementById("puzzleErrorMsg");
@@ -3595,37 +3633,55 @@ window.verifyPuzzleCode = function() {
   const puzzleId = modal.dataset.currentPuzzle;
   const code = input.value.trim().toLowerCase();
   
-let validAnswers = ["bannga"];
-  if (puzzleId === "huy") {
-    validAnswers = ["candyland"];
-  }
-  if (puzzleId === "seol") {
-    validAnswers = ["jacktheripper"];
-  }
-  if (puzzleId === "arashi") {
-    validAnswers = ["otomekaibou"];
-  }
-  if (puzzleId === "tam") {
-    validAnswers = ["ihearu"];
-  }
-  if (puzzleId === "ngon") {
-    validAnswers = ["fake"];
-  }
-  if (puzzleId === "salfozziel") {
-    validAnswers = ["1", "2", "3"];
-  }
+  let validAnswers = ["bannga"];
+  if (puzzleId === "huy") validAnswers = ["candyland"];
+  if (puzzleId === "seol") validAnswers = ["jacktheripper"];
+  if (puzzleId === "arashi") validAnswers = ["otomekaibou"];
+  if (puzzleId === "tam") validAnswers = ["ihearu"];
+  if (puzzleId === "ngon") validAnswers = ["fake"];
+  if (puzzleId === "salfozziel") validAnswers = ["1", "2", "3"];
 
-if (validAnswers.includes(code)) {
-      localStorage.setItem(`unlocked_${puzzleId}`, "true");
-      closePuzzleModal();
-      unlockCharacterLinks(puzzleId);
-      showToast("Đã giải mã thành công! Nút Google AI Studio đã mở.", "success");
-} else {
-      input.classList.add("error-shake");
-      setTimeout(() => input.classList.remove("error-shake"), 400);
-      errorMsg.innerHTML = `<span style="color: #991b1b; font-weight: 600;">❌ Đáp án chưa chính xác. Vui lòng thử lại!</span>`;
-      errorMsg.classList.add("show");
+  if (validAnswers.includes(code)) {
+    // 1. Lưu cục bộ
+    localStorage.setItem(`unlocked_${puzzleId}`, "true");
+
+    // 2. Đồng bộ lên Supabase profiles nếu user đã đăng nhập
+    if (currentUser) {
+      const supabase = await getSupabase();
+      if (supabase) {
+        // Lấy danh sách đang có trên localStorage để gom lại đẩy lên
+        const currentUnlocked = getLocalUnlockedPuzzlesMap();
+        await supabase
+          .from("profiles")
+          .upsert({
+            id: currentUser.id,
+            unlocked_puzzles: currentUnlocked, // Lưu dạng object/JSON {"delmare": true, "huy": true,...}
+            updated_at: new Date().toISOString()
+          });
+      }
+    }
+
+    closePuzzleModal();
+    unlockCharacterLinks(puzzleId);
+    showToast("Đã giải mã thành công! Nút Google AI Studio đã mở.", "success");
+  } else {
+    input.classList.add("error-shake");
+    setTimeout(() => input.classList.remove("error-shake"), 400);
+    errorMsg.innerHTML = `<span style="color: #991b1b; font-weight: 600;">❌ Đáp án chưa chính xác. Vui lòng thử lại!</span>`;
+    errorMsg.classList.add("show");
   }
+}
+
+// Hàm phụ trợ lấy toàn bộ trạng thái unlock hiện tại từ localStorage dưới dạng Object
+function getLocalUnlockedPuzzlesMap() {
+  const puzzleIds = ["delmare", "huy", "seol", "arashi", "tam", "ngon", "salfozziel"];
+  const map = {};
+  puzzleIds.forEach(id => {
+    if (localStorage.getItem(`unlocked_${id}`) === "true") {
+      map[id] = true;
+    }
+  });
+  return map;
 }
 
 // Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
@@ -3656,6 +3712,49 @@ window.checkUnlockedPuzzles = function() {
     }
   });
 };
+
+async function syncAccountPuzzles(user) {
+  if (!user) return;
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  try {
+    // 1. Lấy dữ liệu unlocked_puzzles từ bảng profiles trên Supabase
+    const { data: profileData, error } = await supabase
+      .from("profiles")
+      .select("unlocked_puzzles")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!error && profileData && profileData.unlocked_puzzles) {
+      const cloudPuzzles = profileData.unlocked_puzzles;
+      
+      // Gộp vào localStorage của máy hiện tại
+      Object.keys(cloudPuzzles).forEach(puzzleId => {
+        if (cloudPuzzles[puzzleId]) {
+          localStorage.setItem(`unlocked_${puzzleId}`, "true");
+        }
+      });
+    } else {
+      // Nếu trên cloud chưa có mà máy có sẵn -> đẩy ngược lên cloud cho tài khoản này
+      const localMap = getLocalUnlockedPuzzlesMap();
+      if (Object.keys(localMap).length > 0) {
+        await supabase
+          .from("profiles")
+          .upsert({
+            id: user.id,
+            unlocked_puzzles: localMap,
+            updated_at: new Date().toISOString()
+          });
+      }
+    }
+
+    // Quét và mở khóa giao diện ngay lập tức
+    checkUnlockedPuzzles();
+  } catch (err) {
+    console.warn("Lỗi đồng bộ trạng thái puzzle tài khoản:", err);
+  }
+}
 
 // ==================== KIỂM TRA NHÂN VẬT MỚI TỪ SUPABASE ====================
 async function checkNewCharacter() {
