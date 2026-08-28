@@ -3536,7 +3536,7 @@ window.openPuzzleModal = function(puzzleId) {
             </p>
           `;
         }
-        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 4 chữ cái, viết liền không dấu";
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 1 từ tiếng Anh gồm 4 chữ cái";
       } else if (puzzleId === "salfozziel") {
         if (modalTitle) modalTitle.textContent = "Cái Giá Của Sự Lựa Chọn";
         if (modalSubtitle) modalSubtitle.textContent = "Salfozziel";
@@ -3572,7 +3572,7 @@ window.openPuzzleModal = function(puzzleId) {
             </p>
           `;
         }
-        if (formatHint) formatHint.textContent = "* Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
+        if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
       }
       
       setTimeout(() => {
@@ -3631,7 +3631,6 @@ if (validAnswers.includes(code)) {
 
 // Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
 window.unlockCharacterLinks = function(puzzleId) {
-    // Trả lại đường dẫn thật cho nút Google AI Studio và đổi ổ khóa thành mở khóa màu xanh
     const lockedLinks = document.querySelectorAll(`a[data-real-href][data-puzzle-id="${puzzleId}"]`);
     lockedLinks.forEach(link => {
         link.href = link.getAttribute("data-real-href"); 
