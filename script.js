@@ -3480,19 +3480,20 @@ window.openPuzzleModal = function(puzzleId) {
       const formatHint = modal.querySelector(".book-form-group div");
       
       if (puzzleId === "huy") {
+        huyWrongAttempts = 0;
         if (modalTitle) modalTitle.textContent = "Một Đêm Say";
         if (modalSubtitle) modalSubtitle.textContent = "Dương Khắc Huy";
         if (hintBox) {
           hintBox.innerHTML = `
             <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.88rem;">
-              Dương Khắc Huy (@_hyvq.ft) vừa đăng một Highlights / Tin nổi bật mới:
+              Bạn có 1 thông báo từ ứng dụng <strong>Instagram</strong>
+            </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.88rem;">
+              Dương Khắc Huy <em>(@_hyvq.ft)</em> vừa đăng một Highlights / Tin nổi bật mới:
             </p>
             <p style="font-weight: bold; font-size: 0.95rem; color: #8b3a3a; margin: 10px 0; font-style: italic;">
               "Vết tích của một đêm quên lối về."
-            </p>
-            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <p style="font-style: italic; color: #8b3a3a; font-size: 0.82rem; line-height: 1.4;">
-              "Thung lũng của những cạm bẫy."
             </p>
           `;
         }
@@ -3624,7 +3625,9 @@ window.closePuzzleModal = function() {
   if(modal) modal.classList.remove("active");
 }
 
-// Kiểm tra mã nhập vào
+// Kiểm tra mã nhập vào và Thêm biến đếm số lần nhập sai riêng cho Dương Khắc Huy
+let huyWrongAttempts = 0;
+
 window.verifyPuzzleCode = async function() {
   const modal = document.getElementById("puzzleModal");
   const input = document.getElementById("puzzlePasscodeInput");
@@ -3642,13 +3645,12 @@ window.verifyPuzzleCode = async function() {
   if (puzzleId === "salfozziel") validAnswers = ["1", "2", "3"];
 
   if (validAnswers.includes(code)) {
-    // 1. Lưu trực tiếp trạng thái mở khóa vào thiết bị
+    if (puzzleId === "huy") {
+      huyWrongAttempts = 0;
+    }
     localStorage.setItem(`unlocked_${puzzleId}`, "true");
 
-    // 2. Lấy toàn bộ danh sách map hiện tại bao gồm cả puzzle vừa giải
     const currentUnlocked = getLocalUnlockedPuzzlesMap();
-
-    // 3. Đồng bộ ngay lập tức lên Supabase bảng profiles cột unlocked_puzzles
     if (currentUser) {
       const supabase = await getSupabase();
       if (supabase) {
@@ -3668,7 +3670,24 @@ window.verifyPuzzleCode = async function() {
   } else {
     input.classList.add("error-shake");
     setTimeout(() => input.classList.remove("error-shake"), 400);
-    errorMsg.innerHTML = `<span style="color: #991b1b; font-weight: 600;">❌ Đáp án chưa chính xác. Vui lòng thử lại!</span>`;
+
+    // Xử lý riêng cho Dương Khắc Huy tăng dần qua từng lần sai
+    if (puzzleId === "huy") {
+      huyWrongAttempts++;
+      
+      if (huyWrongAttempts === 1) {
+        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meow? Đáp án chưa chính xác (1/3)</span>`;
+      } else if (huyWrongAttempts === 2) {
+        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meo meo? (2/3)</span>`;
+      } else if (huyWrongAttempts === 3) {
+        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meo meo~ (3/3)</span>`;
+      } else {
+        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Gợi ý từ Nhân viên Mimi:<br>Lữ khách đã kiểm tra tài khoản Instagram của Dương Khắc Huy chưa~?</span>`;
+      }
+    } else {
+      errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;">❌ Đáp án chưa chính xác. Cố lên nào!</span>`;
+    }
+    
     errorMsg.classList.add("show");
   }
 }
