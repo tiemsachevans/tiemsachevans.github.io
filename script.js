@@ -3676,7 +3676,7 @@ window.verifyPuzzleCode = async function() {
       huyWrongAttempts++;
       
       if (huyWrongAttempts === 1) {
-        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meow? Đáp án chưa chính xác (1/3)</span>`;
+        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meow? (1/3)</span>`;
       } else if (huyWrongAttempts === 2) {
         errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meo meo? (2/3)</span>`;
       } else if (huyWrongAttempts === 3) {
