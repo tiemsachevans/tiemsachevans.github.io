@@ -2545,14 +2545,36 @@ async function handleAuthSubmit(e) {
 
       currentUser = data.user;
 
-      if (currentUser) {
-        await supabase.from("profiles").upsert({
+            if (currentUser) {
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+
+        const profilePayload = {
           user_id: currentUser.id,
           display_name: rawUsername,
-          avatar_url: "./images/default_avt.jpg",
+          avatar_url: currentUser.user_metadata?.avatar_url || "./images/default_avt.jpg",
           updated_at: new Date().toISOString()
-        });
+        };
+        
+        if (existingProfile) {
+        // Nếu đã có -> Tiến hành Update
+        await supabase
+          .from("profiles")
+          .update({
+            display_name: profilePayload.display_name,
+            updated_at: profilePayload.updated_at
+          })
+          .eq("user_id", currentUser.id);
+      } else {
+        // Nếu chưa có -> Tiến hành Insert
+        await supabase
+          .from("profiles")
+          .insert([profilePayload]);
       }
+    }
 
       showToast(`Đăng ký thẻ thành công! Chào mừng ${rawUsername}.`, "success");
     } else {
@@ -2572,21 +2594,35 @@ async function handleAuthSubmit(e) {
       currentUser = data.user;
 
       if (currentUser) {
-        const { data: profile } = await supabase
+        const { data: existingProfile } = await supabase
           .from("profiles")
           .select("display_name")
           .eq("user_id", currentUser.id)
           .maybeSingle();
 
-        const nameToSave = profile?.display_name || currentUser.user_metadata?.display_name || rawUsername;
-        
-        await supabase.from("profiles").upsert({
+        const profilePayload = {
           user_id: currentUser.id,
-          display_name: nameToSave,
+          display_name: rawUsername,
           avatar_url: currentUser.user_metadata?.avatar_url || "./images/default_avt.jpg",
           updated_at: new Date().toISOString()
-        }, { onConflict: "user_id" });
+        };
+        
+        if (existingProfile) {
+        // Nếu đã có -> Tiến hành Update
+        await supabase
+          .from("profiles")
+          .update({
+            display_name: profilePayload.display_name,
+            updated_at: profilePayload.updated_at
+          })
+          .eq("user_id", currentUser.id);
+      } else {
+        // Nếu chưa có -> Tiến hành Insert
+        await supabase
+          .from("profiles")
+          .insert([profilePayload]);
       }
+    }
 
       showToast("Đăng nhập thành công!", "success");
     }
