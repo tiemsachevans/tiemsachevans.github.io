@@ -2575,17 +2575,17 @@ async function handleAuthSubmit(e) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("display_name")
-          .eq("id", currentUser.id)
+          .eq("user_id", currentUser.id)
           .maybeSingle();
 
         const nameToSave = profile?.display_name || currentUser.user_metadata?.display_name || rawUsername;
         
         await supabase.from("profiles").upsert({
-          id: currentUser.id,
+          user_id: currentUser.id,
           display_name: nameToSave,
           avatar_url: currentUser.user_metadata?.avatar_url || "./images/default_avt.jpg",
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: "user_id" });
       }
 
       showToast("Đăng nhập thành công!", "success");
@@ -2654,10 +2654,10 @@ async function handleAvatarUpload(event) {
         await supabase
           .from("profiles")
           .upsert({
-            id: currentUser.id,
+            user_id: currentUser.id,
             avatar_url: compressedAvatarUrl,
             updated_at: new Date().toISOString()
-          });
+          }, { onConflict: "user_id" });
 
         // Cập nhật state chung của user hiện tại
         currentUser.user_metadata.avatar_url = compressedAvatarUrl;
@@ -2732,10 +2732,10 @@ async function saveInlineName() {
     await supabase
       .from("profiles")
       .upsert({
-        id: currentUser.id,
+        user_id: currentUser.id,
         display_name: newName,
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: "user_id" });
 
     // 3. ĐỒNG BỘ: Cập nhật tên tác giả trong bảng feedbacks
     if (oldName) {
@@ -3101,10 +3101,11 @@ window.saveInlineName = async function () {
 
     // 2. Ghi đè / Upsert trực tiếp vào bảng profiles
     const { error: profileError } = await supabase.from("profiles").upsert({
-      id: currentUser.id,
+      user_id: currentUser.id,
       display_name: newName,
       updated_at: new Date().toISOString()
-    });
+    }, { onConflict: "user_id" });
+    
     if (profileError) throw profileError;
 
     // 3. Đồng bộ tên mới sang bảng feedbacks & cfs_notes
@@ -3168,7 +3169,7 @@ window.saveInlineBio = async function () {
 
     // 2. Cập nhật bảng profiles
     await supabase.from("profiles").upsert({
-      id: currentUser.id,
+      user_id: currentUser.id,
       bio: newBio,
       updated_at: new Date().toISOString()
     });
@@ -3308,7 +3309,7 @@ async function loadUserMedals(user) {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("title, created_at")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       // 2. Kiểm tra tiến trình giải đố từ bảng puzzle_solvers
@@ -3657,10 +3658,10 @@ window.verifyPuzzleCode = async function() {
         await supabase
           .from("profiles")
           .upsert({
-            id: currentUser.id,
+            user_id: currentUser.id,
             unlocked_puzzles: currentUnlocked,
             updated_at: new Date().toISOString()
-          }, { onConflict: "id" });
+          }, { onConflict: "user_id" });
       }
     }
 
@@ -3742,7 +3743,7 @@ async function syncAccountPuzzles(user) {
     const { data: profileData, error } = await supabase
       .from("profiles")
       .select("unlocked_puzzles")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     let cloudPuzzles = (profileData && profileData.unlocked_puzzles) ? profileData.unlocked_puzzles : {};
@@ -3762,10 +3763,10 @@ async function syncAccountPuzzles(user) {
     await supabase
       .from("profiles")
       .upsert({
-        id: user.id,
+        user_id: user.id,
         unlocked_puzzles: mergedMap,
         updated_at: new Date().toISOString()
-      }, { onConflict: "id" });
+      }, { onConflict: "user_id" });
 
     checkUnlockedPuzzles();
   } catch (err) {
