@@ -2547,7 +2547,7 @@ async function handleAuthSubmit(e) {
 
       if (currentUser) {
         await supabase.from("profiles").upsert({
-          id: currentUser.id,
+          user_id: currentUser.id,
           display_name: rawUsername,
           avatar_url: "./images/default_avt.jpg",
           updated_at: new Date().toISOString()
@@ -3003,7 +3003,7 @@ async function renderProfileInfo(user) {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("display_name, avatar_url, bio")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (profileData) {
