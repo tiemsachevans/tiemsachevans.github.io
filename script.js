@@ -3105,7 +3105,7 @@ window.saveInlineName = async function () {
       display_name: newName,
       updated_at: new Date().toISOString()
     }, { onConflict: "user_id" });
-    
+
     if (profileError) throw profileError;
 
     // 3. Đồng bộ tên mới sang bảng feedbacks & cfs_notes
