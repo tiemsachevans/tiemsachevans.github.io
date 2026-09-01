@@ -1311,7 +1311,99 @@ async function loadFeedbacks() {
   }
 }
 
-// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
+// // ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
+// function initDustParticles() {
+//   let canvas = document.getElementById("dustCanvas");
+//   if (!canvas) {
+//     canvas = document.createElement("canvas");
+//     canvas.id = "dustCanvas";
+//     document.body.appendChild(canvas);
+//   }
+
+//   const ctx = canvas.getContext("2d");
+//   let width = (canvas.width = window.innerWidth);
+//   let height = (canvas.height = window.innerHeight);
+
+//   window.addEventListener("resize", () => {
+//     width = canvas.width = window.innerWidth;
+//     height = canvas.height = window.innerHeight;
+//   });
+
+//   // Số lượng hạt bụi (tối ưu hiệu năng từ PC đến Mobile)
+//   const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
+//   const particles = [];
+
+//   class DustParticle {
+//     constructor() {
+//       this.reset(true);
+//     }
+
+//     reset(initial = false) {
+//       this.x = Math.random() * width;
+//       this.y = initial ? Math.random() * height : -10;
+//       this.radius = Math.random() * 2.2 + 0.8; // Kích thước hạt từ 0.8px - 3px
+//       this.vx = (Math.random() - 0.5) * 0.4; // Tốc độ dạt ngang nhẹ
+//       this.vy = Math.random() * 0.5 + 0.2;  // Tốc độ rơi từ từ
+//       this.opacity = Math.random() * 0.6 + 0.3;
+//       this.fadeSpeed = Math.random() * 0.008 + 0.003;
+//       this.growing = Math.random() > 0.5;
+      
+//       // Màu sắc bụi vàng kim & bụi giấy ấm áp
+//       const colors = [
+//         "255, 235, 170", // Vàng sáng
+//         "212, 175, 55",  // Vàng đồng vintage
+//         "245, 222, 179", // Vàng lúa mạch
+//         "255, 255, 255"  // Đốm trắng sáng li ti
+//       ];
+//       this.color = colors[Math.floor(Math.random() * colors.length)];
+//     }
+
+//     update() {
+//       this.x += this.vx;
+//       this.y += this.vy;
+
+//       // Hiệu ứng nhấp nháy mờ ảo
+//       if (this.growing) {
+//         this.opacity += this.fadeSpeed;
+//         if (this.opacity >= 0.85) this.growing = false;
+//       } else {
+//         this.opacity -= this.fadeSpeed;
+//         if (this.opacity <= 0.15) this.growing = true;
+//       }
+
+//       // Khi hạt trôi ra khỏi màn hình thì đưa trở lại phía trên
+//       if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+//         this.reset();
+//       }
+//     }
+
+//     draw() {
+//       ctx.beginPath();
+//       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+//       ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+//       ctx.shadowBlur = 6;
+//       ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+//       ctx.fill();
+//     }
+//   }
+
+//   for (let i = 0; i < particleCount; i++) {
+//     particles.push(new DustParticle());
+//   }
+
+//   function animate() {
+//     ctx.clearRect(0, 0, width, height);
+//     for (let i = 0; i < particles.length; i++) {
+//       particles[i].update();
+//       particles[i].draw();
+//     }
+//     requestAnimationFrame(animate);
+//   }
+
+//   animate();
+// }
+
+// ==================== HIỆU ỨNG LÁ CỜ VIỆT NAM RƠI TOÀN MÀN HÌNH ====================
 function initDustParticles() {
   let canvas = document.getElementById("dustCanvas");
   if (!canvas) {
@@ -1329,73 +1421,96 @@ function initDustParticles() {
     height = canvas.height = window.innerHeight;
   });
 
-  // Số lượng hạt bụi (tối ưu hiệu năng từ PC đến Mobile)
-  const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
-  const particles = [];
+  // Số lượng lá cờ (tối ưu hiệu năng từ PC đến Mobile)
+  const flagCount = Math.min(Math.floor((width * height) / 35000), 30);
+  const flags = [];
 
-  class DustParticle {
+  class VietnamFlagParticle {
     constructor() {
       this.reset(true);
     }
 
     reset(initial = false) {
       this.x = Math.random() * width;
-      this.y = initial ? Math.random() * height : -10;
-      this.radius = Math.random() * 2.2 + 0.8; // Kích thước hạt từ 0.8px - 3px
-      this.vx = (Math.random() - 0.5) * 0.4; // Tốc độ dạt ngang nhẹ
-      this.vy = Math.random() * 0.5 + 0.2;  // Tốc độ rơi từ từ
-      this.opacity = Math.random() * 0.6 + 0.3;
-      this.fadeSpeed = Math.random() * 0.008 + 0.003;
-      this.growing = Math.random() > 0.5;
-      
-      // Màu sắc bụi vàng kim & bụi giấy ấm áp
-      const colors = [
-        "255, 235, 170", // Vàng sáng
-        "212, 175, 55",  // Vàng đồng vintage
-        "245, 222, 179", // Vàng lúa mạch
-        "255, 255, 255"  // Đốm trắng sáng li ti
-      ];
-      this.color = colors[Math.floor(Math.random() * colors.length)];
+      this.y = initial ? Math.random() * height : -30;
+      this.width = Math.random() * 16 + 18; // Chiều rộng lá cờ từ 18px - 34px
+      this.height = this.width * 0.65;     // Tỷ lệ chuẩn lá cờ (2:3)
+      this.vx = (Math.random() - 0.5) * 0.8; // Trôi dạt ngang nhẹ theo gió
+      this.vy = Math.random() * 0.8 + 0.4;  // Tốc độ rơi từ từ
+      this.rotation = Math.random() * Math.PI * 2; // Góc xoay ban đầu
+      this.vRot = (Math.random() - 0.5) * 0.03;   // Tốc độ lật/xoay lá cờ
+      this.opacity = Math.random() * 0.4 + 0.6;
     }
 
     update() {
-      this.x += this.vx;
+      this.x += this.vx + Math.sin(this.y * 0.02) * 0.5; // Hiệu ứng lá cờ bay lượn uốn lượn
       this.y += this.vy;
+      this.rotation += this.vRot;
 
-      // Hiệu ứng nhấp nháy mờ ảo
-      if (this.growing) {
-        this.opacity += this.fadeSpeed;
-        if (this.opacity >= 0.85) this.growing = false;
-      } else {
-        this.opacity -= this.fadeSpeed;
-        if (this.opacity <= 0.15) this.growing = true;
-      }
-
-      // Khi hạt trôi ra khỏi màn hình thì đưa trở lại phía trên
-      if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+      // Khi lá cờ trôi ra khỏi màn hình thì đưa trở lại phía trên
+      if (this.y > height + 40 || this.x < -40 || this.x > width + 40) {
         this.reset();
       }
     }
 
     draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.globalAlpha = this.opacity;
+
+      // 1. Vẽ nền đỏ của lá cờ
+      ctx.fillStyle = "#da251d"; // Màu đỏ cờ tổ quốc
+      ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+
+      // Viền nhẹ xung quanh lá cờ
+      ctx.strokeStyle = "#b51a13";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
+
+      // 2. Vẽ ngôi sao vàng 5 cánh ở chính giữa lá cờ
+      ctx.fillStyle = "#ff0"; // Màu vàng ngôi sao
+      this.drawStar(ctx, 0, 0, 5, this.width * 0.22, this.width * 0.09);
+
+      ctx.restore();
+    }
+
+    // Hàm hỗ trợ vẽ ngôi sao 5 cánh
+    drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+      let rot = (Math.PI / 2) * 3;
+      let x = cx;
+      let y = cy;
+      let step = Math.PI / spikes;
+
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-      ctx.shadowBlur = 6;
-      ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+      ctx.moveTo(cx, cy - outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+      }
+      ctx.lineTo(cx, cy - outerRadius);
+      ctx.closePath();
       ctx.fill();
     }
   }
 
-  for (let i = 0; i < particleCount; i++) {
-    particles.push(new DustParticle());
+  // Khởi tạo danh sách các hạt lá cờ
+  for (let i = 0; i < flagCount; i++) {
+    flags.push(new VietnamFlagParticle());
   }
 
   function animate() {
     ctx.clearRect(0, 0, width, height);
-    for (let i = 0; i < particles.length; i++) {
-      particles[i].update();
-      particles[i].draw();
+    for (let i = 0; i < flags.length; i++) {
+      flags[i].update();
+      flags[i].draw();
     }
     requestAnimationFrame(animate);
   }
@@ -3468,6 +3583,8 @@ window.openPuzzleModal = function(puzzleId) {
             <p style="font-weight: bold; font-size: 0.95rem; color: #8b3a3a; margin: 10px 0; font-style: italic;">
               "Vết tích của một đêm quên lối về."
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 9 chữ cái, viết liền không dấu";
@@ -3489,6 +3606,8 @@ window.openPuzzleModal = function(puzzleId) {
             <p style="font-style: italic; color: #8b3a3a; font-size: 0.82rem; line-height: 1.4;">
               "Đi lùi 3 bước để tiến đến sự thật." - Đó là điều mà kẻ sát nhân đã để lại trên bức tường đỏ thắm tại hiện trường.
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 13 chữ cái, viết liền không dấu";
@@ -3515,6 +3634,8 @@ window.openPuzzleModal = function(puzzleId) {
             <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
               "Find me, hear me."
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 11 chữ cái, viết liền không dấu";
@@ -3530,6 +3651,8 @@ window.openPuzzleModal = function(puzzleId) {
             <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
               "Tần số kết nối giữa hai tâm hồn, nơi âm thanh vượt qua màng nhĩ để chạm thẳng đến sự thấu cảm."
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
@@ -3545,6 +3668,8 @@ window.openPuzzleModal = function(puzzleId) {
             <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
               Tác phẩm này hoàn toàn không phải hàng nguyên bản. Bản chất của nó là gì?
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 1 từ tiếng Anh gồm 4 chữ cái";
@@ -3554,17 +3679,18 @@ window.openPuzzleModal = function(puzzleId) {
         if (hintBox) {
           hintBox.innerHTML = `
             <p style="margin-bottom: 10px; line-height: 1.5; font-size: 0.9rem; font-style: italic; color: #8b3a3a;">
-              Ta là chiếc gương phản chiếu tâm trí ngươi, nhưng để phá vỡ vòng lặp này, ngươi buộc phải thực hiện chính xác một hành động duy nhất bằng cách chọn một trong ba con đường sau:<br>🔹 <strong>1.</strong> Uống chén độc dược ngưng đọng thời gian để trở thành kẻ bất tử trong cô độc vĩnh cửu.<br>🔹 <strong>2.</strong> Tự tay bóp nát trái tim mình để tồn tại dưới dạng một thực thể vô định không cảm xúc.<br>🔹 <strong>3.</strong> Nhảy xuống vực sâu không đáy để hòa làm một với bóng tối nguyên thủy.<br>
+              Ta là chiếc gương phản chiếu tâm trí ngươi, nhưng để phá vỡ vòng lặp này, ngươi buộc phải thực hiện chính xác một hành động duy nhất bằng cách chọn một trong ba con đường sau:<br><strong>1.</strong> Uống chén độc dược ngưng đọng thời gian để trở thành kẻ bất tử trong cô độc vĩnh cửu.<br><strong>2.</strong> Tự tay bóp nát trái tim mình để tồn tại dưới dạng một thực thể vô định không cảm xúc.<br><strong>3.</strong> Nhảy xuống vực sâu không đáy để hòa làm một với bóng tối nguyên thủy.<br>
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
             <p style="font-style: italic; color: #6c584c; font-size: 0.82rem; line-height: 1.4;">
               <em>(Cảnh báo: Tấm gương dần xuất hiện những vết nứt, khiến hình ảnh phản chiếu của ngươi trở nên méo mó.)</em>
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "There's only one true answer.";
       } else {
-        // Mặc định: Delmare's Abyss
         if (modalTitle) modalTitle.textContent = "Vực Sâu Danh Dự";
         if (modalSubtitle) modalSubtitle.textContent = "Delmare's Abyss";
         if (hintBox) {
@@ -3581,6 +3707,8 @@ window.openPuzzleModal = function(puzzleId) {
             <p style="font-style: italic; color: #8b3a3a; font-size: 0.85rem; line-height: 1.4;">
               "Sự thật về một người không nằm ở khởi đầu, cũng chẳng ở kết cục. Con người thật luôn bị kẹp chặt ở chính giữa những lằn ranh."
             </p>
+            <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
@@ -3655,7 +3783,7 @@ window.verifyPuzzleCode = async function() {
       } else if (huyWrongAttempts === 3) {
         errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meo meo~ (3/3)</span>`;
       } else {
-        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Gợi ý từ Nhân viên Mimi:<br>Lữ khách đã kiểm tra tài khoản Instagram của Dương Khắc Huy chưa~?</span>`;
+        errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;">ฅ₍^>⩊<^₎ฅ⟆ Gợi ý từ Mimi:<br>Lữ khách đã kiểm tra tài khoản Instagram của Dương Khắc Huy chưa~?</span>`;
       }
     } else {
       errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;">❌ Đáp án chưa chính xác. Cố lên nào!</span>`;
