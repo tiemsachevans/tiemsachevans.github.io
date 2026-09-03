@@ -1028,8 +1028,8 @@ header nav a:not(.nav-logo):hover,
 .feedback-section {
   border: 1px solid rgba(139, 58, 58, 0.2);
   border-radius: 8px;
-  padding: 14px 16px;
-  margin-top: 12px;
+  padding: 10px 12px !important;
+  margin-top: 8px !important;
   background-color: rgba(139, 58, 58, 0.02);
   box-shadow: none;
   box-sizing: border-box;
@@ -1044,11 +1044,12 @@ header nav a:not(.nav-logo):hover,
 .feedback-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   max-height: 200px;
   overflow-y: auto;
   margin-bottom: 12px;
   padding-right: 4px;
+  max-height: 110px !important; /* Thu gọn chiều cao khung hiển thị ngoài card */
+  gap: 6px !important;
 }
 
 .feedback-list::-webkit-scrollbar {
@@ -1206,6 +1207,87 @@ header nav a:not(.nav-logo):hover,
 .input-row {
   display: flex;
   gap: 8px;
+}
+
+.modal-right-col .feedback-list,
+.modal-right-col .dynamic-feedback-list {
+  max-height: 130px !important;
+  gap: 8px !important;
+}
+
+.feedback-item-wrapper {
+  margin-bottom: 8px !important;
+}
+
+.feedback-item,
+.feedback-parent-item,
+.feedback-reply-item,
+.feedback-item-text,
+.feedback-replies-container,
+.dynamic-feedback-list {
+  font-family: "Merriweather", serif !important;
+  font-size: 14px !important;
+}
+
+.feedback-parent-item div,
+.feedback-reply-item div {
+  font-family: "Merriweather", serif !important;
+  font-size: 14px !important;
+  line-height: 1.6;
+}
+
+/* Thu gọn form nhập bên dưới để không chiếm diện tích */
+.modal-right-col .feedback-form-box {
+  margin-top: auto !important;
+  padding-top: 8px !important;
+  gap: 6px !important;
+  border-top: 1px solid rgba(139, 58, 58, 0.2);
+}
+
+.modal-right-col .feedback-form-box .feedback-input,
+.modal-right-col .feedback-form-box #feedbackAuthor {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  height: 32px !important;
+  font-family: "Merriweather", serif !important;
+  font-style: italic !important;
+}
+
+.modal-right-col .feedback-form-box .feedback-textarea,
+.modal-right-col .feedback-form-box #feedbackContent {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  min-height: 42px !important;
+  max-height: 80px !important;
+  resize: none !important;
+  font-family: "Merriweather", serif !important;
+  font-style: italic !important;
+}
+
+.modal-right-col .feedback-form-box .feedback-submit-btn,
+.modal-right-col .feedback-form-box #submitFeedbackBtn {
+  padding: 5px 16px !important;
+  font-size: 12px !important;
+  align-self: flex-end;
+}
+
+/* --- HỖ TRỢ XUỐNG DÒNG CHO Ô NHẬP PHẢN HỒI (REPLY) --- */
+.reply-content-input {
+  font-family: "Merriweather", serif !important;
+  font-style: italic !important;
+  font-size: 13px !important;
+  resize: none !important;
+  min-height: 45px !important;
+  max-height: 120px !important;
+  overflow-y: auto !important;
+  line-height: 1.4 !important;
+  box-sizing: border-box !important;
+}
+
+.reply-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end; /* Canh nút Gửi thẳng hàng với đáy textarea */
 }
 
 /* STYLES DÀNH RIÊNG CHO SECRET CARD TÁCH BIỆT */
@@ -1928,9 +2010,9 @@ header nav a:not(.nav-logo):hover,
 .modal-right-col {
   border-left: 1px solid rgba(139, 58, 58, 0.2);
   padding-left: 24px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
   box-sizing: border-box;
 }
 
@@ -2030,8 +2112,9 @@ header nav a:not(.nav-logo):hover,
 }
 
 body.modal-open {
-  overflow: hidden;
-  height: 100vh;
+  overflow: hidden !important;
+  height: 100vh !important;
+  touch-action: none !important;
 }
 
 #botModal {

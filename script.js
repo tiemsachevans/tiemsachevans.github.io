@@ -304,7 +304,7 @@ function initGlobalListeners() {
         .getElementById("modalTitle")
         ?.textContent.trim();
 
-      const author = authorInput?.value.trim() || "Lữ khách ẩn danh";
+      const author = authorInput?.value.trim() || currentUser?.user_metadata?.display_name || "Lữ khách ẩn danh";
       const content = contentInput?.value.trim();
 
       if (!content) {
@@ -312,47 +312,29 @@ function initGlobalListeners() {
         return;
       }
 
-      // 1. Tạo phần tử feedback HTML mới
-      const newFeedbackHTML = `
-    <div class="feedback-item">
-      <strong>${escapeHTML(author)}:</strong> ${escapeHTML(content)}
-    </div>
-  `;
+      const userId = currentUser ? currentUser.id : null;
+      const avatarUrl = currentUser?.user_metadata?.avatar_url || "./images/default_avt.jpg";
 
-      // 2. Cập nhật giao diện Cột Phải trong Modal
-      const modalList = document.getElementById("dynamicFeedbackList");
-      if (modalList) {
-        const noFeedbackText = modalList.querySelector(".no-feedback-text");
-        if (noFeedbackText) noFeedbackText.remove();
-        modalList.insertAdjacentHTML("afterbegin", newFeedbackHTML);
-      }
-
-      // 3. Cập nhật song song vào Card ngoài giao diện chính
-      const allCards = document.querySelectorAll(".bot-card");
-      allCards.forEach((card) => {
-        const cardName = card.querySelector(".bot-name")?.textContent.trim();
-        if (cardName === currentTitle) {
-          const cardFeedbackList = card.querySelector(".feedback-list");
-          if (cardFeedbackList) {
-            cardFeedbackList.insertAdjacentHTML("afterbegin", newFeedbackHTML);
-          }
-        }
-      });
-
-      // 4. Lưu dữ liệu lên Supabase
       const supabase = await getSupabase();
       if (supabase && currentTitle) {
         await supabase
           .from("feedbacks")
           .insert([
-            { char_name: currentTitle, author_name: author, content: content },
+            { 
+              char_name: currentTitle, 
+              author_name: author, 
+              content: content,
+              user_id: userId,
+              avatar_url: avatarUrl,
+              parent_id: null
+            },
           ]);
       }
 
-      // Reset ô nhập & thông báo
-      if (authorInput) authorInput.value = "";
       if (contentInput) contentInput.value = "";
       showToast("Gửi đánh giá thành công!", "success");
+      await loadFeedbacks();
+      await syncModalFeedbacksByName(currentTitle);
     });
 }
 
@@ -783,27 +765,13 @@ function initSearchAndFilter() {
 let isModalInitialized = false;
 
 function initModal() {
-  // 1. GATEKEEPER: TỰ ĐỘNG CHẶN KHI BẤM VÀO CÁC NÚT ĐANG GIẤU LINK
-  document.addEventListener("click", (e) => {
-    // Chỉ kích hoạt khi click vào một cái nút có chứa thuộc tính data-real-href
-    const lockedBtn = e.target.closest("a[data-real-href]");
-    
-    if (lockedBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-
-      // Lấy trực tiếp ID puzzle từ chính cái nút đó
-      const puzzleId = lockedBtn.dataset.puzzleId || "delmare";
-      openPuzzleModal(puzzleId);
-    }
-  }, true);
-
-  // 2. LOGIC MỞ BẢNG THÔNG TIN NHÂN VẬT (Bấm vào vùng trống của thẻ)
   document.addEventListener("click", async (e) => {
     const modal = document.getElementById("botModal");
+    
+    // Khi bấm nút đóng (×) hoặc bấm ra vùng nền mờ bên ngoài
     if (e.target.closest("#modalClose") || (modal && e.target === modal)) {
       modal.classList.remove("show");
+      document.body.classList.remove("modal-open"); // 🔓 Mở lại cuộn trang
       return;
     }
 
@@ -827,24 +795,15 @@ function initModal() {
       }
     }
   });
-
-  // 3. TÍNH NĂNG BẤM RA NGOÀI ĐỂ TẮT BẢNG CÂU ĐỐ
-  document.addEventListener("click", (e) => {
-    const puzzleModal = document.getElementById("puzzleModal");
-    // Nếu bảng câu đố đang mở và người dùng click vào vùng nền mờ (overlay)
-    if (puzzleModal && puzzleModal.classList.contains("active")) {
-      if (e.target === puzzleModal) {
-        closePuzzleModal();
-      }
-    }
-  });
 }
 
 // Bổ sung quét lại thẻ khóa sau khi Modal thông tin nhân vật vừa tải xong
 window.openBotModalByName = async function (name) {
-  /* ... Giữ nguyên toàn bộ logic mở modal hiện tại của bạn ... */
   const modal = document.getElementById("botModal");
   if (!modal) return;
+
+  // Khóa cứng cuộn nền ngay khi mở Modal
+  document.body.classList.add("modal-open");
 
   const normalize = (str) => (str || "").trim().toLowerCase().replace(/[’']/g, "'");
   const cleanTargetName = normalize(name);
@@ -890,7 +849,6 @@ window.openBotModalByName = async function (name) {
     await syncModalFeedbacksByName(char.name);
 
     autofillUserNames();
-    
     checkUnlockedPuzzles();
   }
 };
@@ -1047,23 +1005,66 @@ async function syncModalFeedbacksByName(charName) {
   try {
     const supabase = await getSupabase();
     if (supabase) {
-      const { data, error } = await supabase
+      const { data: feedbacks, error } = await supabase
         .from("feedbacks")
         .select("*")
         .eq("char_name", charName)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        modalFeedbackList.innerHTML = data.map((fb) => `
-          <div class="feedback-item">
-            <strong>${escapeHTML(fb.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(fb.content)}
-          </div>
-        `).join("");
+      if (!error && feedbacks && feedbacks.length > 0) {
+        const parents = feedbacks.filter(f => !f.parent_id);
+        const replies = feedbacks.filter(f => f.parent_id);
+
+        modalFeedbackList.innerHTML = parents.map((parent) => {
+          const parentAvatar = parent.avatar_url || "./images/default_avt.jpg";
+          const isOwnerParent = parent.user_id === OWNER_USER_ID;
+          const parentOwnerBadge = isOwnerParent ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
+
+          const childReplies = replies.filter(r => r.parent_id === parent.id);
+
+          let repliesHTML = childReplies.map(r => {
+            const replyAvatar = r.avatar_url || "./images/default_avt.jpg";
+            const isOwnerReply = r.user_id === OWNER_USER_ID;
+            const ownerBadge = isOwnerReply ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
+            return `
+              <div class="feedback-reply-item" style="display: flex; gap: 8px; margin-left: 28px; margin-top: 8px; align-items: flex-start; padding-left: 8px; border-left: 2px solid #d4af37; font-size: 14px;">
+                <img src="${escapeHTML(replyAvatar)}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
+                <div style="flex: 1; font-size: 14px;">
+                  <strong>${escapeHTML(r.author_name || "Lữ khách")}${ownerBadge}:</strong> ${escapeHTML(r.content)}
+                </div>
+              </div>
+            `;
+          }).join("");
+
+          return `
+            <div class="feedback-item-wrapper" style="margin-bottom: 12px; font-size: 14px;">
+              <div class="feedback-parent-item" style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px;">
+                <img src="${escapeHTML(parentAvatar)}" alt="Avatar" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
+                <div style="flex: 1; font-size: 14px;">
+                  <div style="font-size: 14px;"><strong>${escapeHTML(parent.author_name || "Lữ khách ẩn danh")}${parentOwnerBadge}:</strong> ${escapeHTML(parent.content)}</div>
+                  <button class="btn-toggle-reply" onclick="toggleReplyBox(this)" style="background: none; border: none; color: #8b3a3a; font-size: 0.8rem; cursor: pointer; padding: 2px 0; margin-top: 4px;">
+                    <i class="bi bi-reply-fill"></i> Phản hồi
+                  </button>
+                  <div class="reply-input-box" style="display: none; margin-top: 6px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <input type="text" class="book-input reply-name-input" placeholder="Tên..." style="font-size: 0.8rem; padding: 6px 10px; width: 100%; box-sizing: border-box;" />
+                      <div style="display: flex; gap: 6px;">
+                        <textarea class="book-input reply-content-input" placeholder="Viết phản hồi..." style="font-size: 0.8rem; padding: 6px 10px; flex: 1;"></textarea>
+                        <button class="btn-send-reply" onclick="sendReply(this, ${parent.id})" style="background: #8b3a3a; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex-shrink: 0;">Gửi</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="feedback-replies-container">${repliesHTML}</div>
+            </div>
+          `;
+        }).join("");
         return;
       }
     }
   } catch (err) {
-    console.warn("Lỗi tải feedback:", err);
+    console.warn("Lỗi tải feedback cho modal:", err);
   }
 
   modalFeedbackList.innerHTML = `
@@ -1190,6 +1191,23 @@ window.toggleFeedback = async function (btn) {
   }
 };
 
+window.toggleReplyBox = function(btn) {
+  const parentBox = btn.closest(".feedback-parent-item") || btn.closest(".feedback-item-wrapper");
+  const replyBox = parentBox?.querySelector(".reply-input-box");
+  if (replyBox) {
+    const isHidden = replyBox.style.display === "none" || !replyBox.style.display;
+    replyBox.style.display = isHidden ? "block" : "none";
+    if (isHidden) {
+      const nameInput = replyBox.querySelector(".reply-name-input");
+      const loggedInName = currentUser?.user_metadata?.display_name || "";
+      if (nameInput && !nameInput.value && loggedInName) {
+        nameInput.value = loggedInName;
+      }
+      replyBox.querySelector(".reply-content-input")?.focus();
+    }
+  }
+};
+
 window.sendFeedback = async function (btn) {
   const box = btn.closest(".feedback-input-box");
   const nameInput = box?.querySelector(".input-name");
@@ -1197,7 +1215,6 @@ window.sendFeedback = async function (btn) {
   const feedbackSec = box?.closest(".feedback-section");
   const feedbackList = feedbackSec?.querySelector(".feedback-list");
 
-  // Tìm tên nhân vật
   const card = btn.closest(".bot-card");
   let charName = card?.querySelector(".bot-name")?.textContent.trim();
   if (!charName) {
@@ -1209,52 +1226,86 @@ window.sendFeedback = async function (btn) {
   const content = contentInput?.value.trim();
 
   if (!content) {
-    showToast("Bạn quên nhập nội dung rồi!", "error");
-    return;
-  }
-
-  if (!charName) {
-    showToast("Không xác định được tên nhân vật!", "error");
+    showToast("Bạn quên chưa nhập nội dung rồi!", "error");
     return;
   }
 
   btn.disabled = true;
 
+  const userId = currentUser ? currentUser.id : null;
+  const avatarUrl = currentUser?.user_metadata?.avatar_url || "./images/default_avt.jpg";
+
   const supabase = await getSupabase();
   if (supabase) {
-    // Đẩy dữ liệu lên bảng 'feedbacks' của Supabase
     const { error } = await supabase.from("feedbacks").insert([
       {
         char_name: charName,
-        author_name: name,
+        author_name: author,
         content: content,
+        user_id: userId,
+        avatar_url: avatarUrl,
+        parent_id: null
       },
     ]);
 
     if (error) {
-      console.error("❌ Lỗi gửi feedback lên Supabase:", error);
-      showToast("Gửi đánh giá thất bại, vui lòng thử lại!", "error");
+      console.error("❌ Lỗi gửi feedback:", error);
+      showToast("Gửi đánh giá thất bại!", "error");
       btn.disabled = false;
       return;
     }
   }
 
-  // Nếu trong danh sách đang hiện thông báo "Chưa có lời cảm nhận..." thì xóa dòng đó đi
-  if (feedbackList?.querySelector("em")) {
-    feedbackList.innerHTML = "";
-  }
-
-  // Thêm ngay dòng vừa gửi vào giao diện
-  const newItem = document.createElement("div");
-  newItem.className = "feedback-item";
-  newItem.innerHTML = `<strong>${escapeHTML(name)}:</strong> ${escapeHTML(content)}`;
-  feedbackList?.appendChild(newItem);
-
-  if (nameInput) nameInput.value = "";
   if (contentInput) contentInput.value = "";
   showToast("Gửi đánh giá thành công!", "success");
-
   btn.disabled = false;
+  await loadFeedbacks();
+};
+
+window.sendReply = async function(btn, parentId) {
+  const replyBox = btn.closest(".reply-input-box");
+  const nameInput = replyBox?.querySelector(".reply-name-input");
+  const contentInput = replyBox?.querySelector(".reply-content-input");
+
+  const author = nameInput?.value.trim() || currentUser?.user_metadata?.display_name || "Lữ khách ẩn danh";
+  const content = contentInput?.value.trim();
+
+  if (!content) {
+    showToast("Vui lòng nhập nội dung phản hồi!", "error");
+    return;
+  }
+
+  const card = btn.closest(".bot-card");
+  const charName = card?.querySelector(".bot-name")?.textContent.trim() || document.getElementById("modalTitle")?.textContent.trim();
+
+  btn.disabled = true;
+  
+  const userId = currentUser ? currentUser.id : null;
+  const avatarUrl = currentUser?.user_metadata?.avatar_url || "./images/default_avt.jpg";
+
+  const supabase = await getSupabase();
+  if (supabase) {
+    const { error } = await supabase.from("feedbacks").insert([
+      {
+        char_name: charName,
+        author_name: author,
+        content: content,
+        user_id: userId,
+        avatar_url: avatarUrl,
+        parent_id: parentId
+      }
+    ]);
+
+    if (error) {
+      console.error("Lỗi gửi phản hồi:", error);
+      showToast("Gửi phản hồi thất bại!", "error");
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  showToast("Phản hồi thành công!", "success");
+  await loadFeedbacks();
 };
 
 // ==================== TẢI FEEDBACK TỪ SUPABASE ====================
@@ -1263,45 +1314,75 @@ async function loadFeedbacks() {
   if (!supabase) return;
 
   try {
-    // 1. Lấy tất cả feedback từ Supabase (sắp xếp mới nhất lên đầu)
     const { data: feedbacks, error } = await supabase
       .from("feedbacks")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Lỗi khi tải feedback từ Supabase:", error);
-      return;
-    }
+    if (error || !feedbacks) return;
 
-    if (!feedbacks || feedbacks.length === 0) return;
+    const parents = feedbacks.filter(f => !f.parent_id);
+    const replies = feedbacks.filter(f => f.parent_id);
 
-    // 2. Duyệt qua từng bot-card trên trang để chèn feedback tương ứng
     const botCards = document.querySelectorAll(".bot-card");
-
     botCards.forEach((card) => {
       const charNameEl = card.querySelector(".bot-name");
       if (!charNameEl) return;
 
       const charName = charNameEl.textContent.trim();
       const feedbackListEl = card.querySelector(".feedback-list");
-
       if (!feedbackListEl) return;
 
-      // Lọc các feedback thuộc về nhân vật này
-      const charFeedbacks = feedbacks.filter(
-        (item) => item.char_name === charName,
-      );
+      const charParents = parents.filter(item => item.char_name === charName);
 
-      if (charFeedbacks.length > 0) {
-        // Xóa feedback mẫu cứng trên HTML
+      if (charParents.length > 0) {
         feedbackListEl.innerHTML = "";
 
-        // Chèn danh sách feedback thực tế từ Supabase
-        charFeedbacks.forEach((item) => {
+        charParents.forEach((parent) => {
           const itemEl = document.createElement("div");
-          itemEl.className = "feedback-item";
-          itemEl.innerHTML = `<strong>${escapeHTML(item.author_name || "Lữ khách ẩn danh")}:</strong> ${escapeHTML(item.content)}`;
+          itemEl.className = "feedback-item-wrapper";
+          
+          const parentAvatar = parent.avatar_url || "./images/default_avt.jpg";
+          const isOwnerParent = parent.user_id === OWNER_USER_ID;
+          const parentOwnerBadge = isOwnerParent ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
+
+          const childReplies = replies.filter(r => r.parent_id === parent.id);
+          
+          let repliesHTML = childReplies.map(r => {
+            const replyAvatar = r.avatar_url || "./images/default_avt.jpg";
+            const isOwnerReply = r.user_id === OWNER_USER_ID;
+            const ownerBadge = isOwnerReply ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
+            return `
+              <div class="feedback-reply-item" style="display: flex; gap: 8px; margin-left: 28px; margin-top: 8px; align-items: flex-start; padding-left: 8px; border-left: 2px solid #d4af37; font-size: 14px;">
+                <img src="${escapeHTML(replyAvatar)}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
+                <div style="flex: 1; font-size: 14px;">
+                  <strong>${escapeHTML(r.author_name || "Lữ khách")}${ownerBadge}:</strong> ${escapeHTML(r.content)}
+                </div>
+              </div>
+            `;
+          }).join("");
+
+          itemEl.innerHTML = `
+            <div class="feedback-parent-item" style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; font-size: 14px;">
+              <img src="${escapeHTML(parentAvatar)}" alt="Avatar" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
+              <div style="flex: 1; font-size: 14px;">
+                <div style="font-size: 14px;"><strong>${escapeHTML(parent.author_name || "Lữ khách ẩn danh")}${parentOwnerBadge}:</strong> ${escapeHTML(parent.content)}</div>
+                <button class="btn-toggle-reply" onclick="toggleReplyBox(this)" style="background: none; border: none; color: #8b3a3a; font-size: 0.8rem; cursor: pointer; padding: 2px 0; margin-top: 4px;">
+                  <i class="bi bi-reply-fill"></i> Phản hồi
+                </button>
+                <div class="reply-input-box" style="display: none; margin-top: 6px;">
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <input type="text" class="book-input reply-name-input" placeholder="Tên..." style="font-size: 0.85rem; padding: 6px 10px; width: 100%; box-sizing: border-box;" />
+                    <div style="display: flex; gap: 6px;">
+                      <input type="text" class="book-input reply-content-input" placeholder="Viết phản hồi..." style="font-size: 0.85rem; padding: 6px 10px; flex: 1; box-sizing: border-box;" />
+                      <button class="btn-send-reply" onclick="sendReply(this, ${parent.id})" style="background: #8b3a3a; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex-shrink: 0;">Gửi</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="feedback-replies-container">${repliesHTML}</div>
+          `;
           feedbackListEl.appendChild(itemEl);
         });
       }
