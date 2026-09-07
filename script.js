@@ -294,6 +294,32 @@ function initGlobalListeners() {
     }
   });
 
+  document.addEventListener("click", (e) => {
+  const lockedChip = e.target.closest("[data-puzzle-id]");
+  if (lockedChip) {
+    const puzzleId = lockedChip.getAttribute("data-puzzle-id");
+    if (puzzleId) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Kiểm tra xem nhân vật này đã được giải mã trước đó chưa
+      if (localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
+        // Nếu đã mở khóa rồi thì cho phép mở link thật (data-real-href) nếu có
+        const realHref = lockedChip.getAttribute("data-real-href");
+        if (realHref) {
+          window.open(realHref, "_blank");
+        }
+        return;
+      }
+      
+      // Nếu chưa mở khóa thì mở Modal Nhập Đáp Án Giải Mã
+      if (typeof openPuzzleModal === "function") {
+        openPuzzleModal(puzzleId);
+      }
+    }
+  }
+  });
+
   // Sự kiện gửi feedback trực tiếp trong Modal
   document
     .getElementById("submitFeedbackBtn")
