@@ -3797,7 +3797,7 @@ function getLocalUnlockedPuzzlesMap() {
 // Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
 window.unlockCharacterLinks = function(puzzleId) {
     const lockedLinks = document.querySelectorAll(`a[data-real-href][data-puzzle-id="${puzzleId}"]`);
-    lockedLinks.link.forEach(link => {
+    lockedLinks.forEach(link => {
         const realHref = link.getAttribute("data-real-href");
         if (realHref) {
             link.href = realHref;
@@ -3812,7 +3812,7 @@ window.unlockCharacterLinks = function(puzzleId) {
             innerLock.title = "Đã mở khóa";
         }
     });
-}
+};
 
 // Kiểm tra khi vừa tải trang, nếu đã giải mã rồi thì thả link ra luôn
 window.checkUnlockedPuzzles = function() {
