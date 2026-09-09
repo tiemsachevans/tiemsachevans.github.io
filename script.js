@@ -3756,7 +3756,8 @@ window.verifyPuzzleCode = async function() {
 
     closePuzzleModal();
     unlockCharacterLinks(puzzleId);
-    showToast("Đã giải mã thành công! Nút Google AI Studio đã mở.", "success");
+    const customToastMsg = puzzleConfigs[puzzleId]?.toastMsg || "Đã giải mã thành công! Nút Google AI Studio đã mở.";
+    showToast(customToastMsg, "success");
   } else {
     input.classList.add("error-shake");
     setTimeout(() => input.classList.remove("error-shake"), 400);
