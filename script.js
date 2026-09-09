@@ -295,29 +295,26 @@ function initGlobalListeners() {
   });
 
   document.addEventListener("click", (e) => {
-  const lockedChip = e.target.closest("[data-puzzle-id]");
-  if (lockedChip) {
-    const puzzleId = lockedChip.getAttribute("data-puzzle-id");
-    if (puzzleId) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Kiểm tra xem nhân vật này đã được giải mã trước đó chưa
-      if (localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
-        // Nếu đã mở khóa rồi thì cho phép mở link thật (data-real-href) nếu có
-        const realHref = lockedChip.getAttribute("data-real-href");
-        if (realHref) {
-          window.open(realHref, "_blank");
+    const lockedChip = e.target.closest("[data-puzzle-id]");
+    if (lockedChip) {
+      const puzzleId = lockedChip.getAttribute("data-puzzle-id");
+      if (puzzleId) {
+        // Nếu đã mở khóa trong localStorage, cho phép mở link bình thường qua thuộc tính href hoặc real-href
+        if (localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
+          const targetHref = lockedChip.getAttribute("data-real-href") || lockedChip.href;
+          if (targetHref && targetHref !== "#" && !targetHref.includes("javascript")) {
+            return; // Cho phép sự kiện mở link mặc định diễn ra
+          }
         }
-        return;
-      }
       
-      // Nếu chưa mở khóa thì mở Modal Nhập Đáp Án Giải Mã
-      if (typeof openPuzzleModal === "function") {
-        openPuzzleModal(puzzleId);
+        // Nếu chưa mở khóa thì chặn lại và bật Modal giải mã
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof openPuzzleModal === "function") {
+          openPuzzleModal(puzzleId);
+        }
       }
     }
-  }
   });
 
   // Sự kiện gửi feedback trực tiếp trong Modal
@@ -3800,9 +3797,11 @@ function getLocalUnlockedPuzzlesMap() {
 // Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
 window.unlockCharacterLinks = function(puzzleId) {
     const lockedLinks = document.querySelectorAll(`a[data-real-href][data-puzzle-id="${puzzleId}"]`);
-    lockedLinks.forEach(link => {
-        link.href = link.getAttribute("data-real-href"); 
-        link.removeAttribute("data-real-href");          
+    lockedLinks.link.forEach(link => {
+        const realHref = link.getAttribute("data-real-href");
+        if (realHref) {
+            link.href = realHref;
+        }
         link.target = "_blank";
         
         const innerLock = link.querySelector(".inner-lock") || link.querySelector(".lock-icon"); 
