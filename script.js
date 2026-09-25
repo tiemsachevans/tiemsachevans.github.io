@@ -3879,12 +3879,12 @@ async function checkNewCharacter() {
   }
 
   try {
-    // Truy vấn trực tiếp nhân vật mới nhất dựa vào thời gian tạo (created_at) trên Supabase
+    // Truy vấn trực tiếp nhân vật mới nhất dựa vào thời gian cập nhật (updated_at) trên Supabase
     const { data, error } = await supabase
       .from("characters")
       .select("*")
       .neq("name", "Coming Soon...")
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(1);
 
     if (error || !data || data.length === 0) {
@@ -3893,11 +3893,11 @@ async function checkNewCharacter() {
     }
 
     const latestChar = data[0];
-    const createdAt = latestChar.created_at ? new Date(latestChar.created_at) : null;
+    const updatedAt = latestChar.updated_at ? new Date(latestChar.updated_at) : null;
     const now = new Date();
     
     // Hiển thị nếu nhân vật được tạo trong vòng 15 ngày gần đây
-    const isRecent = createdAt ? (now - createdAt) / (1000 * 60 * 60 * 24) <= 15 : true;
+    const isRecent = updatedAt ? (now - updatedAt) / (1000 * 60 * 60 * 24) <= 15 : true;
 
     if (latestChar && latestChar.name && isRecent) {
       bannerText.innerHTML = `Nhân vật mới vừa ra mắt: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
