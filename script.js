@@ -3879,12 +3879,12 @@ async function checkNewCharacter() {
   }
 
   try {
-    // Lấy danh sách nhân vật và sắp xếp dựa trên updated_at hoặc created_at
+    // Chỉ sắp xếp dựa trên thời gian cập nhật link/thêm nhân vật (link_updated_at)
     const { data, error } = await supabase
       .from("characters")
       .select("*")
       .neq("name", "Coming Soon...")
-      .order("updated_at", { ascending: false, nullsFirst: false })
+      .order("link_updated_at", { ascending: false, nullsFirst: false })
       .limit(1);
 
     if (error || !data || data.length === 0) {
@@ -3893,17 +3893,14 @@ async function checkNewCharacter() {
     }
 
     const latestChar = data[0];
-    
-    // Ưu tiên lấy updated_at, nếu không có thì lấy created_at
-    const timeValue = latestChar.updated_at || latestChar.created_at;
-    const targetDate = timeValue ? new Date(timeValue) : null;
+    const targetDate = latestChar.link_updated_at ? new Date(latestChar.link_updated_at) : null;
     const now = new Date();
     
-    // Kiểm tra trong vòng 15 ngày gần đây
+    // Kiểm tra xem thời gian cập nhật link có nằm trong vòng 15 ngày gần đây không
     const isRecent = targetDate ? (now - targetDate) / (1000 * 60 * 60 * 24) <= 15 : false;
 
     if (latestChar && latestChar.name && isRecent) {
-      bannerText.innerHTML = `Nhân vật vừa được cập nhật: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
+      bannerText.innerHTML = `Nhân vật mới cập nhật link: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
       bannerContainer.style.display = "block";
 
       const bannerBtn = document.getElementById("newCharBannerBtn");
@@ -3916,7 +3913,7 @@ async function checkNewCharacter() {
       bannerContainer.style.display = "none";
     }
   } catch (err) {
-    console.warn("Lỗi kiểm tra nhân vật cập nhật:", err);
+    console.warn("Lỗi kiểm tra nhân vật mới:", err);
     bannerContainer.style.display = "none";
   }
 }
