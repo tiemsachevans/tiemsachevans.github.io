@@ -340,7 +340,8 @@ function initGlobalListeners() {
 
       const supabase = await getSupabase();
       if (supabase && currentTitle) {
-        await supabase
+        // 🌟 Hứng biến error để kiểm tra kết quả thực tế từ Supabase
+        const { error } = await supabase
           .from("feedbacks")
           .insert([
             { 
@@ -352,6 +353,12 @@ function initGlobalListeners() {
               parent_id: null
             },
           ]);
+
+        if (error) {
+          console.error("❌ Lỗi Supabase khi gửi feedback:", error);
+          showToast("Gửi đánh giá thất bại: " + error.message, "error");
+          return; // Dừng lại không báo thành công giả mạo nữa
+        }
       }
 
       if (contentInput) contentInput.value = "";
@@ -1232,15 +1239,25 @@ window.toggleReplyBox = function(btn) {
 };
 
 window.sendFeedback = async function (btn) {
-  const box = btn.closest(".feedback-input-box");
-  const nameInput = box?.querySelector(".input-name");
-  const contentInput = box?.querySelector(".input-content");
-  const feedbackSec = box?.closest(".feedback-section");
-  const feedbackList = feedbackSec?.querySelector(".feedback-list");
+  // Ngăn chặn mọi hành vi nổi bọt hoặc submit mặc định nếu có
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  console.log("👉 Đã nhấn nút gửi feedback!");
+
+  // Tìm kiếm linh hoạt khung chứa input dựa vào card hoặc modal
+  const box = btn.closest(".feedback-input-box") || btn.closest(".modal-right-col") || btn.closest(".feedback-section");
+  const nameInput = box?.querySelector(".input-name") || document.getElementById("feedbackAuthor");
+  const contentInput = box?.querySelector(".input-content") || document.getElementById("feedbackContent");
 
   const card = btn.closest(".bot-card");
-  let charName = card?.querySelector(".bot-name")?.textContent.trim();
-  if (!charName) {
+  let charName = "";
+  
+  if (card) {
+    charName = card.querySelector(".bot-name")?.textContent.trim();
+  } else {
     charName = document.getElementById("modalTitle")?.textContent.trim();
   }
 
@@ -1248,8 +1265,15 @@ window.sendFeedback = async function (btn) {
   const author = loggedInName || nameInput?.value.trim() || "Lữ khách ẩn danh";
   const content = contentInput?.value.trim();
 
+  console.log("📝 Dữ liệu feedback:", { charName, author, content });
+
   if (!content) {
     showToast("Bạn quên chưa nhập nội dung rồi!", "error");
+    return;
+  }
+
+  if (!charName) {
+    showToast("Không xác định được tên nhân vật!", "error");
     return;
   }
 
@@ -1272,7 +1296,7 @@ window.sendFeedback = async function (btn) {
     ]);
 
     if (error) {
-      console.error("❌ Lỗi gửi feedback:", error);
+      console.error("❌ Lỗi Supabase khi gửi feedback:", error);
       showToast("Gửi đánh giá thất bại!", "error");
       btn.disabled = false;
       return;
@@ -1282,7 +1306,12 @@ window.sendFeedback = async function (btn) {
   if (contentInput) contentInput.value = "";
   showToast("Gửi đánh giá thành công!", "success");
   btn.disabled = false;
+  
   await loadFeedbacks();
+  
+  if (typeof syncModalFeedbacksByName === "function" && charName) {
+    await syncModalFeedbacksByName(charName);
+  }
 };
 
 window.sendReply = async function(btn, parentId) {
