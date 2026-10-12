@@ -89,6 +89,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   displayRandomCharacter();
   initGlobalListeners();
   initAjaxNavigation();
+  restoreCharViewFromHash();
+  initCharViewSwipe();
   initMusicPlayer();
   initMenuToggle();
   initCatMascot();
@@ -295,7 +297,10 @@ function initGlobalListeners() {
   });
 
   document.addEventListener("click", (e) => {
-    const lockedChip = e.target.closest("[data-puzzle-id]");
+    // Chỉ nút/chip khóa mới mở bảng giải đố. Thẻ nhân vật (.bot-card) cũng mang
+    // data-puzzle-id nên nếu dùng closest("[data-puzzle-id]") thì bấm bất kỳ đâu
+    // trên thẻ cũng bật bảng giải đố, che mất modal thông tin nhân vật.
+    const lockedChip = e.target.closest("a[data-puzzle-id], .chip-btn[data-puzzle-id]");
     if (lockedChip) {
       const puzzleId = lockedChip.getAttribute("data-puzzle-id");
       if (puzzleId) {
@@ -614,9 +619,27 @@ function initAjaxNavigation() {
     loadPageViaAjax(href);
   });
 
-  window.addEventListener("popstate", () => {
+  window.addEventListener("popstate", (e) => {
     closeMobileMenu();
+
+    // Đang xem nhân vật -> Back chỉ đóng màn hình nhân vật, không tải lại trang
+    if (isBotModalOpen()) {
+      closeBotModal(true);
+      return;
+    }
+    // Forward về lại màn hình nhân vật
+    if (
+      e.state &&
+      e.state.charView &&
+      isMobileView() &&
+      document.getElementById("botModal")
+    ) {
+      openBotModalByName(e.state.charView);
+      return;
+    }
+
     const path = window.location.pathname.split("/").pop() || "index.html";
+    if (path === currentPagePath) return; // cùng trang: giữ nguyên danh sách/bộ lọc
     loadPageViaAjax(path, false);
   });
 }
@@ -654,6 +677,8 @@ async function loadPageViaAjax(url, pushHistory = true) {
         window.history.pushState({ path: url }, "", url);
       }
 
+      currentPagePath =
+        url.split("#")[0].split("?")[0].split("/").pop() || "index.html";
       reinitializePageScripts();
 
       mainContent.style.opacity = "1";
@@ -666,6 +691,9 @@ async function loadPageViaAjax(url, pushHistory = true) {
 }
 
 function reinitializePageScripts() {
+  // Modal nằm trong #main-content nên bị thay khi chuyển trang -> gỡ khóa cuộn còn sót
+  document.body.classList.remove("modal-open", "char-view-open");
+  unlockPageScroll(false); // trang mới: không khôi phục vị trí cuộn của trang cũ
   syncCharacterVotes();
   loadTopRanking();
   loadCfsNotes();
@@ -795,13 +823,27 @@ function initSearchAndFilter() {
 let isModalInitialized = false;
 
 function initModal() {
+  // Tránh gắn trùng listener mỗi lần chuyển trang AJAX
+  if (isModalInitialized) return;
+  isModalInitialized = true;
+
   document.addEventListener("click", async (e) => {
     const modal = document.getElementById("botModal");
-    
-    // Khi bấm nút đóng (×) hoặc bấm ra vùng nền mờ bên ngoài
-    if (e.target.closest("#modalClose") || (modal && e.target === modal)) {
-      modal.classList.remove("show");
-      document.body.classList.remove("modal-open"); // 🔓 Mở lại cuộn trang
+
+    // Tab Thông tin / Lời nhắn (mobile)
+    const tabBtn = e.target.closest(".modal-tab");
+    if (tabBtn && modal && modal.contains(tabBtn)) {
+      setModalTab(tabBtn.dataset.tab);
+      return;
+    }
+
+    // Khi bấm nút đóng (×), nút quay lại (mobile) hoặc bấm ra vùng nền mờ bên ngoài
+    if (
+      e.target.closest("#modalClose") ||
+      e.target.closest("#modalBackBtn") ||
+      (modal && e.target === modal)
+    ) {
+      closeBotModal();
       return;
     }
 
@@ -825,6 +867,164 @@ function initModal() {
       }
     }
   });
+}
+
+// ==================== SPA XEM NHÂN VẬT (MOBILE) ====================
+// Trên điện thoại, modal nhân vật hoạt động như một "màn hình" riêng:
+// có history (nút Back / vuốt cạnh trái đóng được), deep link #nv=<tên>,
+// giữ nguyên bộ lọc + vị trí cuộn của danh sách khi quay lại.
+let charViewScrollY = 0;
+
+// Khóa cuộn trang nền bằng position: fixed (body đang có overflow-y: auto !important
+// nên overflow: hidden không có tác dụng; cách này cũng chặn được cuộn nền trên iOS).
+function lockPageScroll() {
+  const body = document.body;
+  if (body.classList.contains("scroll-locked")) return;
+  charViewScrollY = window.scrollY;
+  body.style.top = `-${charViewScrollY}px`;
+  document.documentElement.classList.add("scroll-locked"); // giữ chỗ thanh cuộn, tránh giật layout
+  body.classList.add("scroll-locked");
+}
+
+function unlockPageScroll(restore = true) {
+  const body = document.body;
+  if (!body.classList.contains("scroll-locked")) return;
+  body.classList.remove("scroll-locked");
+  document.documentElement.classList.remove("scroll-locked");
+  body.style.top = "";
+  if (restore) {
+    window.scrollTo({ top: charViewScrollY, left: 0, behavior: "instant" });
+  }
+}
+let currentPagePath = window.location.pathname.split("/").pop() || "index.html";
+
+function isMobileView() {
+  return window.matchMedia("(max-width: 767px)").matches;
+}
+
+function isBotModalOpen() {
+  return !!document.getElementById("botModal")?.classList.contains("show");
+}
+
+function setModalTab(tab) {
+  const modal = document.getElementById("botModal");
+  if (!modal) return;
+  modal
+    .querySelector(".modal-card")
+    ?.classList.toggle("show-feedback", tab === "feedback");
+  modal.querySelectorAll(".modal-tab").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  modal.querySelector(".modal-body")?.scrollTo({ top: 0 });
+}
+
+function openBotModalUI(modal, charName) {
+  setModalTab("info");
+  lockPageScroll(); // desktop + mobile: không cho trang nền cuộn khi modal đang mở
+  modal.classList.add("show");
+  if (!isMobileView()) return;
+
+  document.body.classList.add("char-view-open");
+
+  // Chỉ push khi chưa đang ở một entry của màn hình nhân vật (popstate/forward)
+  if (!(window.history.state && window.history.state.charView)) {
+    window.history.pushState(
+      { path: currentPagePath, charView: charName },
+      "",
+      "#nv=" + encodeURIComponent(charName),
+    );
+  }
+}
+
+let charViewClosing = false;
+
+function closeBotModal(fromPopstate = false) {
+  const modal = document.getElementById("botModal");
+  if (!modal || charViewClosing) return;
+
+  const wasMobileView = document.body.classList.contains("char-view-open");
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  const finish = () => {
+    modal.classList.remove("show", "closing");
+    document.body.classList.remove("modal-open", "char-view-open");
+    charViewClosing = false;
+    unlockPageScroll();
+  };
+
+  // Chặn đóng lặp khi popstate đến trong lúc đang chạy hiệu ứng
+  const animate = wasMobileView && !reduceMotion;
+  if (animate) charViewClosing = true;
+
+  // Đóng bằng nút/vuốt -> lùi 1 bước history để bỏ entry #nv=
+  if (!fromPopstate && window.history.state && window.history.state.charView) {
+    window.history.back();
+  }
+
+  if (animate) {
+    modal.classList.add("closing"); // trượt ra bên phải
+    setTimeout(finish, 260);
+  } else {
+    finish();
+  }
+}
+
+// Vuốt từ mép trái sang phải để quay lại (Android / trình duyệt không có cử chỉ back)
+function initCharViewSwipe() {
+  if (window.__charSwipeInit) return;
+  window.__charSwipeInit = true;
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      if (!isBotModalOpen() || !isMobileView() || e.touches.length !== 1) {
+        tracking = false;
+        return;
+      }
+      const t = e.touches[0];
+      tracking = t.clientX < 28;
+      startX = t.clientX;
+      startY = t.clientY;
+    },
+    { passive: true },
+  );
+
+  document.addEventListener(
+    "touchend",
+    (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      if (t.clientX - startX > 70 && Math.abs(t.clientY - startY) < 60) {
+        closeBotModal();
+      }
+    },
+    { passive: true },
+  );
+}
+
+// Mở thẳng màn hình nhân vật khi vào bằng link/refresh có #nv=<tên>
+async function restoreCharViewFromHash() {
+  const m = window.location.hash.match(/^#nv=(.+)$/);
+  if (!m || !isMobileView() || !document.getElementById("botModal")) return;
+  let name = "";
+  try {
+    name = decodeURIComponent(m[1]);
+  } catch (_) {
+    return;
+  }
+  // Đưa entry hiện tại về trang danh sách, rồi push màn hình chi tiết lên trên
+  window.history.replaceState(
+    { path: currentPagePath },
+    "",
+    window.location.pathname + window.location.search,
+  );
+  await openBotModalByName(name);
 }
 
 // Bổ sung quét lại thẻ khóa sau khi Modal thông tin nhân vật vừa tải xong
@@ -1015,8 +1215,8 @@ window.openBotModalByName = async function (name) {
       modalVoteBtn.classList.toggle("liked", isLiked);
     }
 
-    // 2. Mở Modal
-    modal.classList.add("show");
+    // 2. Mở Modal (mobile: mở như một màn hình riêng, có history)
+    openBotModalUI(modal, char.name);
 
     // 3. Tải feedback
     await syncModalFeedbacksByName(char.name);
@@ -1976,6 +2176,32 @@ window.closeThankYouModal = function () {
   if (modal) modal.classList.remove("show");
 };
 
+// Định dạng created_at (timestamptz của Supabase) -> ngày theo múi giờ của người xem
+function formatNoteDate(createdAt) {
+  if (!createdAt) return null;
+  // Chuẩn hóa: "2026-10-12 03:20:00.123456+00" -> ISO 8601 mà mọi trình duyệt đều đọc được
+  const iso = String(createdAt)
+    .replace(" ", "T")
+    .replace(/(\.\d{3})\d+/, "$1")
+    .replace(/([+-]\d{2})$/, "$1:00");
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return {
+    date: d.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }),
+    full: d.toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+}
+
 async function loadCfsNotes() {
   const cfsBoard = document.getElementById("cfsBoard");
   if (!cfsBoard) return;
@@ -2015,9 +2241,18 @@ async function loadCfsNotes() {
       noteEl.style.backgroundColor = note.bg_color || "#fff2b2";
     }
 
+    const noteDate = formatNoteDate(note.created_at);
+    const dateHTML = noteDate
+      ? `<span class="note-date" title="${escapeHTML(noteDate.full)}"><i class="bi bi-calendar3"></i> ${escapeHTML(noteDate.date)}</span>`
+      : "";
+
+    // Footer: tên người viết (trái) + ngày viết (phải)
     noteEl.innerHTML = `
       <p class="note-content">"${escapeHTML(note.content)}"</p>
-      <span class="note-author">— ${escapeHTML(note.author || "Lữ khách ẩn danh")}</span>
+      <div class="note-footer">
+        <span class="note-author">— ${escapeHTML(note.author || "Lữ khách ẩn danh")}</span>
+        ${dateHTML}
+      </div>
     `;
     cfsBoard.appendChild(noteEl);
   });
@@ -4048,7 +4283,7 @@ async function checkMaintenanceMode() {
                 Evans đang sắp xếp lại những kệ sách và cập nhật thêm vài điều kỳ diệu mới.
               </p>
               <div class="maintenance-note">
-                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau ít phút nữa nhé! <i class='fa-solid fa-paw'></i>
+                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau 14:30 ngày 12/10/2026 nhé! <i class='fa-solid fa-paw'></i>
               </div>
             </div>
           </div>

@@ -6427,3 +6427,341 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     right: 16px;
   }
 }
+
+
+/* ==================== SPA XEM NHÂN VẬT (MOBILE) ==================== */
+.modal-back-btn,
+.modal-mobile-tabs {
+  display: none;
+}
+
+@keyframes charViewIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes charViewOut {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+@media (max-width: 767px) {
+  body.char-view-open {
+    overflow: hidden;
+  }
+
+  /* Overlay -> toàn màn hình, không còn cảm giác popup */
+  #botModal.modal-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+
+  #botModal.show .modal-card {
+    animation: charViewIn 0.3s cubic-bezier(0.22, 0.8, 0.3, 1);
+  }
+
+  /* Đóng: trượt ngược ra bên phải để lộ lại danh sách phía sau */
+  #botModal.show.closing {
+    pointer-events: none !important;
+  }
+
+  #botModal.show.closing .modal-card {
+    animation: charViewOut 0.26s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  #botModal .modal-card.modal-card-wide {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    border-left-width: 6px !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  #botModal .modal-close {
+    display: none !important;
+  }
+
+  /* Thanh trên cùng: quay lại + tab */
+  #botModal .modal-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    width: 100%;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 8px;
+    background: none;
+    border: 0;
+    color: #902e2e;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #botModal .modal-mobile-tabs {
+    display: flex;
+    flex: none;
+    gap: 8px;
+    padding: 4px 14px 10px;
+    border-bottom: 1px solid rgba(139, 58, 58, 0.2);
+  }
+
+  #botModal .modal-tab {
+    flex: 1;
+    padding: 9px 0;
+    border-radius: 999px;
+    border: 1px solid rgba(139, 58, 58, 0.35);
+    background: transparent;
+    color: #7a4a3a;
+    font-size: 14px;
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #botModal .modal-tab.active {
+    background: #902e2e;
+    border-color: #902e2e;
+    color: #fff;
+  }
+
+  /* Nội dung cuộn trong màn hình, tab quyết định cột nào hiển thị */
+  #botModal .modal-body {
+    padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  #botModal .modal-grid-layout {
+    display: block;
+  }
+
+  #botModal .modal-left-col {
+    max-height: none;
+  }
+
+  #botModal .modal-scroll-area {
+    max-height: none;
+    overflow: visible;
+  }
+
+  #botModal .modal-right-col {
+    display: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+
+  #botModal .modal-card.show-feedback .modal-left-col {
+    display: none;
+  }
+
+  #botModal .modal-card.show-feedback .modal-right-col {
+    display: flex !important;
+  }
+
+  #botModal .modal-right-col .feedback-list,
+  #botModal .modal-right-col .dynamic-feedback-list {
+    max-height: none !important;
+  }
+
+  /* >= 16px để iOS không tự phóng to khi focus ô nhập */
+  #botModal #feedbackAuthor,
+  #botModal #feedbackContent {
+    font-size: 16px;
+  }
+
+  /* Dark mode */
+  body.dark-theme #botModal .modal-back-btn { color: #e5b95d; }
+  body.dark-theme #botModal .modal-mobile-tabs { border-bottom-color: rgba(229, 185, 93, 0.25); }
+  body.dark-theme #botModal .modal-tab {
+    border-color: rgba(229, 185, 93, 0.4);
+    color: #e9d3b4;
+  }
+  body.dark-theme #botModal .modal-tab.active {
+    background: #b83a3a;
+    border-color: #b83a3a;
+    color: #fff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #botModal.show .modal-card,
+  #botModal.show.closing .modal-card { animation: none; }
+}
+
+
+/* ==================== MODAL NHÂN VẬT: SỬA LỆCH PHẢI (MOBILE) ==================== */
+/* 100vw tính cả thanh cuộn của trình duyệt laptop -> nội dung bị đẩy sát/khuất mép phải.
+   Dùng left/right: 0 để overlay luôn vừa đúng vùng nhìn thấy. */
+@media (max-width: 767px) {
+  #botModal.modal-overlay {
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    box-sizing: border-box;
+  }
+
+  #botModal .modal-card.modal-card-wide,
+  #botModal .modal-body,
+  #botModal .modal-left-col,
+  #botModal .modal-right-col {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  #botModal .modal-header-row {
+    gap: 12px;
+  }
+
+  #botModal .modal-header-row #modalTitle {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  #botModal .modal-vote-widget {
+    flex: none;
+  }
+}
+
+/* ==================== MODAL NHÂN VẬT: RỘNG HƠN TRÊN DESKTOP ==================== */
+@media (min-width: 768px) {
+  #botModal .modal-card.modal-card-wide {
+    width: 94%;
+    max-width: 1200px;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  #botModal .modal-grid-layout {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 36px;
+  }
+
+  #botModal .modal-left-col {
+    max-height: 78vh;
+  }
+
+  #botModal .modal-scroll-area {
+    max-height: 50vh;
+  }
+
+  /* Khu lời nhắn: cao hơn hẳn để đọc thoải mái (trước đây chỉ 130px) */
+  #botModal .modal-right-col .feedback-list,
+  #botModal .modal-right-col .dynamic-feedback-list {
+    max-height: 46vh !important;
+    padding-right: 6px;
+  }
+
+  #botModal .modal-right-col .feedback-form-box .feedback-textarea,
+  #botModal .modal-right-col .feedback-form-box #feedbackContent {
+    min-height: 80px;
+  }
+}
+
+
+/* ==================== KHÓA CUỘN TRANG NỀN KHI MỞ MODAL NHÂN VẬT ==================== */
+html.scroll-locked {
+  overflow-y: scroll !important; /* giữ thanh cuộn -> không bị giật ngang khi khóa */
+}
+
+body.scroll-locked {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+  width: 100%;
+}
+
+/* Cuộn trong modal không "lọt" ra trang nền */
+#botModal .modal-card,
+#botModal .modal-body,
+#botModal .modal-scroll-area,
+#botModal .feedback-list,
+#botModal .dynamic-feedback-list {
+  overscroll-behavior: contain;
+}
+
+
+/* ==================== FOOTER NGÀY VIẾT TRÊN BẢNG LỜI NHẮN (INDEX) ==================== */
+.cfs-note-item .note-footer {
+  justify-content: flex-end;
+  margin-top: 10px;
+  border-top: 1px dashed rgba(44, 34, 30, 0.3);
+  color: rgba(44, 34, 30, 0.6);
+  font-size: 0.8rem;
+}
+
+.cfs-note-item .note-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cfs-note-item .note-date i {
+  font-size: 0.75rem;
+}
+
+
+/* Footer ngày viết luôn nằm sát đáy tờ note, thẳng hàng giữa các note cùng hàng */
+.cfs-board .cfs-note-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.cfs-board .cfs-note-item .note-content {
+  margin-bottom: 10px;
+}
+
+.cfs-board .cfs-note-item .note-author {
+  align-self: flex-start;
+  margin-bottom: 12px;
+}
+
+.cfs-board .cfs-note-item .note-footer {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+
+/* Footer bảng lời nhắn: tên người viết (trái) + ngày viết (phải) */
+.cfs-board .cfs-note-item .note-content {
+  margin-bottom: 14px;
+}
+
+.cfs-board .cfs-note-item .note-footer {
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.cfs-board .cfs-note-item .note-footer .note-author {
+  align-self: auto;
+  margin: 0;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cfs-board .cfs-note-item .note-footer .note-date {
+  flex: none;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.cfs-board .cfs-note-item .note-footer .note-date i {
+  font-size: 10px;
+}

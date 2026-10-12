@@ -2571,6 +2571,15 @@
       <div class="modal-card modal-card-wide">
         <button class="modal-close" id="modalClose">&times;</button>
 
+        <!-- Mobile SPA: nút quay lại + tab chuyển nhanh Thông tin / Lời nhắn -->
+        <button type="button" class="modal-back-btn" id="modalBackBtn" aria-label="Quay Lại">
+          <i class="bi bi-arrow-left"></i><span>Quay Lại</span>
+        </button>
+        <div class="modal-mobile-tabs" id="modalMobileTabs" role="tablist">
+          <button type="button" class="modal-tab active" data-tab="info" role="tab">Thông tin</button>
+          <button type="button" class="modal-tab" data-tab="feedback" role="tab">Lời nhắn</button>
+        </div>
+
         <!-- Toast Notification -->
         <div class="custom-toast" id="customToast">Thông báo</div>
 
