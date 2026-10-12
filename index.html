@@ -644,14 +644,15 @@
           <button type="button" class="modal-tab" data-tab="feedback" role="tab">Lời nhắn</button>
         </div>
 
-        <div class="modal-body">
-        <div class="modal-grid-layout">
+        <!-- Toast Notification -->
+        <div class="custom-toast" id="customToast">Thông báo</div>
+        <div class="modal-body modal-grid-layout">
           <!-- CỘT TRÁI: THÔNG TIN NHÂN VẬT & TRIGGER COMMANDS -->
           <div class="modal-left-col">
             <div class="modal-header-row">
               <h2 class="bot-name" id="modalTitle">Tên Sách</h2>
-              <div class="modal-vote-widget" id="modalVoteBtn" onclick="toggleLike(this)" title="Thả tim / Vote nhân vật">
-                <span class="modal-heart-icon"><i class="bi bi-heart-fill"></i></span>
+              <div class="modal-vote-widget" id="modalVoteBtn" title="Thả tim / Vote nhân vật">
+                <span class="modal-heart-icon">&#x2764;</span>
                 <span id="modalVoteCount">0</span>
               </div>
             </div>
@@ -687,7 +688,6 @@
               <button type="button" id="submitFeedbackBtn" class="feedback-submit-btn">Gửi</button>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>

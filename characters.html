@@ -2525,6 +2525,30 @@
         </div>
       </section>
 
+    <!-- ==================== POPUP FEEDBACK (MỞ TỪ NÚT NGOÀI THẺ NHÂN VẬT) ==================== -->
+    <div class="diploma-modal-overlay" id="feedbackPopupModal" style="z-index: 9999990 !important;" onmousedown="if(event.target === this) closeFeedbackPopup()">
+      <div class="diploma-modal-card book-modal-card feedback-popup-card" style="max-width: 460px; padding: 25px;">
+        <button class="modal-close" onclick="closeFeedbackPopup()" style="position: absolute; top: 12px; right: 18px; background: transparent; border: none; font-size: 26px; color: #7a5230; cursor: pointer;">&times;</button>
+
+        <div class="book-modal-header">
+          <h3 class="modal-title">Gửi Thư / Feedback</h3>
+          <p class="modal-subtitle" id="feedbackPopupCharName"></p>
+        </div>
+
+        <div class="feedback-list" id="feedbackPopupList"></div>
+
+        <div class="feedback-input-box">
+          <div class="input-row">
+            <input type="text" class="book-input input-name" placeholder="Tên lữ khách..." />
+          </div>
+          <div class="input-row">
+            <input type="text" class="book-input input-content" placeholder="Viết đôi lời cảm nhận..." onkeypress="if(event.key === 'Enter') this.closest('.feedback-input-box').querySelector('.btn-send').click()" />
+            <button class="btn-send" onclick="sendFeedback(this)">Gửi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== MODAL GIẢI MÃ NHÂN VẬT ĐÃ KHÓA ==================== -->
     <div class="diploma-modal-overlay" id="puzzleModal" style="z-index: 9999999 !important;" onmousedown="if(event.target === this) closePuzzleModal()">
       <div class="diploma-modal-card book-modal-card" style="max-width: 420px; padding: 25px;">

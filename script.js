@@ -69,6 +69,7 @@ async function getSupabase() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  hoistSharedModals();
   await checkMaintenanceMode();
   initThemeMode();
   await initProfilePage();
@@ -288,7 +289,7 @@ function initGlobalListeners() {
     const likeBtn =
       e.target.closest(".btn-like") ||
       e.target.closest(".like-btn") ||
-      e.target.closest("#modalVoteCount")?.parentElement;
+      e.target.closest("#modalVoteBtn");
     if (likeBtn) {
       e.preventDefault();
       e.stopPropagation();
@@ -644,6 +645,27 @@ function initAjaxNavigation() {
   });
 }
 
+// Modal dùng chung (nhân vật + giải đố) phải nằm NGOÀI #main-content, nếu không chúng bị
+// xóa khi chuyển trang AJAX (vd: Tủ sách -> Trang chủ) và top 3/random không mở được modal.
+const SHARED_MODAL_IDS = ["botModal", "puzzleModal", "feedbackPopupModal"];
+
+function hoistSharedModals() {
+  const main = document.getElementById("main-content");
+  if (!main) return;
+  SHARED_MODAL_IDS.forEach((id) => {
+    const inMain = main.querySelector("#" + id);
+    if (!inMain) return;
+    const persistent = Array.from(document.querySelectorAll("#" + id)).find(
+      (el) => !main.contains(el),
+    );
+    if (persistent) {
+      inMain.remove(); // đã có bản bền vững ngoài main -> bỏ bản trùng của trang mới
+    } else {
+      document.body.appendChild(inMain); // trang đầu tiên: nhấc modal ra khỏi main
+    }
+  });
+}
+
 async function loadPageViaAjax(url, pushHistory = true) {
   const mainContent = document.getElementById("main-content");
   if (!mainContent) {
@@ -671,6 +693,7 @@ async function loadPageViaAjax(url, pushHistory = true) {
 
     setTimeout(() => {
       mainContent.innerHTML = newMain.innerHTML;
+      hoistSharedModals();
       if (newTitle) document.title = newTitle.textContent;
 
       if (pushHistory) {
@@ -1405,21 +1428,70 @@ async function handleLikeClick(characterId, currentVotes) {
 }
 
 // FEEDBACK SUBMISSION LOGIC
+// Nút "Gửi Thư / Feedback" ngoài thẻ: mở popup (giống bảng giải đố) thay vì mở rộng thẻ.
+// Nút feedback trong modal chi tiết nhân vật không đi qua hàm này.
 window.toggleFeedback = async function (btn) {
   const card = btn.closest(".bot-card");
-  const feedbackSec = card?.querySelector(".feedback-section");
-
-  if (feedbackSec) {
-    const isHidden =
-      feedbackSec.style.display === "none" || !feedbackSec.style.display;
-    feedbackSec.style.display = isHidden ? "block" : "none";
-
-    // Nếu mở ô feedback ra thì tải lại dữ liệu từ Supabase về
-    if (isHidden) {
-      await loadFeedbacks();
-    }
-  }
+  if (!card) return;
+  await openFeedbackPopup(card);
 };
+
+function getFeedbackPopupCard(charName) {
+  return Array.from(document.querySelectorAll(".bot-card")).find(
+    (c) => c.querySelector(".bot-name")?.textContent.trim() === charName,
+  );
+}
+
+// Đổ danh sách feedback của thẻ (đã được loadFeedbacks điền) vào popup
+function renderFeedbackPopupList() {
+  const popup = document.getElementById("feedbackPopupModal");
+  const listEl = document.getElementById("feedbackPopupList");
+  if (!popup || !listEl) return;
+
+  const card = getFeedbackPopupCard(popup.dataset.charName || "");
+  const source = card?.querySelector(".feedback-list");
+  const hasItems = !!source && source.querySelector(".feedback-item-wrapper");
+
+  listEl.innerHTML = hasItems
+    ? source.innerHTML
+    : `<p class="no-feedback-text">Chưa có lời nhắn nào cho nhân vật này. Hãy là người đầu tiên gửi feedback!</p>`;
+}
+
+window.openFeedbackPopup = async function (card) {
+  const popup = document.getElementById("feedbackPopupModal");
+  if (!popup || !card) return;
+
+  const charName = card.querySelector(".bot-name")?.textContent.trim() || "";
+  popup.dataset.charName = charName;
+
+  const nameEl = document.getElementById("feedbackPopupCharName");
+  if (nameEl) nameEl.textContent = charName;
+
+  // Điền sẵn tên nếu đã đăng nhập
+  const nameInput = popup.querySelector(".input-name");
+  const loggedInName = currentUser?.user_metadata?.display_name || "";
+  if (nameInput && !nameInput.value.trim() && loggedInName) {
+    nameInput.value = loggedInName;
+  }
+
+  renderFeedbackPopupList();
+  lockPageScroll();
+  popup.classList.add("active");
+
+  // Tải dữ liệu mới nhất rồi vẽ lại danh sách (loadFeedbacks tự làm mới popup khi đang mở)
+  await loadFeedbacks();
+};
+
+window.closeFeedbackPopup = function () {
+  const popup = document.getElementById("feedbackPopupModal");
+  if (!popup || !popup.classList.contains("active")) return;
+  popup.classList.remove("active");
+  if (!isBotModalOpen()) unlockPageScroll();
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") window.closeFeedbackPopup();
+});
 
 window.toggleReplyBox = function(btn) {
   const parentBox = btn.closest(".feedback-parent-item") || btn.closest(".feedback-item-wrapper");
@@ -1453,9 +1525,12 @@ window.sendFeedback = async function (btn) {
   const contentInput = box?.querySelector(".input-content") || document.getElementById("feedbackContent");
 
   const card = btn.closest(".bot-card");
+  const feedbackPopup = btn.closest("#feedbackPopupModal");
   let charName = "";
   
-  if (card) {
+  if (feedbackPopup) {
+    charName = feedbackPopup.dataset.charName || "";
+  } else if (card) {
     charName = card.querySelector(".bot-name")?.textContent.trim();
   } else {
     charName = document.getElementById("modalTitle")?.textContent.trim();
@@ -1528,7 +1603,10 @@ window.sendReply = async function(btn, parentId) {
   }
 
   const card = btn.closest(".bot-card");
-  const charName = card?.querySelector(".bot-name")?.textContent.trim() || document.getElementById("modalTitle")?.textContent.trim();
+  const charName =
+    btn.closest("#feedbackPopupModal")?.dataset.charName ||
+    card?.querySelector(".bot-name")?.textContent.trim() ||
+    document.getElementById("modalTitle")?.textContent.trim();
 
   btn.disabled = true;
   
@@ -1639,6 +1717,10 @@ async function loadFeedbacks() {
         });
       }
     });
+
+    if (document.getElementById("feedbackPopupModal")?.classList.contains("active")) {
+      renderFeedbackPopupList();
+    }
   } catch (err) {
     console.warn("Lỗi loadFeedbacks:", err);
   }
@@ -3837,7 +3919,7 @@ window.openPuzzleModal = function(puzzleId) {
               "Vết tích của một đêm quên lối về."
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 9 chữ cái, viết liền không dấu";
@@ -3860,7 +3942,7 @@ window.openPuzzleModal = function(puzzleId) {
               "Đi lùi 3 bước để tiến đến sự thật." - Đó là điều mà kẻ sát nhân đã để lại trên bức tường đỏ thắm tại hiện trường.
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 13 chữ cái, viết liền không dấu";
@@ -3888,7 +3970,7 @@ window.openPuzzleModal = function(puzzleId) {
               "Find me, hear me."
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 11 chữ cái, viết liền không dấu";
@@ -3905,7 +3987,7 @@ window.openPuzzleModal = function(puzzleId) {
               "Tần số kết nối giữa hai tâm hồn, nơi âm thanh vượt qua màng nhĩ để chạm thẳng đến sự thấu cảm."
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
@@ -3922,7 +4004,7 @@ window.openPuzzleModal = function(puzzleId) {
               Tác phẩm này hoàn toàn không phải hàng nguyên bản. Bản chất của nó là gì?
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 1 từ tiếng Anh gồm 4 chữ cái";
@@ -3939,7 +4021,7 @@ window.openPuzzleModal = function(puzzleId) {
               <em>(Cảnh báo: Tấm gương dần xuất hiện những vết nứt, khiến hình ảnh phản chiếu của ngươi trở nên méo mó.)</em>
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "There's only one true answer.";
@@ -3961,7 +4043,7 @@ window.openPuzzleModal = function(puzzleId) {
               "Sự thật về một người không nằm ở khởi đầu, cũng chẳng ở kết cục. Con người thật luôn bị kẹp chặt ở chính giữa những lằn ranh."
             </p>
             <hr style="border: 0; border-top: 1px dashed #d4af37; margin: 10px 0;">
-            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! ദ്ദി≽^-⩊•^≼ ✧</span>
+            <span style="font-style: italic; color: #8b3a3a; font-size: 0.75rem; line-height: 1.4;">Giải pass thử sức hoặc đọc phần "Tâm Thư Chủ Tiệm" ở Trang chủ để nhận link nhé! <span style="white-space: nowrap; display: inline-block;">ദ്ദി≽^-⩊•^≼ ✧</span></span>
           `;
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
@@ -4283,7 +4365,7 @@ async function checkMaintenanceMode() {
                 Evans đang sắp xếp lại những kệ sách và cập nhật thêm vài điều kỳ diệu mới.
               </p>
               <div class="maintenance-note">
-                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau 16:30 ngày 12/10/2026 nhé! <i class='fa-solid fa-paw'></i>
+                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau ít phút nữa nhé! <i class='fa-solid fa-paw'></i>
               </div>
             </div>
           </div>

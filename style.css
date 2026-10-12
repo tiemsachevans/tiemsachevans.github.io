@@ -6765,3 +6765,60 @@ body.scroll-locked {
 .cfs-board .cfs-note-item .note-footer .note-date i {
   font-size: 10px;
 }
+
+
+/* ==================== NÚT FEEDBACK NGOÀI THẺ + POPUP FEEDBACK ==================== */
+/* Cùng font (Merriweather) với khung feedback khi mở ra */
+.bot-card .action-btn.btn-toggle-feedback {
+  font-family: "Merriweather", serif;
+  font-weight: 700;
+}
+
+.bot-card .action-btn.btn-toggle-feedback:focus:not(:focus-visible) {
+  outline: none;
+}
+
+#feedbackPopupModal .feedback-popup-card {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Ô nhập: Merriweather in nghiêng, cỡ 14px bằng các feedback cũ trong danh sách */
+#feedbackPopupModal .book-input {
+  font-family: "Merriweather", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+/* Khung book-modal-card thừa hưởng chữ sáng của diploma-modal-card -> ép lại chữ tối cho dễ đọc */
+#feedbackPopupModal .feedback-list {
+  color: #4a3a2c;
+}
+
+#feedbackPopupModal .feedback-list {
+  max-height: 40vh !important;
+  min-height: 60px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(139, 58, 58, 0.2);
+  border-radius: 8px;
+  background-color: rgba(139, 58, 58, 0.03);
+  overscroll-behavior: contain;
+}
+
+#feedbackPopupModal .no-feedback-text {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #8a7a6a;
+}
+
+#feedbackPopupModal .input-name {
+  width: 100%;
+}
+
+#feedbackPopupModal .btn-send {
+  font-size: 13px;
+}
