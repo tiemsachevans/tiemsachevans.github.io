@@ -4283,7 +4283,7 @@ async function checkMaintenanceMode() {
                 Evans đang sắp xếp lại những kệ sách và cập nhật thêm vài điều kỳ diệu mới.
               </p>
               <div class="maintenance-note">
-                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau 14:30 ngày 12/10/2026 nhé! <i class='fa-solid fa-paw'></i>
+                Mimi đang cuộn tròn giữ cửa. Lữ khách hãy quay lại sau 16:30 ngày 12/10/2026 nhé! <i class='fa-solid fa-paw'></i>
               </div>
             </div>
           </div>
