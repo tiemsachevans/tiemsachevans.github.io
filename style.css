@@ -6822,3 +6822,78 @@ body.scroll-locked {
 #feedbackPopupModal .btn-send {
   font-size: 13px;
 }
+
+/* ==================== NÚT CHIA SẺ NHÂN VẬT TRONG MODAL ==================== */
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.modal-share-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(139, 58, 58, 0.25);
+  background: rgba(139, 58, 58, 0.08);
+  color: #8b3a3a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 10;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-share-btn:hover {
+  background: rgba(192, 95, 95, 0.15);
+  transform: translateY(-1px);
+}
+
+.modal-share-btn i {
+  font-size: 14px;
+}
+
+body.dark-theme .modal-share-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #c7b39f;
+}
+
+@media (max-width: 480px) {
+  /* Màn hình hẹp: chỉ hiện biểu tượng để không chen tiêu đề */
+  .modal-share-btn span {
+    display: none;
+  }
+
+  .modal-share-btn {
+    padding: 6px 10px;
+  }
+}
+
+/* ==================== NGÀY TẠO NHÂN VẬT ==================== */
+.bot-created {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 10px;
+  font-size: 13px;
+  font-style: italic;
+  color: #8a7a6a;
+}
+
+.bot-created i {
+  font-size: 12px;
+  font-style: normal;
+}
+
+body.dark-theme .bot-created {
+  color: #a8957f;
+}

@@ -651,9 +651,16 @@
           <div class="modal-left-col">
             <div class="modal-header-row">
               <h2 class="bot-name" id="modalTitle">Tên Sách</h2>
-              <div class="modal-vote-widget" id="modalVoteBtn" title="Thả tim / Vote nhân vật">
-                <span class="modal-heart-icon">&#x2764;</span>
-                <span id="modalVoteCount">0</span>
+              <div class="modal-header-actions">
+                <!-- Nút chia sẻ nhân vật -->
+                <button type="button" class="modal-share-btn" id="modalShareBtn" title="Chia sẻ nhân vật" aria-label="Chia sẻ nhân vật">
+                  <i class="bi bi-share"></i><span>Chia sẻ</span>
+                </button>
+                <!-- Widget Vote trực tiếp -->
+                <div class="modal-vote-widget" id="modalVoteBtn" title="Thả tim / Vote nhân vật">
+                  <span class="modal-heart-icon">&#x2764;</span>
+                  <span id="modalVoteCount">0</span>
+                </div>
               </div>
             </div>
 

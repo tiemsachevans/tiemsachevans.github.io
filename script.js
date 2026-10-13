@@ -70,6 +70,7 @@ async function getSupabase() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   hoistSharedModals();
+  renderCharacterCreatedDates();
   await checkMaintenanceMode();
   initThemeMode();
   await initProfilePage();
@@ -305,9 +306,10 @@ function initGlobalListeners() {
     if (lockedChip) {
       const puzzleId = lockedChip.getAttribute("data-puzzle-id");
       if (puzzleId) {
-        // Nếu đã mở khóa trong localStorage, cho phép mở link bình thường qua thuộc tính href hoặc real-href
-        if (localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
-          const targetHref = lockedChip.getAttribute("data-real-href") || lockedChip.href;
+        // Đã giải đố (có link do server cấp) -> đắp href rồi để trình duyệt mở link mặc định
+        if (getPuzzleLink(puzzleId)) {
+          unlockCharacterLinks(puzzleId);
+          const targetHref = lockedChip.href;
           if (targetHref && targetHref !== "#" && !targetHref.includes("javascript")) {
             return; // Cho phép sự kiện mở link mặc định diễn ra
           }
@@ -340,6 +342,7 @@ function initGlobalListeners() {
         showToast("Vui lòng nhập nội dung cảm nhận!", "error");
         return;
       }
+      if (!checkSpamGuard("feedback", content)) return;
 
       const userId = currentUser ? currentUser.id : null;
       const avatarUrl = currentUser?.user_metadata?.avatar_url || "./images/default_avt.jpg";
@@ -362,11 +365,12 @@ function initGlobalListeners() {
 
         if (error) {
           console.error("❌ Lỗi Supabase khi gửi feedback:", error);
-          showToast("Gửi đánh giá thất bại: " + error.message, "error");
+          showToast(spamErrorMessage(error, "Gửi đánh giá thất bại: " + error.message), "error");
           return; // Dừng lại không báo thành công giả mạo nữa
         }
       }
 
+      markSpamSent("feedback", content);
       if (contentInput) contentInput.value = "";
       showToast("Gửi đánh giá thành công!", "success");
       await loadFeedbacks();
@@ -717,6 +721,7 @@ function reinitializePageScripts() {
   // Modal nằm trong #main-content nên bị thay khi chuyển trang -> gỡ khóa cuộn còn sót
   document.body.classList.remove("modal-open", "char-view-open");
   unlockPageScroll(false); // trang mới: không khôi phục vị trí cuộn của trang cũ
+  renderCharacterCreatedDates();
   syncCharacterVotes();
   loadTopRanking();
   loadCfsNotes();
@@ -860,6 +865,12 @@ function initModal() {
       return;
     }
 
+    // Nút chia sẻ nhân vật
+    if (e.target.closest("#modalShareBtn")) {
+      shareCurrentCharacter();
+      return;
+    }
+
     // Khi bấm nút đóng (×), nút quay lại (mobile) hoặc bấm ra vùng nền mờ bên ngoài
     if (
       e.target.closest("#modalClose") ||
@@ -975,6 +986,14 @@ function closeBotModal(fromPopstate = false) {
     document.body.classList.remove("modal-open", "char-view-open");
     charViewClosing = false;
     unlockPageScroll();
+    // Desktop: bỏ #nv=... khỏi thanh địa chỉ sau khi đóng (mobile đã tự lùi history)
+    if (!wasMobileView && /^#nv=/.test(window.location.hash)) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + window.location.search,
+      );
+    }
   };
 
   // Chặn đóng lặp khi popstate đến trong lúc đang chạy hiệu ứng
@@ -1034,19 +1053,22 @@ function initCharViewSwipe() {
 // Mở thẳng màn hình nhân vật khi vào bằng link/refresh có #nv=<tên>
 async function restoreCharViewFromHash() {
   const m = window.location.hash.match(/^#nv=(.+)$/);
-  if (!m || !isMobileView() || !document.getElementById("botModal")) return;
+  if (!m || !document.getElementById("botModal")) return;
   let name = "";
   try {
     name = decodeURIComponent(m[1]);
   } catch (_) {
     return;
   }
-  // Đưa entry hiện tại về trang danh sách, rồi push màn hình chi tiết lên trên
-  window.history.replaceState(
-    { path: currentPagePath },
-    "",
-    window.location.pathname + window.location.search,
-  );
+  if (isMobileView()) {
+    // Đưa entry hiện tại về trang danh sách, rồi push màn hình chi tiết lên trên
+    window.history.replaceState(
+      { path: currentPagePath },
+      "",
+      window.location.pathname + window.location.search,
+    );
+  }
+  // Desktop: chỉ mở modal; hash được dọn khi đóng
   await openBotModalByName(name);
 }
 
@@ -1238,10 +1260,13 @@ window.openBotModalByName = async function (name) {
       modalVoteBtn.classList.toggle("liked", isLiked);
     }
 
+    renderModalCreated(char.created);
+
     // 2. Mở Modal (mobile: mở như một màn hình riêng, có history)
     openBotModalUI(modal, char.name);
 
     // 3. Tải feedback
+    checkUnlockedPuzzles();
     await syncModalFeedbacksByName(char.name);
   } else {
     console.error("Không tìm thấy thông tin cho nhân vật:", name);
@@ -1327,6 +1352,27 @@ async function syncModalFeedbacksByName(charName) {
   `;
 }
 
+// Đồng bộ số tim + trạng thái "đã thích" giữa nút vừa bấm, các thẻ và modal
+function applyLikeUI(charName, count, liked, btn, countSpan) {
+  if (btn) btn.classList.toggle("liked", liked);
+  if (countSpan) countSpan.textContent = count;
+
+  document.querySelectorAll(".bot-card").forEach((card) => {
+    const name = card.querySelector(".bot-name")?.textContent.trim();
+    if (name === charName) {
+      const cardCount = card.querySelector(".like-count");
+      if (cardCount) cardCount.textContent = count;
+      card.querySelector(".btn-like")?.classList.toggle("liked", liked);
+    }
+  });
+
+  if (document.getElementById("modalTitle")?.textContent.trim() === charName) {
+    const modalCount = document.getElementById("modalVoteCount");
+    if (modalCount) modalCount.textContent = count;
+    document.getElementById("modalVoteBtn")?.classList.toggle("liked", liked);
+  }
+}
+
 window.toggleLike = async function (btn) {
   const now = Date.now();
   if (btn._lastToggleTime && now - btn._lastToggleTime < 250) return;
@@ -1374,20 +1420,30 @@ window.toggleLike = async function (btn) {
     showToast(`Bạn không còn yêu thích ${charName} nữa rồi`, "error");
   }
 
-  // 4. Lưu tổng lượt vote mới lên Supabase
+  // 4. Lưu lượt tim lên Supabase qua RPC (mỗi người chỉ được 1 tim / nhân vật, có giới hạn tần suất)
   const supabase = await getSupabase();
   if (supabase) {
-    const { data, error } = await supabase
-      .from("characters")
-      .update({ votes: count })
-      .eq("name", charName)
-      .select();
+    const { data: newTotal, error } = await supabase.rpc("set_vote", {
+      p_name: charName,
+      p_liked: willBeLiked,
+      p_device: getDeviceId(),
+    });
 
     if (error) {
       console.error("❌ Lỗi Supabase khi lưu tim:", error);
-    } else {
-      loadTopRanking();
+      // Hoàn tác giao diện vì server không ghi nhận
+      const revertedCount = willBeLiked ? Math.max(0, count - 1) : count + 1;
+      saveLocalLikeState(charName, !willBeLiked);
+      applyLikeUI(charName, revertedCount, !willBeLiked, btn, countSpan);
+      showToast(spamErrorMessage(error, "Không lưu được lượt tim, thử lại sau nhé!"), "error");
+      return;
     }
+
+    // Số tim chuẩn do server trả về
+    if (typeof newTotal === "number") {
+      applyLikeUI(charName, newTotal, willBeLiked, btn, countSpan);
+    }
+    loadTopRanking();
   }
 
   if (currentUser) {
@@ -1426,6 +1482,215 @@ async function handleLikeClick(characterId, currentVotes) {
     if (el) el.textContent = newVotes;
   }
 }
+
+// ==================== NGÀY TẠO NHÂN VẬT ====================
+function formatCreatedDate(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return "";
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); // YYYY-MM-DD (không dùng Date để khỏi lệch múi giờ)
+  if (m) return `${m[3].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[1]}`;
+  m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); // DD/MM/YYYY
+  if (m) return `${m[1].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[3]}`;
+  return v; // giữ nguyên nếu là chữ tự do, vd "Mùa hè 2026"
+}
+
+function createdDateHTML(text) {
+  return `<i class="fa-solid fa-feather-pointed"></i> Ngày tạo: ${escapeHTML(text)}`;
+}
+
+function renderCharacterCreatedDates() {
+  document.querySelectorAll(".bot-card").forEach((card) => {
+    const text = formatCreatedDate(card.getAttribute("data-created"));
+    let el = card.querySelector(".bot-created");
+    if (!text) {
+      el?.remove();
+      return;
+    }
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "bot-created";
+      const tags = card.querySelector(".bot-tags");
+      if (tags) tags.insertAdjacentElement("afterend", el);
+      else card.querySelector(".bot-body")?.prepend(el);
+    }
+    el.innerHTML = createdDateHTML(text);
+  });
+}
+
+function renderModalCreated(raw) {
+  const sub = document.getElementById("modalSubtitle");
+  if (!sub) return;
+  const text = formatCreatedDate(raw);
+  let el = document.getElementById("modalCreated");
+  if (!text) {
+    el?.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "modalCreated";
+    el.className = "bot-created";
+    sub.insertAdjacentElement("afterend", el);
+  }
+  el.innerHTML = createdDateHTML(text);
+}
+
+// ==================== CHỐNG SPAM (PHÍA CLIENT) ====================
+// Lớp bảo vệ thật nằm ở Supabase (supabase/002_anti_spam.sql). Phần này chỉ giúp báo lỗi
+// thân thiện và tránh gửi những yêu cầu chắc chắn bị từ chối.
+const SPAM_RULES = {
+  feedback: { cooldownMs: 15000, maxLen: 500 },
+  reply: { cooldownMs: 10000, maxLen: 300 },
+  note: { cooldownMs: 30000, maxLen: 300 },
+};
+
+function checkSpamGuard(kind, content) {
+  const rule = SPAM_RULES[kind];
+  if (!rule) return true;
+
+  if (content.length > rule.maxLen) {
+    showToast(`Nội dung hơi dài rồi, tối đa ${rule.maxLen} ký tự nhé (hiện ${content.length}).`, "error");
+    return false;
+  }
+
+  const links = (content.match(/(https?:\/\/|www\.)/gi) || []).length;
+  if (links > 1) {
+    showToast("Mỗi lời nhắn chỉ nên có tối đa 1 liên kết nha!", "error");
+    return false;
+  }
+
+  let last = {};
+  try {
+    last = JSON.parse(localStorage.getItem(`spam_last_${kind}`) || "{}");
+  } catch (_) {}
+
+  const waitMs = (last.t || 0) + rule.cooldownMs - Date.now();
+  if (waitMs > 0) {
+    showToast(`Bạn gửi hơi nhanh, đợi ${Math.ceil(waitMs / 1000)} giây nữa nhé!`, "error");
+    return false;
+  }
+
+  if (last.c && last.c === content.toLowerCase() && Date.now() - last.t < 10 * 60 * 1000) {
+    showToast("Bạn vừa gửi nội dung này rồi.", "error");
+    return false;
+  }
+  return true;
+}
+
+function markSpamSent(kind, content) {
+  try {
+    localStorage.setItem(
+      `spam_last_${kind}`,
+      JSON.stringify({ t: Date.now(), c: content.toLowerCase() }),
+    );
+  } catch (_) {}
+}
+
+// Đổi mã lỗi từ trigger/RPC của Supabase thành câu thân thiện
+function spamErrorMessage(error, fallback) {
+  const msg = String(error?.message || "");
+  if (msg.includes("RATE_LIMITED")) return "Bạn thao tác hơi nhanh, đợi một lát rồi thử lại nhé!";
+  if (msg.includes("CONTENT_TOO_LONG")) return "Nội dung quá dài, hãy rút gọn lại nhé.";
+  if (msg.includes("TOO_MANY_LINKS")) return "Mỗi lời nhắn chỉ được chứa tối đa 1 liên kết.";
+  if (msg.includes("DUPLICATE_CONTENT")) return "Bạn vừa gửi nội dung này rồi.";
+  if (msg.includes("EMPTY_CONTENT")) return "Nội dung đang trống.";
+  return fallback;
+}
+
+// Mã thiết bị ẩn danh: giúp server đếm "1 tim / thiết bị" cho khách chưa đăng nhập
+function getDeviceId() {
+  try {
+    let id = localStorage.getItem("evans_device_id");
+    if (!id) {
+      id =
+        window.crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem("evans_device_id", id);
+    }
+    return id;
+  } catch (_) {
+    return "no-storage";
+  }
+}
+
+// ==================== CHIA SẺ NHÂN VẬT ====================
+let shareMapPromise = null;
+
+function shareKey(name) {
+  return String(name || "").normalize("NFC").trim().toLowerCase();
+}
+
+// share/map.json do tools/build_share_pages.py tạo ra: { "tên nhân vật": "slug" }
+function loadShareMap() {
+  if (!shareMapPromise) {
+    shareMapPromise = fetch("share/map.json", { cache: "no-cache" })
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({}));
+  }
+  return shareMapPromise;
+}
+
+async function buildShareUrl(name) {
+  const map = await loadShareMap();
+  const slug = map[shareKey(name)];
+  // Có trang chia sẻ riêng -> link có ảnh xem trước đúng nhân vật; không thì dùng link sâu thẳng vào modal
+  return slug
+    ? new URL(`share/${slug}.html`, document.baseURI).href
+    : new URL(`characters.html#nv=${encodeURIComponent(name)}`, document.baseURI).href;
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+window.shareCurrentCharacter = async function () {
+  const name = document.getElementById("modalTitle")?.textContent.trim();
+  if (!name) return;
+
+  const url = await buildShareUrl(name);
+  const subtitle = document.getElementById("modalSubtitle")?.textContent.trim() || "";
+
+  // Điện thoại: mở bảng chia sẻ của hệ điều hành
+  if (isMobileView() && navigator.share) {
+    try {
+      await navigator.share({
+        title: `${name} — Tiệm Sách Evans`,
+        text: subtitle ? `${name} · ${subtitle}` : name,
+        url,
+      });
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") return; // người dùng tự đóng bảng chia sẻ
+    }
+  }
+
+  const copied = await copyTextToClipboard(url);
+  showToast(
+    copied
+      ? `Đã sao chép liên kết của ${name}!`
+      : `Hãy sao chép liên kết của ${name}: ${url}`,
+    copied ? "success" : "error",
+  );
+};
 
 // FEEDBACK SUBMISSION LOGIC
 // Nút "Gửi Thư / Feedback" ngoài thẻ: mở popup (giống bảng giải đố) thay vì mở rộng thẻ.
@@ -1552,6 +1817,8 @@ window.sendFeedback = async function (btn) {
     return;
   }
 
+  if (!checkSpamGuard("feedback", content)) return;
+
   btn.disabled = true;
 
   const userId = currentUser ? currentUser.id : null;
@@ -1572,11 +1839,13 @@ window.sendFeedback = async function (btn) {
 
     if (error) {
       console.error("❌ Lỗi Supabase khi gửi feedback:", error);
-      showToast("Gửi đánh giá thất bại!", "error");
+      showToast(spamErrorMessage(error, "Gửi đánh giá thất bại!"), "error");
       btn.disabled = false;
       return;
     }
   }
+
+  markSpamSent("feedback", content);
 
   if (contentInput) contentInput.value = "";
   showToast("Gửi đánh giá thành công!", "success");
@@ -1608,6 +1877,8 @@ window.sendReply = async function(btn, parentId) {
     card?.querySelector(".bot-name")?.textContent.trim() ||
     document.getElementById("modalTitle")?.textContent.trim();
 
+  if (!checkSpamGuard("reply", content)) return;
+
   btn.disabled = true;
   
   const userId = currentUser ? currentUser.id : null;
@@ -1628,12 +1899,13 @@ window.sendReply = async function(btn, parentId) {
 
     if (error) {
       console.error("Lỗi gửi phản hồi:", error);
-      showToast("Gửi phản hồi thất bại!", "error");
+      showToast(spamErrorMessage(error, "Gửi phản hồi thất bại!"), "error");
       btn.disabled = false;
       return;
     }
   }
 
+  markSpamSent("reply", content);
   showToast("Phản hồi thành công!", "success");
   await loadFeedbacks();
 };
@@ -1919,8 +2191,9 @@ async function getAllCharacters() {
       const toc = card.getAttribute("data-toc") || "";
       const opening = card.getAttribute("data-opening") || "";
       const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
+      const created = card.getAttribute("data-created") || "";
       if (name && name !== "Coming Soon...") {
-        htmlCharacters.push({ name, title, toc, opening, chipsHTML });
+        htmlCharacters.push({ name, title, toc, opening, chipsHTML, created });
       }
     });
   } else {
@@ -1936,8 +2209,9 @@ async function getAllCharacters() {
           const toc = card.getAttribute("data-toc") || "";
           const opening = card.getAttribute("data-opening") || "";
           const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
+          const created = card.getAttribute("data-created") || "";
           if (name && name !== "Coming Soon...") {
-            htmlCharacters.push({ name, title, toc, opening, chipsHTML });
+            htmlCharacters.push({ name, title, toc, opening, chipsHTML, created });
           }
         });
       }
@@ -1958,6 +2232,7 @@ async function getAllCharacters() {
       toc: (matchedCloud && matchedCloud.toc) || hChar.toc,
       opening: (matchedCloud && matchedCloud.opening) || hChar.opening,
       chipsHTML: (matchedCloud && matchedCloud.chipsHTML) || hChar.chipsHTML,
+      created: hChar.created || "",
     };
   });
 
@@ -2153,6 +2428,8 @@ window.submitCfsNote = async function () {
     return;
   }
 
+  if (!checkSpamGuard("note", content)) return;
+
   if (submitBtn) submitBtn.disabled = true;
 
   // 1. Dán tờ note lên bảng ngay lập tức trên giao diện
@@ -2193,7 +2470,15 @@ window.submitCfsNote = async function () {
       .from("cfs_notes")
       .insert([noteData]);
       
-    if (error) console.error("❌ Lỗi lưu Supabase:", error);
+    if (error) {
+      console.error("❌ Lỗi lưu Supabase:", error);
+      // Server từ chối (spam / lỗi) -> gỡ tờ note vừa dán thử và không báo thành công giả
+      noteEl.remove();
+      if (submitBtn) submitBtn.disabled = false;
+      showToast(spamErrorMessage(error, "Chưa gửi được tâm thư, bạn thử lại sau nhé!"), "error");
+      return;
+    }
+    markSpamSent("note", content);
   }
 
   // 3. Reset input và hiển thị Modal Cảm Ơn
@@ -3845,43 +4130,36 @@ window.viewSavedDiploma = function () {
 // Cấu hình đáp án, tiêu đề và Toast riêng biệt cho từng nhân vật
 const puzzleConfigs = {
   delmare: {
-    answer: "bannga",
     title: "Vực Sâu Danh Dự",
     subtitle: "Delmare's Abyss",
     toastMsg: "Cánh cửa dẫn đến Delmare's Abyss đã mở! Chúc ngài chinh phục bản ngã thành công."
   },
   huy: {
-    answer: "candyland",
     title: "Một Cơn Say",
     subtitle: "Dương Khắc Huy",
     toastMsg: "Giỏi lắm. Giờ thì đến đây, đừng để tôi phải đợi lâu."
   },
   seol: {
-    answer: "jacktheripper",
     title: "Phía Sau Màn Sương",
     subtitle: "Seol Min-jae",
     toastMsg: "Màn sương đã tan. Chúc may mắn, đồ tể."
   },
   arashi: {
-    answer: "otomekaibou",
     title: "Thanh Âm Cấm Kỵ",
     subtitle: "Arashi「嵐」",
     toastMsg: "Đã giải mã giai điệu cấm kỵ của Arashi! Cánh cửa đêm nay chính thức rộng mở."
   },
   tam: {
-    answer: "ihearu",
     title: "Sợi Dây Liên Kết",
     subtitle: "Phó Kỳ Tâm",
     toastMsg: "Tôi nghe thấy tiếng mở cửa từ em rồi."
   },
   ngon: {
-    answer: "fake",
     title: "Bản Chất Sự Vật",
     subtitle: "Khương Tịch Ngôn",
     toastMsg: "Dù biết là giả, nhưng tôi vẫn trân trọng khoảnh khắc này."
   },
   salfozziel: {
-    answer: ["1", "2", "3"],
     title: "Cái Giá Của Sự Lựa Chọn",
     subtitle: "Salfozziel",
     toastMsg: "Đã ghi nhận lựa chọn của ngươi. Hãy để 'Bữa Tiệc' của chúng ta được khai màn."
@@ -4064,46 +4342,72 @@ window.closePuzzleModal = function() {
 // Kiểm tra mã nhập vào và Thêm biến đếm số lần nhập sai riêng cho Dương Khắc Huy
 let huyWrongAttempts = 0;
 
+let puzzleVerifying = false;
+
+// Đáp án và link thật chỉ nằm trên Supabase (supabase/001_puzzle_secrets.sql).
+// Trình duyệt chỉ gửi đáp án lên để kiểm tra và nhận link về nếu đúng.
+function getPuzzleLink(puzzleId) {
+  const link = localStorage.getItem(`puzzle_link_${puzzleId}`);
+  return link && /^https:\/\//.test(link) ? link : null;
+}
+
+function storePuzzleUnlock(puzzleId, link) {
+  if (!puzzleId || !link) return;
+  localStorage.setItem(`unlocked_${puzzleId}`, "true");
+  localStorage.setItem(`puzzle_link_${puzzleId}`, link);
+}
+
 window.verifyPuzzleCode = async function() {
+  if (puzzleVerifying) return;
+
   const modal = document.getElementById("puzzleModal");
   const input = document.getElementById("puzzlePasscodeInput");
   const errorMsg = document.getElementById("puzzleErrorMsg");
   
   const puzzleId = modal.dataset.currentPuzzle;
   const code = input.value.trim().toLowerCase();
-  
-  let validAnswers = ["bannga"];
-  if (puzzleId === "huy") validAnswers = ["candyland"];
-  if (puzzleId === "seol") validAnswers = ["jacktheripper"];
-  if (puzzleId === "arashi") validAnswers = ["otomekaibou"];
-  if (puzzleId === "tam") validAnswers = ["ihearu"];
-  if (puzzleId === "ngon") validAnswers = ["fake"];
-  if (puzzleId === "salfozziel") validAnswers = ["1", "2", "3"];
 
-  if (validAnswers.includes(code)) {
+  const showPuzzleError = (html) => {
+    errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;">${html}</span>`;
+    errorMsg.classList.add("show");
+  };
+
+  let result = { ok: false };
+  if (code) {
+    puzzleVerifying = true;
+    try {
+      const supabase = await getSupabase();
+      if (!supabase) {
+        showPuzzleError("Không kết nối được máy chủ, lữ khách thử lại sau nhé!");
+        return;
+      }
+      const { data, error } = await supabase.rpc("verify_puzzle", {
+        p_puzzle_id: puzzleId,
+        p_answer: code,
+      });
+      if (error) throw error;
+      result = data || { ok: false };
+    } catch (err) {
+      console.warn("Lỗi kiểm tra đáp án:", err);
+      showPuzzleError("Có lỗi khi kiểm tra đáp án, lữ khách thử lại sau nhé!");
+      return;
+    } finally {
+      puzzleVerifying = false;
+    }
+  }
+
+  if (result.ok && result.link) {
     if (puzzleId === "huy") {
       huyWrongAttempts = 0;
     }
-    localStorage.setItem(`unlocked_${puzzleId}`, "true");
-
-    const currentUnlocked = getLocalUnlockedPuzzlesMap();
-    if (currentUser) {
-      const supabase = await getSupabase();
-      if (supabase) {
-        await supabase
-          .from("profiles")
-          .upsert({
-            user_id: currentUser.id,
-            unlocked_puzzles: currentUnlocked,
-            updated_at: new Date().toISOString()
-          }, { onConflict: "user_id" });
-      }
-    }
+    storePuzzleUnlock(puzzleId, result.link);
 
     closePuzzleModal();
     unlockCharacterLinks(puzzleId);
     const customToastMsg = puzzleConfigs[puzzleId]?.toastMsg || "Đã giải mã thành công! Nút Google AI Studio đã mở.";
     showToast(customToastMsg, "success");
+  } else if (result.error === "RATE_LIMITED") {
+    showPuzzleError("Lữ khách thử hơi nhiều rồi, hãy nghỉ vài phút rồi quay lại nhé!");
   } else {
     input.classList.add("error-shake");
     setTimeout(() => input.classList.remove("error-shake"), 400);
@@ -4141,15 +4445,15 @@ function getLocalUnlockedPuzzlesMap() {
   return map;
 }
 
-// Hàm "Giải phóng Link": Lấy data-real-href đắp ngược lại vào href
+// Hàm "Giải phóng Link": đắp link thật (nhận từ Supabase khi giải đúng) vào các nút đã khóa
 window.unlockCharacterLinks = function(puzzleId) {
-    const lockedLinks = document.querySelectorAll(`a[data-real-href][data-puzzle-id="${puzzleId}"]`);
-    lockedLinks.forEach(link => {
-        const realHref = link.getAttribute("data-real-href");
-        if (realHref) {
-            link.href = realHref;
-        }
+    const realHref = getPuzzleLink(puzzleId);
+    if (!realHref) return;
+
+    document.querySelectorAll(`a[data-puzzle-id="${puzzleId}"]`).forEach(link => {
+        link.href = realHref;
         link.target = "_blank";
+        link.rel = "noopener noreferrer";
         
         const innerLock = link.querySelector(".inner-lock") || link.querySelector(".lock-icon"); 
         if (innerLock) {
@@ -4161,12 +4465,11 @@ window.unlockCharacterLinks = function(puzzleId) {
     });
 };
 
-// Kiểm tra khi vừa tải trang, nếu đã giải mã rồi thì thả link ra luôn
 window.checkUnlockedPuzzles = function() {
   const puzzleIds = ["delmare", "huy", "seol", "arashi", "tam", "ngon", "salfozziel"];
   
   puzzleIds.forEach(puzzleId => {
-    if (localStorage.getItem(`unlocked_${puzzleId}`) === "true") {
+    if (getPuzzleLink(puzzleId)) {
       unlockCharacterLinks(puzzleId);
     }
   });
@@ -4178,34 +4481,11 @@ async function syncAccountPuzzles(user) {
   if (!supabase) return;
 
   try {
-    const { data: profileData, error } = await supabase
-      .from("profiles")
-      .select("unlocked_puzzles")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // Server chỉ trả link của những câu mà tài khoản này đã thật sự giải đúng
+    const { data, error } = await supabase.rpc("get_my_puzzle_links");
+    if (error) throw error;
 
-    let cloudPuzzles = (profileData && profileData.unlocked_puzzles) ? profileData.unlocked_puzzles : {};
-    let localMap = getLocalUnlockedPuzzlesMap();
-
-    // Hợp nhất dữ liệu giữa Cloud (Supabase) và LocalStorage (ưu tiên kết hợp cả 2 chiều tránh mất mát)
-    const mergedMap = { ...cloudPuzzles, ...localMap };
-
-    // Cập nhật ngược lại vào LocalStorage
-    Object.keys(mergedMap).forEach(puzzleId => {
-      if (mergedMap[puzzleId]) {
-        localStorage.setItem(`unlocked_${puzzleId}`, "true");
-      }
-    });
-
-    // Đẩy dữ liệu đồng nhất lên lại Supabase
-    await supabase
-      .from("profiles")
-      .upsert({
-        user_id: user.id,
-        unlocked_puzzles: mergedMap,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "user_id" });
-
+    (data || []).forEach((row) => storePuzzleUnlock(row.puzzle_id, row.link));
     checkUnlockedPuzzles();
   } catch (err) {
     console.warn("Lỗi đồng bộ trạng thái puzzle tài khoản:", err);
