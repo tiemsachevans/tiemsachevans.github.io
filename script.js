@@ -39,7 +39,27 @@ async function ensureSupabaseScriptLoaded() {
 }
 
 // Hàm kiểm tra và chờ thư viện Supabase CDN nạp hoàn tất (chờ tối đa 3 giây)
+// Nhiều tác vụ khởi động gọi getSupabase() cùng lúc -> chỉ tạo MỘT client, mọi nơi dùng chung kết quả
+let _supabasePromise = null;
+
 async function getSupabase() {
+  if (_supabaseInstance) return _supabaseInstance;
+  if (!_supabasePromise) {
+    _supabasePromise = createSupabaseInstance().then(
+      (inst) => {
+        if (!inst) _supabasePromise = null; // thất bại -> cho phép thử lại lần sau
+        return inst;
+      },
+      (err) => {
+        _supabasePromise = null;
+        throw err;
+      },
+    );
+  }
+  return _supabasePromise;
+}
+
+async function createSupabaseInstance() {
   if (_supabaseInstance) return _supabaseInstance;
 
   // Tăng thời gian chờ lên 6 giây và chủ động kiểm tra/nạp lại script dự phòng
@@ -68,37 +88,83 @@ async function getSupabase() {
   return null;
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  hoistSharedModals();
-  renderCharacterCreatedDates();
-  await checkMaintenanceMode();
-  initThemeMode();
-  await initProfilePage();
-  const supabase = await getSupabase();
-  if (supabase) {
-    console.log("Supabase đã sẵn sàng!");
+// ==================== MÀN HÌNH CHỜ KHI MỞ TRANG ====================
+// CSS (khối "MÀN HÌNH CHỜ" trong style.css) phủ kín trang cho tới khi body có class page-ready,
+// nhờ vậy người xem không thấy nội dung mặc định/trống rồi mới nhảy sang dữ liệu thật.
+function markPageReady() {
+  document.body.classList.add("page-ready");
+  // Nếu màn hình chờ dùng video nền thì dừng lại khi đã vào trang (đỡ tốn pin/CPU)
+  const loaderVideo = document.getElementById("loaderVideo");
+  if (loaderVideo) setTimeout(() => loaderVideo.pause(), 500);
+}
+
+// Chờ tối đa `ms` mili giây (không bao giờ ném lỗi) để màn hình chờ không kẹt khi mạng chậm
+function waitAtMost(promises, ms) {
+  return Promise.race([
+    Promise.allSettled(promises),
+    new Promise((resolve) => setTimeout(resolve, ms)),
+  ]);
+}
+
+// Chạy một tác vụ khởi động mà không bao giờ ném lỗi ra ngoài: một phần lỗi không làm hỏng cả trang
+function runStartupTask(label, fn) {
+  try {
+    return Promise.resolve(fn()).catch((err) => {
+      console.warn(`Khởi động "${label}" gặp lỗi:`, err);
+    });
+  } catch (err) {
+    console.warn(`Khởi động "${label}" gặp lỗi:`, err);
+    return Promise.resolve();
   }
-  await syncCharacterVotes();
-  await loadFeedbacks();
-  await checkNewCharacter();
-  loadRandomDailyQuote();
-  loadTopRanking();
-  loadCfsNotes();
-  initColorPicker();
-  initSearchAndFilter();
-  initModal();
-  initBackToTop();
-  displayRandomCharacter();
-  initGlobalListeners();
-  initAjaxNavigation();
-  restoreCharViewFromHash();
-  initCharViewSwipe();
-  initMusicPlayer();
-  initMenuToggle();
-  initCatMascot();
-  initDustParticles();
-  checkUserSession();
-  checkUnlockedPuzzles();
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // Chốt an toàn: dù có chuyện gì cũng mở trang sau 9 giây
+  const readyFailsafe = setTimeout(markPageReady, 9000);
+
+  try {
+    hoistSharedModals();
+    renderCharacterCreatedDates();
+
+    // 1. Phần không cần mạng: chạy ngay
+    [
+      ["theme", initThemeMode],
+      ["colorPicker", initColorPicker],
+      ["searchFilter", initSearchAndFilter],
+      ["modal", initModal],
+      ["backToTop", initBackToTop],
+      ["globalListeners", initGlobalListeners],
+      ["ajaxNav", initAjaxNavigation],
+      ["charSwipe", initCharViewSwipe],
+      ["musicPlayer", initMusicPlayer],
+      ["menuToggle", initMenuToggle],
+      ["catMascot", initCatMascot],
+      ["dustParticles", initDustParticles],
+      ["unlockedPuzzles", checkUnlockedPuzzles],
+    ].forEach(([label, fn]) => runStartupTask(label, fn));
+
+    // 2. Phần cần Supabase: chạy SONG SONG thay vì nối đuôi nhau, tổng thời gian chờ ≈ lần gọi chậm nhất
+    const startupTasks = [
+      ["maintenance", checkMaintenanceMode],
+      ["profile", initProfilePage],
+      ["votes", syncCharacterVotes],
+      ["feedbacks", loadFeedbacks],
+      ["newCharacter", checkNewCharacter],
+      ["dailyQuote", loadRandomDailyQuote],
+      ["topRanking", loadTopRanking],
+      ["cfsNotes", loadCfsNotes],
+      ["randomCharacter", displayRandomCharacter],
+      ["userSession", checkUserSession],
+      ["deepLink", restoreCharViewFromHash],
+    ].map(([label, fn]) => runStartupTask(label, fn));
+
+    // Chờ dữ liệu + font tải xong (tối đa 6 giây) rồi mới mở màn hình chờ
+    if (document.fonts && document.fonts.ready) startupTasks.push(document.fonts.ready);
+    await waitAtMost(startupTasks, 6000);
+  } finally {
+    clearTimeout(readyFailsafe);
+    markPageReady();
+  }
 });
 
 // Hàm escape HTML chống XSS
@@ -695,7 +761,7 @@ async function loadPageViaAjax(url, pushHistory = true) {
       return;
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
       mainContent.innerHTML = newMain.innerHTML;
       hoistSharedModals();
       if (newTitle) document.title = newTitle.textContent;
@@ -706,7 +772,8 @@ async function loadPageViaAjax(url, pushHistory = true) {
 
       currentPagePath =
         url.split("#")[0].split("?")[0].split("/").pop() || "index.html";
-      reinitializePageScripts();
+      const pageTasks = reinitializePageScripts();
+      await waitAtMost(pageTasks || [], 3500); // dữ liệu trang mới sẵn sàng rồi mới hiện, tránh nháy nội dung mặc định
 
       mainContent.style.opacity = "1";
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -722,23 +789,26 @@ function reinitializePageScripts() {
   document.body.classList.remove("modal-open", "char-view-open");
   unlockPageScroll(false); // trang mới: không khôi phục vị trí cuộn của trang cũ
   renderCharacterCreatedDates();
-  syncCharacterVotes();
-  loadTopRanking();
-  loadCfsNotes();
+  const pageTasks = [
+    syncCharacterVotes(),
+    loadTopRanking(),
+    loadCfsNotes(),
+    displayRandomCharacter(),
+    loadRandomDailyQuote(),
+    checkNewCharacter(),
+  ];
   initColorPicker();
   initSearchAndFilter();
   initModal();
-  displayRandomCharacter();
   initCatMascot();
-  loadRandomDailyQuote();
   initDustParticles();
   checkUnlockedPuzzles();
-  checkNewCharacter();
   autofillUserNames();
   
   if (document.querySelector(".profile-page-container")) {
-    initProfilePage();
+    pageTasks.push(initProfilePage());
   }
+  return pageTasks;
 }
 // Chuyển trang profile mượt mà qua AJAX
 function handleNavAuthClick() {
@@ -1484,6 +1554,8 @@ async function handleLikeClick(characterId, currentVotes) {
 }
 
 // ==================== NGÀY TẠO NHÂN VẬT ====================
+// Thêm ngày tạo cho một nhân vật: gắn data-created="2026-08-26" (hoặc "26/08/2026") vào thẻ .bot-card
+// trong characters.html. Không có thuộc tính này thì không hiển thị gì.
 function formatCreatedDate(raw) {
   const v = String(raw || "").trim();
   if (!v) return "";
@@ -1495,7 +1567,7 @@ function formatCreatedDate(raw) {
 }
 
 function createdDateHTML(text) {
-  return `<i class="fa-solid fa-feather-pointed"></i> Ngày tạo: ${escapeHTML(text)}`;
+  return `<i class="bi bi-calendar3"></i> Ngày tạo: ${escapeHTML(text)}`;
 }
 
 function renderCharacterCreatedDates() {
@@ -2164,61 +2236,71 @@ function toggleDonateQR() {
 }
 
 // ==================== HÀM LẤY DỮ LIỆU TỔNG HỢP (SUPABASE + FALLBACK HTML) ====================
-async function getAllCharacters() {
-  const supabase = await getSupabase();
-  let cloudCharacters = [];
+let _allCharactersInflight = null;
 
-  // 1. Luôn truy vấn dữ liệu mới nhất (đặc biệt là cột votes) từ Supabase
-  if (supabase) {
+async function getAllCharacters() {
+  // Khi mở trang, nhiều tác vụ (tim, top 3, nhân vật ngẫu nhiên...) cùng cần danh sách này:
+  // dùng chung một lần tải đang chạy. Lần gọi sau đó (vd: sau khi thả tim) vẫn tải mới.
+  if (!_allCharactersInflight) {
+    _allCharactersInflight = fetchAllCharacters().finally(() => {
+      _allCharactersInflight = null;
+    });
+  }
+  const list = await _allCharactersInflight;
+  return Array.isArray(list) ? list.map((c) => ({ ...c })) : list; // mỗi nơi nhận bản riêng để sắp xếp thoải mái
+}
+
+async function fetchAllCharacters() {
+  const supabase = await getSupabase();
+
+  // 1. Dữ liệu mới nhất (đặc biệt là cột votes) từ Supabase
+  const cloudTask = (async () => {
+    if (!supabase) return [];
     try {
       const { data, error } = await supabase.from("characters").select("*");
-      if (!error && data && data.length > 0) {
-        cloudCharacters = data;
-      }
+      if (!error && data && data.length > 0) return data;
     } catch (err) {
       console.warn("Lỗi kết nối Supabase:", err);
     }
-  }
+    return [];
+  })();
 
-  // 2. Lấy thêm thông tin chi tiết (Mục lục, trích đoạn, chips) từ characters.html nếu Supabase thiếu cột
-  let htmlCharacters = [];
-  const domCards = document.querySelectorAll(".bot-card:not(.secret-cat-card)");
+  // 2. Chi tiết (Mục lục, trích đoạn, chips) từ thẻ trên trang hoặc từ characters.html — chạy song song với bước 1
+  const readCard = (card) => ({
+    name: card.querySelector(".bot-name")?.textContent.trim() || "",
+    title: card.querySelector(".bot-tags")?.textContent.trim() || "",
+    toc: card.getAttribute("data-toc") || "",
+    opening: card.getAttribute("data-opening") || "",
+    chipsHTML: card.querySelector(".bot-chips")?.innerHTML || "",
+    created: card.getAttribute("data-created") || "",
+  });
 
-  if (domCards.length > 0) {
-    domCards.forEach((card) => {
-      const name = card.querySelector(".bot-name")?.textContent.trim() || "";
-      const title = card.querySelector(".bot-tags")?.textContent.trim() || "";
-      const toc = card.getAttribute("data-toc") || "";
-      const opening = card.getAttribute("data-opening") || "";
-      const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
-      const created = card.getAttribute("data-created") || "";
-      if (name && name !== "Coming Soon...") {
-        htmlCharacters.push({ name, title, toc, opening, chipsHTML, created });
+  const htmlTask = (async () => {
+    const found = [];
+    const domCards = document.querySelectorAll(".bot-card:not(.secret-cat-card)");
+    let cards = Array.from(domCards);
+
+    if (cards.length === 0) {
+      try {
+        const res = await fetch("characters.html");
+        if (res.ok) {
+          const htmlText = await res.text();
+          const doc = new DOMParser().parseFromString(htmlText, "text/html");
+          cards = Array.from(doc.querySelectorAll(".bot-card:not(.secret-cat-card)"));
+        }
+      } catch (err) {
+        console.warn("Lỗi đọc file characters.html:", err);
       }
-    });
-  } else {
-    try {
-      const res = await fetch("characters.html");
-      if (res.ok) {
-        const htmlText = await res.text();
-        const doc = new DOMParser().parseFromString(htmlText, "text/html");
-        const cards = doc.querySelectorAll(".bot-card:not(.secret-cat-card)");
-        cards.forEach((card) => {
-          const name = card.querySelector(".bot-name")?.textContent.trim() || "";
-          const title = card.querySelector(".bot-tags")?.textContent.trim() || "";
-          const toc = card.getAttribute("data-toc") || "";
-          const opening = card.getAttribute("data-opening") || "";
-          const chipsHTML = card.querySelector(".bot-chips")?.innerHTML || "";
-          const created = card.getAttribute("data-created") || "";
-          if (name && name !== "Coming Soon...") {
-            htmlCharacters.push({ name, title, toc, opening, chipsHTML, created });
-          }
-        });
-      }
-    } catch (err) {
-      console.warn("Lỗi đọc file characters.html:", err);
     }
-  }
+
+    cards.forEach((card) => {
+      const info = readCard(card);
+      if (info.name && info.name !== "Coming Soon...") found.push(info);
+    });
+    return found;
+  })();
+
+  const [cloudCharacters, htmlCharacters] = await Promise.all([cloudTask, htmlTask]);
 
   // 3. Hợp nhất: Lấy số vote từ Supabase và chi tiết mô tả từ file HTML
   const mergedList = htmlCharacters.map((hChar) => {
