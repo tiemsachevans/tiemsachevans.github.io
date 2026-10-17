@@ -440,7 +440,8 @@ function initGlobalListeners() {
       if (contentInput) contentInput.value = "";
       showToast("Gửi đánh giá thành công!", "success");
       await loadFeedbacks();
-      await syncModalFeedbacksByName(currentTitle);
+      await syncModalFeedbacksByName(currentTitle, { silent: true });
+      revealNewFeedback("#dynamicFeedbackList");
     });
 }
 
@@ -1344,11 +1345,15 @@ window.openBotModalByName = async function (name) {
 };
 
 // Hàm tải feedback trực tiếp theo tên nhân vật vào Modal
-async function syncModalFeedbacksByName(charName) {
+async function syncModalFeedbacksByName(charName, { silent = false } = {}) {
   const modalFeedbackList = document.getElementById("dynamicFeedbackList");
   if (!modalFeedbackList) return;
 
-  modalFeedbackList.innerHTML = `<span style="font-size:0.85rem; opacity:0.7; font-style:italic;">Đang tải cảm nhận...</span>`;
+  // silent = làm mới ngầm sau khi gửi: giữ nguyên danh sách cũ cho tới khi có dữ liệu mới, không nháy chữ "Đang tải"
+  const prevScroll = modalFeedbackList.scrollTop;
+  if (!silent) {
+    modalFeedbackList.innerHTML = `<span style="font-size:0.85rem; opacity:0.7; font-style:italic;">Đang tải cảm nhận...</span>`;
+  }
 
   try {
     const supabase = await getSupabase();
@@ -1385,7 +1390,7 @@ async function syncModalFeedbacksByName(charName) {
           }).join("");
 
           return `
-            <div class="feedback-item-wrapper" style="margin-bottom: 12px; font-size: 14px;">
+            <div class="feedback-item-wrapper" data-feedback-id="${parent.id}" style="margin-bottom: 12px; font-size: 14px;">
               <div class="feedback-parent-item" style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px;">
                 <img src="${escapeHTML(parentAvatar)}" alt="Avatar" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
                 <div style="flex: 1; font-size: 14px;">
@@ -1408,6 +1413,7 @@ async function syncModalFeedbacksByName(charName) {
             </div>
           `;
         }).join("");
+        modalFeedbackList.scrollTop = prevScroll;
         return;
       }
     }
@@ -1789,9 +1795,44 @@ function renderFeedbackPopupList() {
   const source = card?.querySelector(".feedback-list");
   const hasItems = !!source && source.querySelector(".feedback-item-wrapper");
 
+  const prevScroll = listEl.scrollTop;
   listEl.innerHTML = hasItems
     ? source.innerHTML
     : `<p class="no-feedback-text">Chưa có lời nhắn nào cho nhân vật này. Hãy là người đầu tiên gửi feedback!</p>`;
+  listEl.scrollTop = prevScroll;
+}
+
+// Cuộn tới phần vừa gửi và nháy sáng nhẹ để người viết thấy ngay
+function flashAndReveal(el) {
+  if (!el) return;
+  el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  const prevTransition = el.style.transition;
+  el.style.transition = "background-color 1.2s ease";
+  el.style.backgroundColor = "rgba(212, 175, 55, 0.28)";
+  setTimeout(() => {
+    el.style.backgroundColor = "";
+    setTimeout(() => (el.style.transition = prevTransition), 1300);
+  }, 1400);
+}
+
+function feedbackListSelectorFor(btn) {
+  if (btn.closest("#feedbackPopupModal")) return "#feedbackPopupList";
+  if (btn.closest("#botModal")) return "#dynamicFeedbackList";
+  return null;
+}
+
+function revealNewReply(parentId, listSelector) {
+  if (!listSelector) return;
+  const wrapper = document
+    .querySelector(listSelector)
+    ?.querySelector(`.feedback-item-wrapper[data-feedback-id="${parentId}"]`);
+  flashAndReveal(wrapper?.querySelector(".feedback-replies-container")?.lastElementChild);
+}
+
+function revealNewFeedback(listSelector) {
+  if (!listSelector) return;
+  const items = document.querySelector(listSelector)?.querySelectorAll(".feedback-item-wrapper");
+  flashAndReveal(items && items[items.length - 1]);
 }
 
 window.openFeedbackPopup = async function (card) {
@@ -1923,11 +1964,13 @@ window.sendFeedback = async function (btn) {
   showToast("Gửi đánh giá thành công!", "success");
   btn.disabled = false;
   
+  const listSelector = feedbackListSelectorFor(btn);
   await loadFeedbacks();
   
   if (typeof syncModalFeedbacksByName === "function" && charName) {
-    await syncModalFeedbacksByName(charName);
+    await syncModalFeedbacksByName(charName, { silent: true });
   }
+  revealNewFeedback(listSelector);
 };
 
 window.sendReply = async function(btn, parentId) {
@@ -1979,7 +2022,15 @@ window.sendReply = async function(btn, parentId) {
 
   markSpamSent("reply", content);
   showToast("Phản hồi thành công!", "success");
-  await loadFeedbacks();
+
+  // Làm mới danh sách mà người viết đang xem để phản hồi hiện ra NGAY (không cần đóng/mở lại)
+  const listSelector = feedbackListSelectorFor(btn);
+  await loadFeedbacks(); // cập nhật các thẻ + popup (nếu đang mở)
+  if (listSelector === "#dynamicFeedbackList" && charName) {
+    await syncModalFeedbacksByName(charName, { silent: true });
+  }
+  btn.disabled = false;
+  revealNewReply(parentId, listSelector);
 };
 
 // ==================== TẢI FEEDBACK TỪ SUPABASE ====================
@@ -2015,6 +2066,7 @@ async function loadFeedbacks() {
         charParents.forEach((parent) => {
           const itemEl = document.createElement("div");
           itemEl.className = "feedback-item-wrapper";
+          itemEl.dataset.feedbackId = parent.id;
           
           const parentAvatar = parent.avatar_url || "./images/default_avt.jpg";
           const isOwnerParent = parent.user_id === OWNER_USER_ID;
