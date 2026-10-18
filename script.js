@@ -167,6 +167,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// Chỉ chấp nhận mã màu hợp lệ trước khi đưa vào thuộc tính style (tránh chèn CSS/HTML lạ từ dữ liệu)
+function safeCssColor(value, fallback = "#fff2b2") {
+  const v = String(value || "").trim();
+  return /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(v) ? v : fallback;
+}
+
 // Hàm escape HTML chống XSS
 function escapeHTML(str) {
   if (!str) return "";
@@ -720,6 +726,22 @@ function initAjaxNavigation() {
 // xóa khi chuyển trang AJAX (vd: Tủ sách -> Trang chủ) và top 3/random không mở được modal.
 const SHARED_MODAL_IDS = ["botModal", "puzzleModal", "feedbackPopupModal"];
 
+// Khai báo cho trình đọc màn hình biết đây là hộp thoại
+function applyDialogA11y() {
+  [
+    ["botModal", "Thông tin nhân vật"],
+    ["puzzleModal", "Giải mã nhân vật"],
+    ["feedbackPopupModal", "Gửi thư / Feedback"],
+  ].forEach(([id, label]) => {
+    const el = document.getElementById(id);
+    if (el && !el.getAttribute("role")) {
+      el.setAttribute("role", "dialog");
+      el.setAttribute("aria-modal", "true");
+      el.setAttribute("aria-label", label);
+    }
+  });
+}
+
 function hoistSharedModals() {
   const main = document.getElementById("main-content");
   if (!main) return;
@@ -735,6 +757,7 @@ function hoistSharedModals() {
       document.body.appendChild(inMain); // trang đầu tiên: nhấc modal ra khỏi main
     }
   });
+  applyDialogA11y();
 }
 
 async function loadPageViaAjax(url, pushHistory = true) {
@@ -1867,8 +1890,18 @@ window.closeFeedbackPopup = function () {
   if (!isBotModalOpen()) unlockPageScroll();
 };
 
+// Phím Esc: đóng lớp trên cùng trước (giải đố -> popup feedback -> modal nhân vật)
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") window.closeFeedbackPopup();
+  if (e.key !== "Escape") return;
+  if (document.getElementById("puzzleModal")?.classList.contains("active")) {
+    if (typeof closePuzzleModal === "function") closePuzzleModal();
+    return;
+  }
+  if (document.getElementById("feedbackPopupModal")?.classList.contains("active")) {
+    window.closeFeedbackPopup();
+    return;
+  }
+  if (isBotModalOpen()) closeBotModal();
 });
 
 window.toggleReplyBox = function(btn) {
@@ -2653,7 +2686,7 @@ function showThankYouLetterModal(author) {
   toast.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
       <span style="font-size: 1.2rem; line-height: 1;">💌</span>
-      <strong style="font-size: 0.95rem;">Cảm ơn ${author || "Lữ khách"}!</strong>
+      <strong style="font-size: 0.95rem;">Cảm ơn ${escapeHTML(author || "Lữ khách")}!</strong>
     </div>
     <div>
       <span style="opacity: 0.9;">Cảm ơn những dòng tâm tư chân thành mà bạn đã gửi gắm vào góc Confession nhỏ của Tiệm sách. Chúc bạn luôn bình yên và có những phút giây trải nghiệm tuyệt vời tại đây!</span>
@@ -3253,7 +3286,7 @@ function updateNavUserUI(user) {
       const avatar = meta.avatar_url || "./images/cat_icon.jpg";
 
       navBtn.innerHTML = `
-        <img src="${avatar}" class="nav-auth-avatar-mini" alt="Avatar" />
+        <img src="${escapeHTML(avatar)}" class="nav-auth-avatar-mini" alt="Avatar" />
         <span>${escapeHTML(name)}</span>
       `;
     } else {
@@ -4126,7 +4159,7 @@ async function loadUserNotes(user) {
   container.innerHTML = notes.map(note => {
     const isHolo = note.bg_color === "hologram";
     return `
-      <div class="cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}" style="${!isHolo ? `background-color: ${note.bg_color || '#fff2b2'};` : ''}">
+      <div class="cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}" style="${!isHolo ? `background-color: ${safeCssColor(note.bg_color)};` : ''}">
         <p class="note-content">"${escapeHTML(note.content)}"</p>
         <span class="note-author">— ${escapeHTML(note.author || displayName)}</span>
       </div>

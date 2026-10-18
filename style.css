@@ -6900,6 +6900,17 @@ body.dark-theme .bot-created {
 
 
 /* ==================== MÀN HÌNH CHỜ KHI MỞ TRANG ==================== */
+/* Phủ kín trang cho tới khi script.js thêm class "page-ready" vào <body>.
+   Không cần sửa HTML: dùng ::before (nền + tên tiệm) và ::after (quyển sách lật trang + dòng chữ) của body.
+   Quyển sách là ảnh SVG động nhúng thẳng trong CSS (nguồn dễ đọc: loader-book.svg). */
+/* ----- ĐỔI NỀN MÀN HÌNH CHỜ: chỉ cần sửa khối :root bên dưới -----
+   Mọi biến đều tuỳ chọn; xoá cả khối :root thì quay về nền trơn + quyển sách lật trang.
+
+   PRESET A (đang dùng): ảnh động nến + sách, chữ nằm phía dưới trên nền tối dần.
+   PRESET B: nền trơn + quyển sách lật trang -> xoá khối :root.
+   PRESET C: ảnh bất kỳ nhưng vẫn giữ quyển sách lật ở giữa:
+       --loader-bg-image: url("images/anh-khac.jpg");
+       --loader-bg-shade: linear-gradient(rgba(20, 15, 10, 0.55), rgba(20, 15, 10, 0.55));  */
 :root {
   --loader-bg-image: url("images/loader-bg.webp");
   --loader-bg-shade: linear-gradient(
@@ -6908,8 +6919,8 @@ body.dark-theme .bot-created {
     rgba(10, 7, 4, 0.6) 40%,
     rgba(10, 7, 4, 0.12) 100%
   );
-  --loader-book-image: none;
-  --loader-title-align: flex-end;
+  --loader-book-image: none; /* ảnh đã có sách thật nên ẩn quyển sách SVG */
+  --loader-title-align: flex-end; /* tên tiệm nằm sát phía dưới */
   --loader-title-pad-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
   --loader-caption-top: calc(100% - 140px - env(safe-area-inset-bottom, 0px));
   --loader-caption-pad-top: 0px;
@@ -6918,6 +6929,13 @@ body.dark-theme .bot-created {
   --loader-message: "Leng keng~ Chuông cửa khẽ ngân, có vị khách vừa bước vào tiệm.\A Chẳng biết hôm nay, cuốn sách nào sẽ được chọn đây\A0nhỉ?";
 }
 
+/* ----- NỀN VIDEO (tuỳ chọn, cần thêm 1 thẻ vào HTML) -----
+   Dán ngay sau thẻ <body> của mỗi trang:
+     <video id="loaderVideo" autoplay muted loop playsinline preload="auto"
+            poster="images/loader-poster.jpg">
+       <source src="videos/loader.mp4" type="video/mp4" />
+     </video>
+   rồi đặt trong :root: --loader-bg-image: none; --loader-bg-base: none; (và chỉnh --loader-bg-shade nếu cần) */
 #loaderVideo {
   position: fixed;
   top: 0;
@@ -6989,7 +7007,7 @@ body::after {
   padding-top: var(--loader-caption-pad-top, 104px);
   text-align: center;
   white-space: pre-line;
-  text-wrap: balance;
+  text-wrap: balance; /* chia đều chữ giữa các dòng, tránh dòng cuối chỉ còn 1-2 chữ */
   font-family: "Merriweather", "Playfair Display", serif;
   font-size: clamp(13px, 3.6vw, 15px);
   font-style: italic;
@@ -7036,4 +7054,13 @@ body.page-ready::after {
 @media (prefers-reduced-motion: reduce) {
   body::before { animation: pageLoaderFailsafe 0.01s 12s forwards; }
   body::after  { animation: pageLoaderFailsafe 0.01s 12s forwards; }
+}
+
+/* ==================== CHỐNG IPHONE TỰ PHÓNG TO KHI BẤM VÀO Ô NHẬP ==================== */
+@supports (-webkit-touch-callout: none) {
+  input:not(#ios-zoom-fix):not(#ios-zoom-fix):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):not([type="button"]),
+  textarea:not(#ios-zoom-fix):not(#ios-zoom-fix),
+  select:not(#ios-zoom-fix):not(#ios-zoom-fix) {
+    font-size: 16px !important;
+  }
 }
