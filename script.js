@@ -1403,7 +1403,7 @@ async function syncModalFeedbacksByName(charName, { silent = false } = {}) {
             const isOwnerReply = r.user_id === OWNER_USER_ID;
             const ownerBadge = isOwnerReply ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
             return `
-              <div class="feedback-reply-item" style="display: flex; gap: 8px; margin-left: 28px; margin-top: 8px; align-items: flex-start; padding-left: 8px; border-left: 2px solid #d4af37; font-size: 14px;">
+              <div class="feedback-reply-item" data-feedback-id="${r.id}" style="display: flex; gap: 8px; margin-left: 28px; margin-top: 8px; align-items: flex-start; padding-left: 8px; border-left: 2px solid #d4af37; font-size: 14px;">
                 <img src="${escapeHTML(replyAvatar)}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
                 <div style="flex: 1; font-size: 14px;">
                   <strong>${escapeHTML(r.author_name || "Lữ khách")}${ownerBadge}:</strong> ${escapeHTML(r.content)}
@@ -1634,6 +1634,305 @@ function renderModalCreated(raw) {
     sub.insertAdjacentElement("afterend", el);
   }
   el.innerHTML = createdDateHTML(text);
+}
+
+// ==================== THÔNG BÁO (CHUÔNG TRÊN THANH ĐIỀU HƯỚNG) ====================
+// Dữ liệu do trigger trong supabase/003_notifications.sql tạo ra:
+//  - Chủ tiệm: có người gửi feedback mới.
+//  - Lữ khách (đã đăng nhập): có người phản hồi feedback của mình.
+// Chuông chỉ hiện sau khi tải được bảng thông báo, nên chưa chạy SQL thì web không có gì thay đổi.
+const NOTIF_LIMIT = 30;
+const notifState = {
+  userId: null,
+  supabase: null,
+  items: [],
+  channel: null,
+  timer: null,
+  visibilityBound: false,
+  docBound: false,
+};
+
+function timeAgoVi(iso) {
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return "";
+  const sec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (sec < 60) return "Vừa xong";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min} phút trước`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} giờ trước`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day} ngày trước`;
+  return new Date(t).toLocaleDateString("vi-VN");
+}
+
+function ensureNotifUI() {
+  let bell = document.getElementById("notifBellBtn");
+  if (!bell) {
+    const authBtn = document.getElementById("navAuthBtn");
+    const host = authBtn?.parentElement || document.querySelector(".nav-right-actions");
+    if (!host) return null;
+
+    bell = document.createElement("button");
+    bell.type = "button";
+    bell.id = "notifBellBtn";
+    bell.className = "notif-bell-btn";
+    bell.hidden = true;
+    bell.setAttribute("aria-label", "Thông báo");
+    bell.setAttribute("aria-haspopup", "dialog");
+    bell.setAttribute("aria-expanded", "false");
+    bell.innerHTML = `<i class="bi bi-bell-fill"></i><span class="notif-badge" id="notifBadge" hidden>0</span>`;
+    host.insertBefore(bell, authBtn || null);
+  }
+
+  if (!document.getElementById("notifPanel")) {
+    const panel = document.createElement("div");
+    panel.id = "notifPanel";
+    panel.className = "notif-panel";
+    panel.hidden = true;
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "Thông báo");
+    panel.innerHTML = `
+      <div class="notif-panel-head">
+        <strong id="notifPanelTitle">Thông báo</strong>
+        <button type="button" class="notif-markall" id="notifMarkAll">Đánh dấu đã đọc</button>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+    `;
+    document.body.appendChild(panel);
+  }
+
+  if (!notifState.docBound) {
+    notifState.docBound = true;
+    document.addEventListener("click", (e) => {
+      const bellEl = document.getElementById("notifBellBtn");
+      const panelEl = document.getElementById("notifPanel");
+      if (!bellEl || !panelEl) return;
+
+      if (e.target.closest("#notifBellBtn")) {
+        toggleNotifPanel();
+        return;
+      }
+      if (e.target.closest("#notifMarkAll")) {
+        markAllNotifRead();
+        return;
+      }
+      const item = e.target.closest(".notif-item");
+      if (item && panelEl.contains(item)) {
+        handleNotifClick(item.dataset.notifId);
+        return;
+      }
+      if (!panelEl.hidden && !panelEl.contains(e.target)) closeNotifPanel();
+    });
+  }
+  return bell;
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById("notifPanel");
+  if (!panel) return;
+  if (panel.hidden) {
+    panel.hidden = false;
+    document.getElementById("notifBellBtn")?.setAttribute("aria-expanded", "true");
+    renderNotifications();
+    fetchNotifications(); // làm mới ngầm mỗi lần mở
+  } else {
+    closeNotifPanel();
+  }
+}
+
+function closeNotifPanel() {
+  const panel = document.getElementById("notifPanel");
+  if (panel && !panel.hidden) panel.hidden = true;
+  document.getElementById("notifBellBtn")?.setAttribute("aria-expanded", "false");
+}
+
+function renderNotifications() {
+  const list = document.getElementById("notifList");
+  const badge = document.getElementById("notifBadge");
+  const unread = notifState.items.filter((n) => !n.is_read).length;
+
+  if (badge) {
+    badge.textContent = unread > 9 ? "9+" : String(unread);
+    badge.hidden = unread === 0;
+  }
+  const markAll = document.getElementById("notifMarkAll");
+  if (markAll) markAll.hidden = unread === 0;
+  if (!list) return;
+
+  if (notifState.items.length === 0) {
+    list.innerHTML = `<div class="notif-empty">Chưa có thông báo nào.<br />Khi có người gửi feedback hoặc phản hồi bạn, thông báo sẽ hiện ở đây.</div>`;
+    return;
+  }
+
+  list.innerHTML = notifState.items
+    .map((n) => {
+      const actor = escapeHTML(n.actor_name || "Một lữ khách");
+      const ch = escapeHTML(n.char_name || "một nhân vật");
+      const text =
+        n.type === "reply"
+          ? `<b>${actor}</b> đã phản hồi bạn ở <b>${ch}</b>`
+          : `<b>${actor}</b> vừa gửi feedback cho <b>${ch}</b>`;
+      const icon = n.type === "reply" ? "bi-reply-fill" : "bi-envelope-fill";
+      return `
+        <button type="button" class="notif-item${n.is_read ? "" : " unread"}" data-notif-id="${escapeHTML(String(n.id))}">
+          <span class="notif-icon"><i class="bi ${icon}"></i></span>
+          <span class="notif-body">
+            <span class="notif-text">${text}</span>
+            ${n.snippet ? `<span class="notif-snippet">“${escapeHTML(n.snippet)}”</span>` : ""}
+            <span class="notif-time">${escapeHTML(timeAgoVi(n.created_at))}</span>
+          </span>
+        </button>`;
+    })
+    .join("");
+}
+
+async function fetchNotifications() {
+  const supabase = notifState.supabase;
+  if (!supabase || !notifState.userId) return;
+  try {
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(NOTIF_LIMIT);
+    if (error) throw error;
+    notifState.items = data || [];
+    const bell = document.getElementById("notifBellBtn");
+    if (bell) bell.hidden = false; // tải được bảng -> mới hiện chuông
+    renderNotifications();
+  } catch (err) {
+    console.warn("Chưa tải được thông báo (đã chạy supabase/003_notifications.sql chưa?):", err);
+  }
+}
+
+async function markNotifRead(ids) {
+  if (!ids || ids.length === 0) return;
+  const set = new Set(ids.map(String));
+  notifState.items.forEach((n) => {
+    if (set.has(String(n.id))) n.is_read = true;
+  });
+  renderNotifications();
+  try {
+    await notifState.supabase?.from("notifications").update({ is_read: true }).in("id", ids);
+  } catch (err) {
+    console.warn("Lỗi đánh dấu đã đọc:", err);
+  }
+}
+
+async function markAllNotifRead() {
+  const ids = notifState.items.filter((n) => !n.is_read).map((n) => n.id);
+  if (ids.length === 0) return;
+  notifState.items.forEach((n) => (n.is_read = true));
+  renderNotifications();
+  try {
+    // Đánh dấu cả những thông báo cũ hơn 30 mục đang hiển thị (RLS chỉ cho sửa thông báo của mình)
+    await notifState.supabase?.from("notifications").update({ is_read: true }).eq("is_read", false);
+  } catch (err) {
+    console.warn("Lỗi đánh dấu tất cả đã đọc:", err);
+  }
+}
+
+async function handleNotifClick(idStr) {
+  const n = notifState.items.find((x) => String(x.id) === String(idStr));
+  if (!n) return;
+  if (!n.is_read) markNotifRead([n.id]);
+  closeNotifPanel();
+  await openNotificationTarget(n);
+}
+
+// Mở nhân vật liên quan, chuyển sang phần lời nhắn và nháy sáng đúng feedback/phản hồi mới
+async function openNotificationTarget(n) {
+  if (!n.char_name) return;
+
+  // Trang không có modal nhân vật (about, station...) -> chuyển tới Tủ Sách với link sâu
+  if (!document.getElementById("botModal")) {
+    window.location.href = `characters.html#nv=${encodeURIComponent(n.char_name)}`;
+    return;
+  }
+
+  await openBotModalByName(n.char_name);
+  if (isMobileView()) setModalTab("feedback");
+
+  const list = document.getElementById("dynamicFeedbackList");
+  if (!list) return;
+  const target =
+    n.type === "reply"
+      ? list.querySelector(`.feedback-reply-item[data-feedback-id="${n.feedback_id}"]`) ||
+        list.querySelector(`.feedback-item-wrapper[data-feedback-id="${n.parent_id}"]`)
+      : list.querySelector(`.feedback-item-wrapper[data-feedback-id="${n.feedback_id}"]`);
+  flashAndReveal(target);
+}
+
+function handleIncomingNotification(n) {
+  if (!n || notifState.items.some((x) => x.id === n.id)) return;
+  notifState.items.unshift(n);
+  notifState.items = notifState.items.slice(0, NOTIF_LIMIT);
+  renderNotifications();
+
+  const who = n.actor_name || "Một lữ khách";
+  const ch = n.char_name || "một nhân vật";
+  showToast(
+    n.type === "reply" ? `💬 ${who} vừa phản hồi bạn ở ${ch}` : `💌 ${who} vừa gửi feedback cho ${ch}`,
+    "success",
+  );
+}
+
+async function initNotifications(user) {
+  if (!user) return teardownNotifications();
+  if (notifState.userId === user.id) return; // đã chạy cho tài khoản này rồi
+  teardownNotifications();
+
+  const supabase = await getSupabase();
+  if (!supabase) return;
+
+  notifState.userId = user.id;
+  notifState.supabase = supabase;
+  if (!ensureNotifUI()) return;
+
+  await fetchNotifications();
+  if (notifState.userId !== user.id) return; // trong lúc chờ đã đổi/đăng xuất
+
+  // Thông báo hiện ngay khi đang mở web (cần bảng đã nằm trong publication realtime)
+  try {
+    notifState.channel = supabase
+      .channel(`notif-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => handleIncomingNotification(payload.new),
+      )
+      .subscribe();
+  } catch (err) {
+    console.warn("Không bật được thông báo realtime:", err);
+  }
+
+  // Dự phòng khi realtime không chạy: hỏi lại mỗi 90 giây (chỉ khi đang xem tab) và mỗi khi quay lại tab
+  notifState.timer = setInterval(() => {
+    if (document.visibilityState === "visible") fetchNotifications();
+  }, 90000);
+
+  if (!notifState.visibilityBound) {
+    notifState.visibilityBound = true;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && notifState.userId) fetchNotifications();
+    });
+  }
+}
+
+function teardownNotifications() {
+  if (notifState.timer) clearInterval(notifState.timer);
+  try {
+    if (notifState.channel && notifState.supabase) notifState.supabase.removeChannel(notifState.channel);
+  } catch (_) {}
+  notifState.userId = null;
+  notifState.timer = null;
+  notifState.channel = null;
+  notifState.items = [];
+  closeNotifPanel();
+  const bell = document.getElementById("notifBellBtn");
+  if (bell) bell.hidden = true;
+  renderNotifications();
 }
 
 // ==================== CHỐNG SPAM (PHÍA CLIENT) ====================
@@ -1893,6 +2192,10 @@ window.closeFeedbackPopup = function () {
 // Phím Esc: đóng lớp trên cùng trước (giải đố -> popup feedback -> modal nhân vật)
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (document.getElementById("notifPanel") && !document.getElementById("notifPanel").hidden) {
+    closeNotifPanel();
+    return;
+  }
   if (document.getElementById("puzzleModal")?.classList.contains("active")) {
     if (typeof closePuzzleModal === "function") closePuzzleModal();
     return;
@@ -2112,7 +2415,7 @@ async function loadFeedbacks() {
             const isOwnerReply = r.user_id === OWNER_USER_ID;
             const ownerBadge = isOwnerReply ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
             return `
-              <div class="feedback-reply-item" style="display: flex; gap: 8px; margin-left: 28px; margin-top: 8px; align-items: flex-start; padding-left: 8px; border-left: 2px solid #d4af37; font-size: 14px;">
+              <div class="feedback-reply-item" data-feedback-id="${r.id}" style="display: flex; gap: 8px; margin-left: 28px; margin-top: 8px; align-items: flex-start; padding-left: 8px; border-left: 2px solid #d4af37; font-size: 14px;">
                 <img src="${escapeHTML(replyAvatar)}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; flex-shrink: 0;" />
                 <div style="flex: 1; font-size: 14px;">
                   <strong>${escapeHTML(r.author_name || "Lữ khách")}${ownerBadge}:</strong> ${escapeHTML(r.content)}
@@ -3249,17 +3552,21 @@ async function checkUserSession() {
   if (session && session.user) {
     currentUser = session.user;
     updateNavUserUI(currentUser);
+    initNotifications(currentUser);
     autofillUserNames();
     await syncAllUserData(currentUser);
   } else {
     currentUser = null;
     updateNavUserUI(null);
+    teardownNotifications();
   }
 
   // Lắng nghe thay đổi trạng thái đăng nhập
   supabase.auth.onAuthStateChange(async (event, session) => {
     currentUser = session ? session.user : null;
     updateNavUserUI(currentUser);
+    if (currentUser) initNotifications(currentUser);
+    else teardownNotifications();
     if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
       await syncAllUserData(currentUser);
     }
@@ -4276,8 +4583,22 @@ async function loadUserMedals(user) {
     `;
   }
 
+  // Chủ tiệm không cần "Kẻ Vén Màn Bí Mật" (dành cho người chơi) -> có thành tựu đặc quyền riêng
+  const ownerKeeperMedalHTML = `
+    <div class="showcase-medal-card owner-exclusive-medal" style="border: 1px solid #d4af37; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(139, 58, 58, 0.05));">
+      <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%); color: #8b3a3a;"><i class="fa-solid fa-key"></i></div>
+      <div class="medal-info-wrap">
+        <strong class="medal-title-text" style="color: #8b3a3a;"><i class="fa-solid fa-lock-open" style="color: #d4af37; margin-right: 4px;"></i> Người Giữ Chìa Khóa</strong>
+        <span class="medal-desc-text">Nắm trong tay đáp án của mọi Két Sách Bí Mật và là người mở cửa tiệm mỗi ngày</span>
+        <span class="medal-date-tag" style="color: #d4af37; font-weight: bold;"><i class="bi bi-shield-check"></i> Đặc quyền tối cao</span>
+      </div>
+    </div>
+  `;
+
   let finalMedalsHTML = "";
-  if (isDiplomaUnlocked && solverOrder) {
+  if (isOwner) {
+    finalMedalsHTML = memberMedalHTML + ownerKeeperMedalHTML;
+  } else if (isDiplomaUnlocked && solverOrder) {
     finalMedalsHTML += secretUnlockedHTML + memberMedalHTML;
   } else {
     finalMedalsHTML += memberMedalHTML + secretLockedHTML;
