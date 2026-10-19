@@ -1,4 +1,3 @@
-/* --- 1. RESET & BASE --- */
 * {
   margin: 0;
   padding: 0;
@@ -9,7 +8,6 @@
   navigation: auto;
 }
 
-/* --- KHI BẤM MENU ĐI TỚI (FORWARD): Trang cũ trượt phải, trang mới vào từ trái --- */
 ::view-transition-old(root) {
   animation: 0.35s cubic-bezier(0.4, 1, 0.5, 1) both slide-to-right;
 }
@@ -17,7 +15,6 @@
   animation: 0.35s cubic-bezier(0.4, 1, 0.5, 1) both slide-from-left;
 }
 
-/* --- ĐỊNH NGHĨA CÁC KEYFRAMES TRƯỢT --- */
 @keyframes slide-to-left {
   to {
     transform: translateX(-30%);
@@ -58,7 +55,6 @@ body {
   margin: 0;
 }
 
-/* --- 2. BANNER BASE (Áp dụng chung) --- */
 .banner {
   position: relative;
   overflow: hidden;
@@ -72,7 +68,6 @@ body {
   display: block;
 }
 
-/* Khung chứa nội dung - Căn giữa toàn bộ Avatar & Title */
 .banner-content {
   position: absolute;
   top: 50%;
@@ -107,7 +102,6 @@ body {
   line-height: 1.4;
 }
 
-/* CSS cho Nav Bar */
 .navbar {
   font-family: "Charm", cursive;
   position: fixed;
@@ -133,7 +127,6 @@ body {
   align-items: center;
 }
 
-/* Đảm bảo khi Hover vào Logo KHÔNG bị đổi sang màu xanh */
 .navbar .nav-logo:hover,
 .navbar a.nav-logo:hover {
   color: #fff8e7 !important;
@@ -173,7 +166,6 @@ body {
   color: #fff8e7;
 }
 
-/* --- ĐỒNG BỘ TUYỆT ĐỐI MÀU CHỮ NAVBAR (KỂ CẢ KHI ACTIVE) --- */
 header nav a,
 .navbar a,
 #navbar a,
@@ -196,7 +188,7 @@ header nav a:active,
 #navbar a:active,
 #navMenu a:active,
 .nav-link:active {
-  color: #e2dedb !important; /* Khớp màu chữ chung của menu */
+  color: #e2dedb !important;
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
@@ -205,7 +197,6 @@ header nav a:active,
   box-shadow: none !important;
 }
 
-/* Chỉ đổi màu xanh cho các liên kết menu khác (loại trừ logo) */
 header nav a:not(.nav-logo):hover,
 .navbar a:not(.nav-logo):hover,
 #navbar a:not(.nav-logo):hover,
@@ -215,7 +206,6 @@ header nav a:not(.nav-logo):hover,
   color: #3b82f6 !important;
 }
 
-/* --- BỐ CỤC CỤM NAVBAR TRÊN MOBILE & PC --- */
 .nav-left-group {
   display: flex;
   align-items: center;
@@ -229,7 +219,6 @@ header nav a:not(.nav-logo):hover,
   z-index: 10002;
 }
 
-/* --- NÚT ĐĂNG NHẬP TRÊN NAVBAR --- */
 .nav-auth-btn {
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(139, 58, 58, 0.35)) !important;
   border: 1px solid rgba(212, 175, 55, 0.7) !important;
@@ -261,12 +250,10 @@ header nav a:not(.nav-logo):hover,
   border: 1.5px solid #d4af37;
 }
 
-/* Mặc định trên Laptop: Ẩn mục theme trong menu */
 .mobile-menu-theme-item {
   display: none;
 }
 
-/* --- WRAPPER INPUT PASSWORD CÓ NÚT CON MẮT --- */
 .password-input-wrapper {
   position: relative;
   display: flex;
@@ -293,7 +280,6 @@ header nav a:not(.nav-logo):hover,
   color: #8b3a3a;
 }
 
-/* --- CHỈNH SỬA TÊN TRỰC TIẾP INLINE --- */
 .inline-name-input {
   flex: 1;
   padding: 6px 10px;
@@ -341,7 +327,6 @@ header nav a:not(.nav-logo):hover,
   background: #c8bca7;
 }
 
-/* --- THẺ ĐỘC GIẢ VINTAGE MODAL --- */
 .auth-card-vintage {
   position: relative;
   background: #fdfbf7;
@@ -465,7 +450,6 @@ header nav a:not(.nav-logo):hover,
   margin-left: 4px;
 }
 
-/* GIAO DIỆN HỒ SƠ & UPLOAD AVATAR */
 .profile-avatar-wrapper {
   display: flex;
   justify-content: center;
@@ -574,7 +558,6 @@ header nav a:not(.nav-logo):hover,
   color: #fff;
 }
 
-/* --- NÚT HAMBURGER --- */
 .menu-toggle {
   display: none;
   flex-direction: column;
@@ -606,7 +589,6 @@ header nav a:not(.nav-logo):hover,
   transform: translateY(-8.5px) rotate(-45deg);
 }
 
-/* --- MINI BANNER CHO TRANG PHỤ --- */
 .sub-banner {
   position: relative;
   width: 100%;
@@ -662,7 +644,6 @@ header nav a:not(.nav-logo):hover,
   border-color: #bc8a5f;
 }
 
-/* --- GÓC TRÍCH DẪN (DAILY QUOTE) --- */
 .daily-quote-section {
   max-width: 1300px;
   margin: 30px auto 10px auto;
@@ -702,7 +683,6 @@ header nav a:not(.nav-logo):hover,
   letter-spacing: 0.5px;
 }
 
-/* --- HIỆU ỨNG GÓC TRÍCH DẪN (BLINK BLINK & FADE IN) --- */
 @keyframes quoteBlinkGlow {
   0%,
   100% {
@@ -746,7 +726,7 @@ header nav a:not(.nav-logo):hover,
   padding: 18px 30px;
   text-align: center;
   position: relative;
-  /* Kết hợp hiệu ứng xuất hiện ban đầu và hiệu ứng nhấp nháy liên tục (blink) */
+
   animation:
     fadeInQuote 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards,
     quoteBlinkGlow 3s ease-in-out infinite;
@@ -777,7 +757,6 @@ header nav a:not(.nav-logo):hover,
   letter-spacing: 0.5px;
 }
 
-/* --- BỐ CỤC KHU VỰC TỦ SÁCH --- */
 .bot-section {
   padding: 60px 5%;
 }
@@ -796,7 +775,6 @@ header nav a:not(.nav-logo):hover,
   gap: 30px;
 }
 
-/* ==================== BOT CARD - BOOK VIBE ==================== */
 .bot-card {
   position: relative;
   background-color: #fcf8f2;
@@ -1048,7 +1026,7 @@ header nav a:not(.nav-logo):hover,
   overflow-y: auto;
   margin-bottom: 12px;
   padding-right: 4px;
-  max-height: 110px !important; /* Thu gọn chiều cao khung hiển thị ngoài card */
+  max-height: 110px !important;
   gap: 6px !important;
 }
 
@@ -1236,7 +1214,6 @@ header nav a:not(.nav-logo):hover,
   line-height: 1.6;
 }
 
-/* Thu gọn form nhập bên dưới để không chiếm diện tích */
 .modal-right-col .feedback-form-box {
   margin-top: auto !important;
   padding-top: 8px !important;
@@ -1271,7 +1248,6 @@ header nav a:not(.nav-logo):hover,
   align-self: flex-end;
 }
 
-/* --- HỖ TRỢ XUỐNG DÒNG CHO Ô NHẬP PHẢN HỒI (REPLY) --- */
 .reply-content-input {
   font-family: "Merriweather", serif !important;
   font-style: italic !important;
@@ -1287,10 +1263,9 @@ header nav a:not(.nav-logo):hover,
 .reply-input-row {
   display: flex;
   gap: 6px;
-  align-items: flex-end; /* Canh nút Gửi thẳng hàng với đáy textarea */
+  align-items: flex-end;
 }
 
-/* STYLES DÀNH RIÊNG CHO SECRET CARD TÁCH BIỆT */
 .custom-secret-theme {
   position: relative;
   background: linear-gradient(145deg, #1e1b2e 0%, #2d243f 100%) !important;
@@ -1325,7 +1300,6 @@ header nav a:not(.nav-logo):hover,
   color: #f3f4f6;
 }
 
-/* Header Badge & Titles */
 .secret-card-header {
   text-align: center;
   position: relative;
@@ -1363,7 +1337,6 @@ header nav a:not(.nav-logo):hover,
   font-style: italic;
 }
 
-/* Quote Box */
 .secret-quote-box {
   position: relative;
   background: rgba(255, 255, 255, 0.05);
@@ -1393,7 +1366,6 @@ header nav a:not(.nav-logo):hover,
   line-height: 1;
 }
 
-/* Icon góc trên trái */
 .quote-icon-left {
   position: absolute;
   top: 14px;
@@ -1403,18 +1375,16 @@ header nav a:not(.nav-logo):hover,
   line-height: 1;
 }
 
-/* Icon góc dưới phải */
 .quote-icon-right {
   position: absolute;
-  bottom: 14px; /* Dùng bottom thay vì để mặc định */
+  bottom: 14px;
   right: 14px;
   color: #fff8e7;
   font-size: 1.1rem;
   line-height: 1;
-  transform: rotate(180deg); /* Bỏ translateY(-50%) */
+  transform: rotate(180deg);
 }
 
-/* Hint Box */
 .secret-clue-hint {
   display: flex;
   align-items: center;
@@ -1468,7 +1438,6 @@ header nav a:not(.nav-logo):hover,
   font-size: 13px;
 }
 
-/* Nút Gửi */
 .btn-send {
   padding: 8px 18px;
   background-color: #8b3a3a;
@@ -1493,7 +1462,6 @@ header nav a:not(.nav-logo):hover,
   transform: scale(0.98);
 }
 
-/* DEV LOG & BẢNG XẾP HẠNG & KHÁM PHÁ NGẪU NHIÊN  */
 .ranking-layout-wrapper {
   display: grid;
   grid-template-columns: 28% 44% 28%;
@@ -1506,7 +1474,6 @@ header nav a:not(.nav-logo):hover,
   align-items: stretch;
 }
 
-/* Container hiển thị Top 3 */
 #topRankingContainer {
   display: flex;
   flex-direction: column;
@@ -1514,7 +1481,6 @@ header nav a:not(.nav-logo):hover,
   margin-top: 10px;
 }
 
-/* Thẻ nhân vật trong Top (Đã bỏ Avatar) */
 .ranking-card {
   display: flex;
   flex-direction: column;
@@ -1547,7 +1513,7 @@ header nav a:not(.nav-logo):hover,
   font-weight: bold;
   color: #2b1c11;
   margin: 0;
-  padding-right: 65px; /* Chừa khoảng trống cho Huy hiệu Top bên phải */
+  padding-right: 65px;
 }
 
 .rank-info .char-title {
@@ -1563,7 +1529,6 @@ header nav a:not(.nav-logo):hover,
   margin-top: 4px;
 }
 
-/* Huy hiệu Top 1, 2, 3 góc phải */
 .rank-badge {
   position: absolute;
   top: 10px;
@@ -1579,7 +1544,6 @@ header nav a:not(.nav-logo):hover,
   letter-spacing: 0.5px;
 }
 
-/* Nổi bật Top 1 */
 .ranking-card.rank-1 .rank-badge {
   background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
   color: #3d2300;
@@ -1587,21 +1551,18 @@ header nav a:not(.nav-logo):hover,
   box-shadow: 0 3px 10px rgba(212, 175, 55, 0.4);
 }
 
-/* 🥈 Top 2 - Bạc Ánh Kim */
 .ranking-card.rank-2 .rank-badge {
   background: linear-gradient(135deg, #708090 0%, #a9b7c6 100%);
   color: #ffffff;
   border: 1px solid #e2e8f0;
 }
 
-/* 🥉 Top 3 - Đồng Vintage */
 .ranking-card.rank-3 .rank-badge {
   background: linear-gradient(135deg, #a0522d 0%, #cd853f 100%);
   color: #ffffff;
   border: 1px solid #f4a460;
 }
 
-/* Kiểu dáng chung cho các hộp */
 .owner-letter-col,
 .ranking-center-highlight,
 .ranking-right {
@@ -1619,7 +1580,6 @@ header nav a:not(.nav-logo):hover,
   flex-direction: column;
 }
 
-/* Nổi bật cột Ranking ở giữa */
 .ranking-center-highlight {
   font-family: "Merriweather", serif;
   font-weight: 700;
@@ -1632,9 +1592,6 @@ header nav a:not(.nav-logo):hover,
   transform: scale(1.01);
 }
 
-/* --- ĐỒNG BỘ HEADER CHO TOP 3 RANKING & KHÁM PHÁ NGẪU NHIÊN --- */
-
-/* 1. Header của Top 3 Ranking (Cột giữa) */
 .ranking-center-highlight > h3,
 .ranking-center-highlight .section-title-custom {
   display: flex;
@@ -1647,7 +1604,6 @@ header nav a:not(.nav-logo):hover,
   font-weight: 700;
 }
 
-/* 2. Header của Khám phá ngẫu nhiên (Cột phải) */
 .ranking-right > h3,
 .ranking-right .section-title-custom {
   display: flex;
@@ -1660,7 +1616,6 @@ header nav a:not(.nav-logo):hover,
   font-weight: 700;
 }
 
-/* Header Tâm thư */
 .letter-header {
   display: flex;
   align-items: center;
@@ -1677,7 +1632,6 @@ header nav a:not(.nav-logo):hover,
   color: #2b1c11;
 }
 
-/* Khung Tờ Thư Vintage */
 .letter-scroll-paper {
   background: #fdfbf7;
   border: 1px dashed #c8bca7;
@@ -1747,7 +1701,6 @@ header nav a:not(.nav-logo):hover,
   margin-top: 2px;
 }
 
-/* --- HIỆU ỨNG NGỌN LỬA BẬP BÙNG --- */
 @keyframes flameGlow {
   0%,
   100% {
@@ -1833,7 +1786,6 @@ header nav a:not(.nav-logo):hover,
   box-shadow: 0 4px 15px rgba(144, 46, 46, 0.1);
 }
 
-/* --- NÚT BẤM NHÂN VẬT KHÁC --- */
 #randomBtn {
   width: 100%;
   justify-content: center;
@@ -1863,7 +1815,6 @@ header nav a:not(.nav-logo):hover,
   transform: translateY(0);
 }
 
-/* ==================== MODAL POPUP ==================== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2177,19 +2128,16 @@ body.modal-open {
   transform: translateY(0);
 }
 
-/* Toast loại báo lỗi */
 .custom-toast.error {
   border-color: #e53935;
   color: #ffcdd2;
 }
 
-/* Toast loại yêu thích */
 .custom-toast.liked-toast {
   border-color: #4caf50;
   color: #c8e6c9;
 }
 
-/* --- THANH TÌM KIẾM & BỘ LỌC --- */
 .search-filter-container-right {
   display: flex;
   justify-content: flex-end;
@@ -2289,19 +2237,16 @@ body.modal-open {
   transform: rotate(180deg);
 }
 
-/* Mặc định ẩn menu grid thể loại */
 .filter-dropdown-wrapper .genre-grid-menu {
   display: none;
   position: absolute;
-  /* Các thuộc tính định vị và giao diện khác của bạn giữ nguyên */
+
 }
 
-/* Khi có class .show được thêm vào wrapper qua JS thì hiển thị dạng Grid */
 .filter-dropdown-wrapper.show .genre-grid-menu {
   display: grid;
 }
 
-/* Cưỡng chế hiển thị chuẩn xác cho Dropdown Menu thể loại */
 #genreContainer.show,
 .genre-grid-menu.show,
 .genre-container.show,
@@ -2372,7 +2317,6 @@ body.modal-open {
   box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3);
 }
 
-/* --- MUSIC CAPSULE PLAYER --- */
 .music-capsule-player {
   position: fixed;
   bottom: 24px;
@@ -2653,12 +2597,10 @@ body.modal-open {
   pointer-events: none;
 }
 
-/* --- MUSIC PLAYER: TRẠNG THÁI BÌNH THƯỜNG & THU NHỎ --- */
 #musicPlayer {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Khi thu nhỏ (khi cuộn trang): Giảm chiều cao và làm gọn tối đa */
 #musicPlayer.minimized-scroll {
   left: 50% !important;
   transform: translateX(-50%) scale(0.85) !important;
@@ -2670,7 +2612,6 @@ body.modal-open {
   align-items: center !important;
 }
 
-/* Ẩn hoàn toàn thanh progress, thời gian và dấu / triệt để */
 #musicPlayer.minimized-scroll #progressBar,
 #musicPlayer.minimized-scroll .progress-container,
 #musicPlayer.minimized-scroll #currentTime,
@@ -2681,7 +2622,6 @@ body.modal-open {
   display: none !important;
 }
 
-/* Khắc phục triệt để nút play bị chìm, loại bỏ viền/nền/shadow rườm rà */
 #musicPlayer.minimized-scroll #playPauseBtn,
 #musicPlayer.minimized-scroll #playPauseBtn * {
   background: transparent !important;
@@ -2694,7 +2634,6 @@ body.modal-open {
   margin: 0 !important;
 }
 
-/* Hiệu ứng hiển thị trạng thái bật cho nút Loop */
 #loopBtn.active,
 #loopBtn.active i,
 .control-btn.active,
@@ -2708,7 +2647,6 @@ body.modal-open {
   color: #e74c3c !important;
 }
 
-/* --- CSS FOOTER TRÀN FULL 2 ĐẦU MÀN HÌNH --- */
 .site-footer {
   width: 100vw;
   position: relative;
@@ -2739,7 +2677,6 @@ body.modal-open {
   box-sizing: border-box;
 }
 
-/* --- NÚT LÊN ĐẦU TRANG --- */
 .back-to-top-btn {
   position: fixed;
   bottom: 30px;
@@ -2778,7 +2715,6 @@ body.modal-open {
   transform: translateY(-3px);
 }
 
-/* BẢNG CFS & STICKY NOTES */
 .cfs-section {
   padding: 40px 20px;
   max-width: 900px;
@@ -2802,7 +2738,6 @@ body.modal-open {
   margin-bottom: 24px;
 }
 
-/* Form nhập liệu */
 .cfs-form-box {
   display: flex;
   flex-direction: column;
@@ -2866,7 +2801,6 @@ body.modal-open {
   transform: translateY(-2px);
 }
 
-/* ==================== COLOR PICKER IMPROVED ==================== */
 .color-picker-wrapper {
   display: flex;
   align-items: center;
@@ -2891,7 +2825,7 @@ body.modal-open {
   height: 26px;
   border-radius: 50%;
   cursor: pointer;
-  /* Viền nhẹ giúp tách biệt nút màu với nền web tối */
+
   border: 2px solid rgba(255, 255, 255, 0.4);
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: inline-block;
@@ -2899,10 +2833,9 @@ body.modal-open {
 }
 
 .color-btn input {
-  display: none; /* Ẩn ô radio gốc */
+  display: none;
 }
 
-/* 🎨 Bảng màu tươi sáng, rõ nét hơn */
 .color-yellow {
   background-color: #fff2b2;
 }
@@ -2922,13 +2855,11 @@ body.modal-open {
   background-color: #ffd7ba;
 }
 
-/* Hiệu ứng Rê chuột vào */
 .color-btn:hover {
   transform: scale(1.2);
   border-color: #ffffff;
 }
 
-/* 🌟 Hiệu ứng KHI ĐƯỢC CHỌN (Active) - Nổi bật rõ rệt */
 .color-btn.active {
   transform: scale(1.25);
   border: 2.5px solid #ffffff;
@@ -2937,7 +2868,6 @@ body.modal-open {
     0 0 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Dấu tích nhỏ xinh hiện ra giữa nút đang chọn */
 .color-btn.active::after {
   content: "✓";
   position: absolute;
@@ -2949,7 +2879,6 @@ body.modal-open {
   font-weight: bold;
 }
 
-/* Bảng chứa các tờ Note */
 .cfs-board {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -2957,7 +2886,6 @@ body.modal-open {
   padding: 10px;
 }
 
-/* Phong cách Tờ giấy note dán tường */
 .sticky-note {
   color: #2c221e;
   padding: 20px 16px 16px;
@@ -2970,7 +2898,6 @@ body.modal-open {
   word-wrap: break-word;
 }
 
-/* Nút tròn Hologram trong Color Picker */
 .color-hologram {
   background: linear-gradient(
     135deg,
@@ -2984,7 +2911,6 @@ body.modal-open {
   );
 }
 
-/* Hiệu ứng nền giấy Note Hologram dán trên bảng */
 .sticky-note.hologram-note {
   background: linear-gradient(
     135deg,
@@ -2999,7 +2925,6 @@ body.modal-open {
   border: 1px solid rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Đinh ghim ở giữa mép trên tờ giấy */
 .sticky-note::before {
   content: "";
   position: absolute;
@@ -3008,7 +2933,7 @@ body.modal-open {
   transform: translateX(-50%);
   width: 12px;
   height: 12px;
-  background: #a33835; /* Màu đinh ghim đỏ hoài cổ */
+  background: #a33835;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -3052,7 +2977,6 @@ body.modal-open {
   font-style: italic;
 }
 
-/* CSS hiển thị Modal Thư cảm ơn */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -3064,7 +2988,7 @@ body.modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999999; /* Đảm bảo nổi lên trên cùng */
+  z-index: 999999;
   opacity: 0;
   visibility: hidden;
   transition:
@@ -3077,7 +3001,6 @@ body.modal-open {
   visibility: visible;
 }
 
-/* --- GIAO DIỆN TRANG TÁC GIẢ (HỒ SƠ CÁ NHÂN) --- */
 .author-profile-container {
   max-width: 750px;
   margin: 50px auto;
@@ -3097,7 +3020,6 @@ body.modal-open {
   overflow: hidden;
 }
 
-/* Hiệu ứng viền giấy cổ điển (tùy chọn) */
 .author-profile-card::before {
   content: "";
   position: absolute;
@@ -3157,7 +3079,6 @@ body.modal-open {
   margin-bottom: 30px;
 }
 
-/* Phần nội dung tự sự */
 .author-bio-text {
   text-align: justify;
   font-size: 1rem;
@@ -3174,7 +3095,6 @@ body.modal-open {
   margin-bottom: 0;
 }
 
-/* Khung trích dẫn */
 .author-quote-box {
   background: #f4ebd0;
   border-left: 3px solid #8b3a3a;
@@ -3196,7 +3116,6 @@ body.modal-open {
   opacity: 0.6;
 }
 
-/* --- DÃY MẠNG XÃ HỘI (FACEBOOK, DISCORD, INSTAGRAM) --- */
 .author-social-links {
   display: flex;
   justify-content: center;
@@ -3221,7 +3140,6 @@ body.modal-open {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-/* Hiệu ứng Rê chuột (Hover) */
 .social-stamp:hover {
   background: #8b3a3a;
   color: #f4ebd0;
@@ -3230,7 +3148,6 @@ body.modal-open {
   box-shadow: 0 5px 12px rgba(139, 58, 58, 0.25);
 }
 
-/* Cập nhật lại đường phân cách dòng trạng thái bên dưới */
 .author-current-status {
   font-family: sans-serif;
   font-size: 0.85rem;
@@ -3243,7 +3160,6 @@ body.modal-open {
   padding-top: 20px;
 }
 
-/* --- KHỐI NÚT MỞ RỘNG (NGL & DONATE) --- */
 .author-extra-actions {
   display: flex;
   justify-content: center;
@@ -3285,7 +3201,6 @@ body.modal-open {
   color: #f4ebd0;
 }
 
-/* --- KHUNG POPUP HIỂN THỊ MÃ QR --- */
 .qr-popup-box {
   background: #f9f6ef;
   border: 1px dashed #d4c3b3;
@@ -3335,7 +3250,6 @@ body.modal-open {
   }
 }
 
-/* Trạng thái tĩnh lặng */
 .author-current-status {
   font-family: sans-serif;
   font-size: 0.85rem;
@@ -3352,7 +3266,7 @@ body.modal-open {
 .status-dot {
   width: 8px;
   height: 8px;
-  background-color: #2ecc71; /* Xanh lá trà dịu nhẹ*/
+  background-color: #2ecc71;
   border-radius: 50%;
   display: inline-block;
   box-shadow: 0 0 0 3px rgba(92, 131, 116, 0.15);
@@ -3360,9 +3274,6 @@ body.modal-open {
   position: relative;
 }
 
-/* TRẠM DỪNG CHÂN */
-
-/* Phần footer các kênh phụ */
 .contact-footer-channels {
   text-align: center;
   margin-top: 35px;
@@ -3400,7 +3311,6 @@ body.modal-open {
   color: #8b3a3a;
 }
 
-/* Reset & Style tổng thể cho section */
 .fanart-gallery-section {
   background-color: #2b221e;
   padding: 40px 20px;
@@ -3426,7 +3336,6 @@ body.modal-open {
   margin: 0;
 }
 
-/* Nút gửi tranh */
 .btn-submit-art {
   background: #8b3a3a;
   color: #f5f2eb;
@@ -3444,7 +3353,6 @@ body.modal-open {
   border-color: #6d0505;
 }
 
-/* Lưới hiển thị ảnh (Grid) */
 .gallery-grid {
   display: flex;
   flex-wrap: wrap;
@@ -3455,7 +3363,6 @@ body.modal-open {
   margin: 0 auto;
 }
 
-/* Thẻ chứa từng bức tranh */
 .art-card {
   width: 100%;
   max-width: 340px;
@@ -3473,7 +3380,6 @@ body.modal-open {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Khung ảnh để giữ tỉ lệ đồng đều */
 .art-image-wrapper {
   position: relative;
   width: 100%;
@@ -3492,7 +3398,6 @@ body.modal-open {
   transition: transform 0.5s ease;
 }
 
-/* Lớp nền mờ từ chính bức ảnh gốc lấp đầy khoảng trống */
 .art-bg-blur {
   position: absolute;
   top: 0;
@@ -3506,7 +3411,6 @@ body.modal-open {
   z-index: 1;
 }
 
-/* Ảnh chính hiển thị trọn vẹn (contain) ở tầng trên */
 .art-image-wrapper img {
   position: relative;
   z-index: 2;
@@ -3520,7 +3424,6 @@ body.modal-open {
   transform: scale(1.03);
 }
 
-/* Phần thông tin tên tranh và tác giả */
 .art-info {
   padding: 18px;
   text-align: center;
@@ -3544,7 +3447,6 @@ body.modal-open {
   font-weight: 500;
 }
 
-/* Container chú mèo ở góc phải Footer */
 .footer-cat-wrapper {
   position: absolute;
   right: 40px;
@@ -3555,7 +3457,6 @@ body.modal-open {
   z-index: 100;
 }
 
-/* Nút chú mèo */
 .cat-mascot-btn {
   background: #d4af37;
   color: #1a1a1a;
@@ -3583,7 +3484,6 @@ body.modal-open {
   border-radius: 50%;
 }
 
-/* Hiệu ứng nhún nhảy (purr) khi click */
 .cat-mascot-btn.purr {
   animation: catJump 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
@@ -3601,7 +3501,6 @@ body.modal-open {
   }
 }
 
-/* 1. Bong bóng thoại: Cố định vị trí căn lề phải */
 .cat-speech-bubble {
   position: absolute;
   bottom: 100%;
@@ -3650,8 +3549,6 @@ body.modal-open {
   transform: translateY(0);
 }
 
-/* DIPLOMA PASSCODE MODAL STYLES */
-/* Lớp nền mờ tối toàn màn hình */
 .diploma-modal-overlay {
   position: fixed;
   top: 0;
@@ -3673,13 +3570,11 @@ body.modal-open {
   padding: 20px;
 }
 
-/* Kích hoạt hiển thị modal */
 .diploma-modal-overlay.active {
   opacity: 1;
   visibility: visible;
 }
 
-/* Khung nội dung Két sách */
 .diploma-modal-card {
   height: auto !important;
   max-width: 420px;
@@ -3702,7 +3597,6 @@ body.modal-open {
   transform: scale(1);
 }
 
-/* Icon & Tiêu đề */
 .diploma-modal-icon {
   font-size: 2.2rem;
   margin-bottom: 8px;
@@ -3723,7 +3617,6 @@ body.modal-open {
   line-height: 1.5;
 }
 
-/* Ô nhập mật mã */
 .diploma-modal-input {
   width: 100%;
   padding: 12px 16px;
@@ -3745,7 +3638,6 @@ body.modal-open {
   border-color: rgba(212, 175, 55, 0.8);
 }
 
-/* Nút bấm */
 .diploma-modal-actions {
   display: flex;
   justify-content: center;
@@ -3786,7 +3678,6 @@ body.modal-open {
   filter: brightness(1.15);
 }
 
-/* Gợi ý hiển thị bên dưới ô Input */
 .diploma-modal-hint {
   display: none;
   background: rgba(241, 196, 15, 0.15);
@@ -3805,7 +3696,6 @@ body.modal-open {
   display: block;
 }
 
-/* Dòng thông báo lỗi / gợi ý dưới ô input */
 .diploma-error-msg {
   display: none;
   margin: 4px 0 8px 0;
@@ -3824,7 +3714,6 @@ body.modal-open {
   animation: fadeIn 0.3s ease;
 }
 
-/* Hiệu ứng rung khi gõ sai */
 .error-shake {
   animation: shake 0.4s ease-in-out;
   border-color: #ef4444 !important;
@@ -3856,8 +3745,6 @@ body.modal-open {
   }
 }
 
-/* VINTAGE BOOK STYLE - DIPLOMA & SAFE MODAL */
-/* Modal Overlay chung cho Bằng / Két bí mật */
 .diploma-modal-overlay {
   position: fixed;
   top: 0;
@@ -3885,7 +3772,6 @@ body.modal-open {
   visibility: visible;
 }
 
-/* Card Nhập Mật Mã (Đồng bộ với .bot-card & .modal-card) */
 .book-modal-card {
   max-width: 460px;
   width: 100%;
@@ -3930,7 +3816,6 @@ body.modal-open {
   margin-top: 4px;
 }
 
-/* Khung gợi ý từ Mimi */
 .book-hint-box {
   background: rgba(212, 175, 55, 0.12);
   border: 1px dashed #d4af37;
@@ -3952,7 +3837,6 @@ body.modal-open {
   font-family: "Courier Prime", monospace;
 }
 
-/* Form Group & Input */
 .book-form-group {
   margin-bottom: 14px;
 }
@@ -4002,7 +3886,6 @@ body.modal-open {
   font-style: italic;
 }
 
-/* Footer Nút bấm Modal Nhập Mật Mã */
 .book-modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -4059,7 +3942,6 @@ body.modal-open {
   transform: scale(0.98);
 }
 
-/* DIPLOMA SUCCESS CARD (BẰNG CHỨNG NHẬN) */
 .diploma-card {
   background: #fdfbf7;
   border: 8px solid #8b3a3a;
@@ -4150,8 +4032,6 @@ body.modal-open {
   transform: scale(0.98);
 }
 
-/* ==================== VINTAGE CAT ID CARD ==================== */
-/* Khung chứa căn giữa, giới hạn chiều rộng không bị co giãn */
 .cat-id-card-wrapper {
   display: flex;
   justify-content: center;
@@ -4163,9 +4043,9 @@ body.modal-open {
 .cat-id-card {
   position: relative;
   width: 100%;
-  max-width: 520px; /* Khóa chiều rộng vừa vặn dạng thẻ */
-  background: #f4ebd0; /* Màu giấy da ngả vàng nổi bật trên nền tối */
-  color: #2c1d11; /* Chữ màu nâu gỗ đậm dễ đọc */
+  max-width: 520px;
+  background: #f4ebd0;
+  color: #2c1d11;
   border: 2px solid #d4af37;
   border-radius: 10px;
   padding: 20px 22px 14px;
@@ -4177,7 +4057,7 @@ body.modal-open {
 
 .card-clip.brass-clip {
   position: absolute;
-  top: -18px; /* Đẩy kẹp nhô lên khỏi mép thẻ */
+  top: -18px;
   left: 28px;
   z-index: 10;
   transform: rotate(-10deg);
@@ -4186,10 +4066,9 @@ body.modal-open {
 }
 
 .cat-id-card:hover .brass-clip {
-  transform: rotate(-4deg) scale(1.08); /* Nhẹ nhàng lắc khi di chuột vào thẻ */
+  transform: rotate(-4deg) scale(1.08);
 }
 
-/* Con dấu sáp đỏ nổi bật */
 .card-stamp {
   position: absolute;
   top: 12px;
@@ -4206,14 +4085,12 @@ body.modal-open {
   user-select: none;
 }
 
-/* Cấu trúc 2 cột bên trong thẻ */
 .card-body {
   display: flex;
   gap: 18px;
   align-items: center;
 }
 
-/* Cột trái: Ảnh avatar */
 .card-photo-col {
   display: flex;
   flex-direction: column;
@@ -4238,8 +4115,8 @@ body.modal-open {
 .cat-avatar-img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Giữ tỷ lệ ảnh không bị co giãn/méo */
-  border-radius: 6px; /* Bo góc nhỏ hơn khung ngoài 1 chút */
+  object-fit: cover;
+  border-radius: 6px;
   display: block;
   filter: sepia(15%) contrast(105%);
 }
@@ -4274,7 +4151,6 @@ body.modal-open {
   font-family: monospace;
 }
 
-/* Cột phải: Nội dung chữ */
 .card-info-col {
   flex-grow: 1;
 }
@@ -4325,17 +4201,15 @@ body.modal-open {
   font-weight: 600;
 }
 
-/* Màu sắc và khoảng cách cho icon trong danh sách */
 .cat-details i {
-  color: #8b3a3a; /* Màu đỏ rượu vintage */
+  color: #8b3a3a;
   margin-right: 4px;
   font-size: 0.85rem;
   display: inline-block;
-  width: 16px; /* Cố định chiều rộng để chữ thẳng hàng đẹp mắt */
+  width: 16px;
   text-align: center;
 }
 
-/* Footer nhỏ bên dưới */
 .card-footer-note {
   margin-top: 12px;
   padding-top: 6px;
@@ -4345,7 +4219,6 @@ body.modal-open {
   color: #6b5848;
 }
 
-/* Responsive cho di động nhỏ */
 @media (max-width: 480px) {
   .card-body {
     flex-direction: column;
@@ -4356,19 +4229,17 @@ body.modal-open {
   }
 }
 
-/* Canvas hạt bụi bay toàn màn hình */
 #dustCanvas {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  pointer-events: none !important; /* Không chặn click chuột vào các nút bên dưới */
-  z-index: 9999 !important;        /* Nổi lên trên nền và các ô card */
+  pointer-events: none !important;
+  z-index: 9999 !important;
   opacity: 0.85;
 }
 
-/* ==================== VINTAGE DARK MODE THEME (ELEGANT & HIGH CONTRAST) ==================== */
 .theme-toggle-btn {
   background: rgba(212, 175, 55, 0.15) !important;
   border: 1px solid rgba(212, 175, 55, 0.5) !important;
@@ -4396,7 +4267,6 @@ body.modal-open {
   transform: rotate(20deg) scale(1.08) !important;
 }
 
-/* 1. NÚT CHUYỂN ĐỔI THEME (FIX KHÔNG BỊ TRẮNG/CHỮ NHẬT) */
 body.dark-theme .theme-toggle-btn {
   background: rgba(212, 175, 55, 0.25) !important;
   border: 1.5px solid #d4af37 !important;
@@ -4407,13 +4277,11 @@ body.dark-theme .theme-toggle-btn i {
   color: #ffd700 !important;
 }
 
-/* 2. NỀN CHÍNH & VĂN BẢN TOÀN TRANG */
 body.dark-theme {
   background-color: #140f0c !important;
   color: #f7ede2 !important;
 }
 
-/* 3. KHỐI TÂM THƯ, TOP 3 & KHÁM PHÁ (BỐ CỤC 3 CỘT TRANG CHỦ) */
 body.dark-theme .owner-letter-col,
 body.dark-theme .ranking-center-highlight,
 body.dark-theme .ranking-right,
@@ -4436,7 +4304,6 @@ body.dark-theme .cfs-title {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8) !important;
 }
 
-/* FIX ẢNH 3: CHỮ "THÂN ÁI" & TÂM THƯ CHỦ TIỆM */
 body.dark-theme .letter-scroll-paper {
   background: #1c140f !important;
   border: 1px dashed rgba(212, 175, 55, 0.4) !important;
@@ -4453,7 +4320,7 @@ body.dark-theme .letter-date {
 }
 
 body.dark-theme .letter-signature span {
-  color: #e5cdb3 !important; /* Fix chữ "Thân ái" sáng rõ ràng */
+  color: #e5cdb3 !important;
   font-size: 0.95rem !important;
 }
 
@@ -4462,7 +4329,6 @@ body.dark-theme .signature-name {
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.4) !important;
 }
 
-/* FIX ẢNH 2: NỀN TOP 3 RANKING NỊNH MẮT */
 body.dark-theme .ranking-card {
   background: linear-gradient(135deg, #2b1f18 0%, #1f1611 100%) !important;
   border: 1px solid rgba(212, 175, 55, 0.3) !important;
@@ -4487,7 +4353,6 @@ body.dark-theme .ranking-card .vote-count {
   color: #ff7b7b !important;
 }
 
-/* FIX KHỐI RANDOM NHÂN VẬT */
 body.dark-theme .random-card-box {
   background: linear-gradient(135deg, #261b14 0%, #1c130e 100%) !important;
   border: 1px dashed rgba(212, 175, 55, 0.4) !important;
@@ -4506,7 +4371,6 @@ body.dark-theme .random-hint-text {
   color: #d1b89d !important;
 }
 
-/* FIX ẢNH 5: THẺ BOT SÁCH & HÀNG NÚT VOTE / FEEDBACK */
 body.dark-theme .bot-card {
   background: linear-gradient(145deg, #33241c, #241a13) !important;
   border: 1px solid #634733 !important;
@@ -4553,13 +4417,12 @@ body.dark-theme .lock-icon.bi-lock {
   color: #ffd700 !important;
 }
 
-/* SÁNG RÕ HÀNG VOTE VÀ GỬI THƯ / FEEDBACK DƯỚI CARD */
 body.dark-theme .bot-actions {
   border-top: 1px solid rgba(212, 175, 55, 0.25) !important;
 }
 
 body.dark-theme .action-btn {
-  color: #e8d5c4 !important; /* Nâng sáng rõ ràng */
+  color: #e8d5c4 !important;
 }
 
 body.dark-theme .action-btn i {
@@ -4578,7 +4441,7 @@ body.dark-theme .action-btn.btn-like {
 
 body.dark-theme .action-btn.btn-like .icon,
 body.dark-theme .action-btn.btn-like i {
-  color: #7d6556 !important; /* Tim màu xám gỗ mờ */
+  color: #7d6556 !important;
   transition: all 0.25s ease;
 }
 
@@ -4590,14 +4453,12 @@ body.dark-theme .action-btn.btn-like .like-count {
   color: #c7b39f !important;
 }
 
-/* Hover khi chưa like */
 body.dark-theme .action-btn.btn-like:hover .icon,
 body.dark-theme .action-btn.btn-like:hover i {
   color: #ff8585 !important;
   transform: scale(1.15);
 }
 
-/* Trạng thái ĐÃ LIKE: Đỏ Ruby Neon sáng rực + Viền phát sáng */
 body.dark-theme .action-btn.btn-like.liked {
   color: #ff4d4d !important;
   opacity: 1 !important;
@@ -4605,8 +4466,8 @@ body.dark-theme .action-btn.btn-like.liked {
 
 body.dark-theme .action-btn.btn-like.liked .icon,
 body.dark-theme .action-btn.btn-like.liked i {
-  color: #ff3333 !important; /* Đỏ tươi rực rỡ */
-  filter: drop-shadow(0 0 6px rgba(255, 51, 51, 0.8)) !important; /* Hiệu ứng tỏa sáng */
+  color: #ff3333 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 51, 51, 0.8)) !important;
   transform: scale(1.12);
 }
 
@@ -4615,9 +4476,6 @@ body.dark-theme .action-btn.btn-like.liked .like-count {
   font-weight: 800 !important;
 }
 
-
-/* --- 2. NÚT VOTE / THẢ TIM TRONG MODAL CARD --- */
-/* Trạng thái CHƯA LIKE trong Modal */
 body.dark-theme .modal-vote-widget {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(212, 175, 55, 0.3) !important;
@@ -4627,14 +4485,13 @@ body.dark-theme .modal-vote-widget {
 
 body.dark-theme .modal-vote-widget .modal-heart-icon,
 body.dark-theme .modal-vote-widget .modal-heart-icon i {
-  color: #8c7362 !important; /* Trái tim xám bạc chìm */
+  color: #8c7362 !important;
 }
 
 body.dark-theme .modal-vote-widget #modalVoteCount {
   color: #d1b89d !important;
 }
 
-/* Trạng thái ĐÃ LIKE trong Modal: Nổi bật với nền đỏ sẫm viền phát sáng */
 body.dark-theme .modal-vote-widget.liked {
   background: rgba(255, 51, 51, 0.18) !important;
   border: 1.5px solid #ff4d4d !important;
@@ -4654,21 +4511,18 @@ body.dark-theme .modal-vote-widget.liked #modalVoteCount {
   text-shadow: 0 0 6px rgba(255, 77, 77, 0.6);
 }
 
-
-/* --- 3. NÚT GỬI THƯ / FEEDBACK TRÊN BOT-CARD --- */
 body.dark-theme .action-btn.btn-toggle-feedback {
   color: #d8c2af !important;
 }
 
 body.dark-theme .action-btn.btn-toggle-feedback i {
-  color: #d4af37 !important; /* Icon thư màu vàng gold */
+  color: #d4af37 !important;
 }
 
 body.dark-theme .action-btn.btn-toggle-feedback:hover {
   color: #ffd700 !important;
 }
 
-/* 4. MODAL POPUP & FORM NHẬP TRONG DARK MODE */
 body.dark-theme .modal-card,
 body.dark-theme .modal-card.modal-card-wide,
 body.dark-theme .auth-card-vintage {
@@ -4751,7 +4605,6 @@ body.dark-theme .btn-send {
   border: 1px solid #d4af37 !important;
 }
 
-/* FIX ẢNH 4: TRANG PROFILE & HỒ SƠ ĐỘC GIẢ */
 body.dark-theme .passport-cover,
 body.dark-theme .journal-content-col {
   background: linear-gradient(145deg, #241a13, #18100b) !important;
@@ -4759,7 +4612,6 @@ body.dark-theme .journal-content-col {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
-/* 2. HUY HIỆU ĐỘC GIẢ CHÍNH THỨC & ICON BÚT SỬA */
 body.dark-theme .passport-stamp-badge {
   background: rgba(212, 175, 55, 0.18) !important;
   border: 1.5px dashed #ffd700 !important;
@@ -4777,13 +4629,12 @@ body.dark-theme .btn-edit-bio:hover {
   filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
 }
 
-/* 3. TÊN, USERNAME & BIO DÒNG TRẠNG THÁI */
 body.dark-theme .passport-name {
   color: #ffffff !important;
 }
 
 body.dark-theme .passport-handle {
-  color: #e5b95d !important; /* Vàng gold sáng thay vì xám chìm */
+  color: #e5b95d !important;
   font-weight: 600;
 }
 
@@ -4794,26 +4645,25 @@ body.dark-theme .passport-bio-box {
 }
 
 body.dark-theme .passport-bio-text {
-  color: #fcefdc !important; /* Chữ kem sáng rõ ràng */
+  color: #fcefdc !important;
 }
 
-/* 4. DÒNG THÔNG TIN CHI TIẾT (NGÀY CẤP THẺ, TRI KỶ, TÂM THƯ) */
 body.dark-theme .passport-details-list li {
   border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
 }
 
 body.dark-theme .detail-label {
-  color: #e8d5c4 !important; /* Màu kem sáng chuẩn feedback */
+  color: #e8d5c4 !important;
   font-weight: 500 !important;
 }
 
 body.dark-theme .detail-label i {
-  color: #ffd700 !important; /* Icon màu vàng sáng bóng */
+  color: #ffd700 !important;
   filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
 }
 
 body.dark-theme .detail-value {
-  color: #ffd700 !important; /* Số đếm nổi bật */
+  color: #ffd700 !important;
   font-weight: 800 !important;
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
 }
@@ -4830,7 +4680,6 @@ body.dark-theme .btn-passport-logout:hover {
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.35) !important;
 }
 
-/* 5. CỘT PHẢI: TAB NỘI DUNG, MINI CARDS & HUY HIỆU */
 body.dark-theme .journal-tabs-bar {
   border-bottom: 2px solid rgba(212, 175, 55, 0.35) !important;
 }
@@ -4867,7 +4716,6 @@ body.dark-theme .tab-subtitle {
   color: #e5b95d !important;
 }
 
-/* Thẻ Mini Tri Kỷ */
 body.dark-theme .fav-char-mini-card {
   background: linear-gradient(135deg, #2b1f18 0%, #1f1611 100%) !important;
   border: 1px solid rgba(212, 175, 55, 0.35) !important;
@@ -4888,7 +4736,6 @@ body.dark-theme .fav-char-tag {
   color: #e8d5c4 !important;
 }
 
-/* Thẻ Huy Hiệu Vinh Danh */
 body.dark-theme .showcase-medal-card {
   background: linear-gradient(135deg, #2d1f17 0%, #1e140e 100%) !important;
   border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
@@ -4908,7 +4755,6 @@ body.dark-theme .medal-desc-text {
   color: #fcefdc !important;
 }
 
-/* FIX TOÀN DIỆN: TRANG TÁC GIẢ (ABOUT.HTML) TRONG DARK MODE */
 body.dark-theme .author-profile-card {
   background: linear-gradient(145deg, #241a13, #18100b) !important;
   border: 1.5px solid rgba(212, 175, 55, 0.4) !important;
@@ -4942,7 +4788,7 @@ body.dark-theme .author-bio-text {
 
 body.dark-theme .author-quote-box {
   background: linear-gradient(135deg, #2e1f17 0%, #1e140e 100%) !important;
-  border-left: 4px solid #ffd700 !important; /* Viền vàng sáng rõ nét */
+  border-left: 4px solid #ffd700 !important;
   border-top: 1px solid rgba(212, 175, 55, 0.25) !important;
   border-right: 1px solid rgba(212, 175, 55, 0.25) !important;
   border-bottom: 1px solid rgba(212, 175, 55, 0.25) !important;
@@ -4985,7 +4831,6 @@ body.dark-theme .social-stamp:hover i {
   color: #ffffff !important;
 }
 
-/* 6. CÁC NÚT PHỤ (NGL & DONATE) NỔI BẬT */
 body.dark-theme .extra-btn {
   background: linear-gradient(135deg, #2d1f17 0%, #1f150f 100%) !important;
   border: 1px solid rgba(212, 175, 55, 0.45) !important;
@@ -4994,7 +4839,7 @@ body.dark-theme .extra-btn {
 }
 
 body.dark-theme .extra-btn i {
-  color: #ff8585 !important; /* Icon đỏ/hồng sáng dịu mắt */
+  color: #ff8585 !important;
 }
 
 body.dark-theme .extra-btn:hover {
@@ -5008,7 +4853,6 @@ body.dark-theme .extra-btn:hover i {
   color: #ffffff !important;
 }
 
-/* 7. DÒNG TRẠNG THÁI HIỆN TẠI & HỘP QR */
 body.dark-theme .author-current-status {
   color: #e5cdb3 !important;
   border-top: 1px dashed rgba(212, 175, 55, 0.35) !important;
@@ -5036,7 +4880,6 @@ body.dark-theme .qr-sub {
   display: none !important;
 }
 
-/* ==================== VINTAGE PROFILE & JOURNAL PAGE ==================== */
 .profile-page-container {
   max-width: 1280px;
   margin: 40px auto 60px;
@@ -5047,7 +4890,6 @@ body.dark-theme .qr-sub {
   align-items: start;
 }
 
-/* CỘT TRÁI: HỘ CHIẾU ĐỘC GIẢ (VINTAGE PASSPORT) */
 .passport-cover {
   background: #fdfbf7;
   border: 1px solid #dcd0bf;
@@ -5233,7 +5075,6 @@ body.dark-theme .qr-sub {
   color: #fff;
 }
 
-/* Sửa tên inline */
 .passport-edit-row {
   display: flex;
   gap: 6px;
@@ -5313,7 +5154,6 @@ body.dark-theme .qr-sub {
   background: #c8bca7;
 }
 
-/* CỘT PHẢI: SỔ TAY HÀNH TRÌNH */
 .journal-content-col {
   background: #fdfbf7;
   border: 1px solid #dcd0bf;
@@ -5378,7 +5218,6 @@ body.dark-theme .qr-sub {
   font-style: italic;
 }
 
-/* Lưới hiển thị Nhân vật yêu thích */
 .favorites-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -5433,14 +5272,12 @@ body.dark-theme .qr-sub {
   transform: scale(1.25);
 }
 
-/* Lưới hiển thị Tâm thư CFS của người dùng */
 .user-notes-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
 }
 
-/* Lưới Huy Hiệu Danh Dự */
 .medals-showcase-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -5507,7 +5344,6 @@ body.dark-theme .qr-sub {
   font-size: 0.9rem;
 }
 
-/* ==================== DARKMODE THEME CHO PROFILE PAGE ==================== */
 body.dark-theme .passport-cover,
 body.dark-theme .journal-content-col {
   background: #191411 !important;
@@ -5557,8 +5393,6 @@ body.dark-theme .passport-bio-textarea {
   border-color: #d4af37 !important;
 }
 
-/* ==================== ĐỒNG BỘ MÀU SẮC PROFILE & HUY HIỆU (DARK MODE) ==================== */
-/* Trạng thái Huy hiệu đang bị khóa */
 .showcase-medal-card.locked-medal {
   opacity: 0.65;
   border: 1px dashed rgba(212, 175, 55, 0.25) !important;
@@ -5582,7 +5416,6 @@ body.dark-theme .passport-bio-textarea {
   font-style: italic;
 }
 
-/* Trạng thái Huy hiệu Kẻ Vén Màn Bí Mật đã mở khóa */
 body.dark-theme .showcase-medal-card.unlocked-secret {
   background: linear-gradient(135deg, #332319 0%, #1f140e 100%) !important;
   border: 1.5px solid #ffd700 !important;
@@ -5594,7 +5427,6 @@ body.dark-theme .showcase-medal-card.unlocked-secret .medal-title-text {
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 }
 
-/* Các chi tiết nhỏ trong Passport & Sổ tay */
 body.dark-theme .passport-cover,
 body.dark-theme .journal-content-col {
   background: linear-gradient(145deg, #241a13, #18100b) !important;
@@ -5632,7 +5464,6 @@ body.dark-theme .fav-char-tag {
   color: #e8d5c4 !important;
 }
 
-/* Nhãn hiển thị ngày đạt được thành tựu */
 .medal-date-tag {
   display: inline-flex;
   align-items: center;
@@ -5648,7 +5479,6 @@ body.dark-theme .fav-char-tag {
   color: #d4af37;
 }
 
-/* Nhãn khi danh hiệu bị khóa */
 .medal-date-tag.locked-tag {
   color: #7d6b5c !important;
 }
@@ -5657,7 +5487,6 @@ body.dark-theme .fav-char-tag {
   color: #7d6b5c !important;
 }
 
-/* Khi ở Dark Mode */
 body.dark-theme .medal-date-tag {
   color: #e8d5c4 !important;
 }
@@ -5674,16 +5503,13 @@ body.dark-theme .showcase-medal-card.locked-medal .medal-date-tag.locked-tag {
   color: #807062 !important;
 }
 
-/* ==================== KHUNG & HUY HIỆU HOÀNG GIA ĐỘC QUYỀN CHỦ TIỆM ==================== */
-
-/* 1. KHUNG AVATAR HOÀNG GIA */
 .passport-avatar-frame.owner-avatar-frame {
   position: relative !important;
   border: none !important;
   padding: 3.5px !important;
   background: linear-gradient(135deg, #ffe082 0%, #d4af37 40%, #8a6524 70%, #ffd700 100%) !important;
   border-radius: 50% !important;
-  box-shadow: 
+  box-shadow:
     0 0 0 2px #fdfbf7,
     0 0 0 4.5px #d4af37,
     0 8px 25px rgba(212, 175, 55, 0.35) !important;
@@ -5696,9 +5522,8 @@ body.dark-theme .showcase-medal-card.locked-medal .medal-date-tag.locked-tag {
   height: 100% !important;
 }
 
-/* 2. ICON VƯƠNG MIỆN FONTAWESOME LỆCH PHẢI (TĨNH, KHÔNG BOUNCE) */
 .owner-crown-badge {
-  display: none; /* Mặc định ẩn đối với độc giả */
+  display: none;
 }
 
 .passport-avatar-frame.owner-avatar-frame .owner-crown-badge {
@@ -5707,31 +5532,29 @@ body.dark-theme .showcase-medal-card.locked-medal .medal-date-tag.locked-tag {
   justify-content: center;
   position: absolute;
   top: -10px;
-  right: -2px; /* Đặt lệch sang góc trên bên phải */
+  right: -2px;
   width: 28px;
   height: 28px;
   background: linear-gradient(135deg, #fff3a1 0%, #ffd700 50%, #d4af37 100%);
   border: 2px solid #ffffff;
   border-radius: 50%;
-  transform: rotate(20deg); /* Nghiêng nhẹ sang phải tự nhiên */
+  transform: rotate(20deg);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), 0 0 8px rgba(255, 215, 0, 0.6);
   z-index: 10;
   pointer-events: none;
 }
 
 .passport-avatar-frame.owner-avatar-frame .owner-crown-badge i {
-  color: #78350f; /* Màu vàng đồng đậm tương phản cao */
+  color: #78350f;
   font-size: 0.85rem;
   filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.5));
 }
 
-/* Bỏ các pseudo-elements cũ */
 .passport-avatar-frame.owner-avatar-frame::before,
 .passport-avatar-frame.owner-avatar-frame::after {
   content: none !important;
 }
 
-/* 3. HUY HIỆU TAG CHỦ TIỆM TRÊN ĐẦU */
 .passport-stamp-badge.owner-stamp-badge {
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(139, 58, 58, 0.15) 100%) !important;
   color: #b8860b !important;
@@ -5755,9 +5578,8 @@ body.dark-theme .showcase-medal-card.locked-medal .medal-date-tag.locked-tag {
   filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.6));
 }
 
-/* 4. HIỂN THỊ DARK MODE */
 body.dark-theme .passport-avatar-frame.owner-avatar-frame {
-  box-shadow: 
+  box-shadow:
     0 0 0 2px #191411,
     0 0 0 4.5px #ffd700,
     0 0 25px rgba(255, 215, 0, 0.35) !important;
@@ -5780,7 +5602,6 @@ body.dark-theme .passport-stamp-badge.owner-stamp-badge i {
   filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
 }
 
-/* --- FIX DARK MODE CHO KHUNG ĐĂNG NHẬP & QUÊN MẬT KHẨU --- */
 body.dark-theme .auth-card-vintage {
   background: linear-gradient(145deg, #241a13, #19110c) !important;
   border: 1.5px solid #5c4330 !important;
@@ -5898,7 +5719,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   color: #f5f0eb;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
   .profile-page-container {
     grid-template-columns: 1fr;
@@ -5909,7 +5729,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 }
 
-/* --- MEDIA QUERIES --- */
 @media (min-width: 992px) {
   .banner-bg {
     height: 380px;
@@ -6092,7 +5911,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     padding: 20px 15px 15px 20px !important;
   }
 
-  /* Biến thân modal thành vùng cuộn mượt mà */
   .modal-body {
     overflow-y: auto !important;
     flex-grow: 1 !important;
@@ -6105,31 +5923,27 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     gap: 20px;
   }
 
-  /* Tinh chỉnh cột feedback bên phải trên mobile */
   .modal-right-col {
     border-left: none !important;
-    border-top: 1px solid rgba(139, 58, 58, 0.2) !important; /* Đồng bộ màu vintage book */
+    border-top: 1px solid rgba(139, 58, 58, 0.2) !important;
     padding-left: 0 !important;
     padding-top: 15px !important;
     max-height: none !important;
   }
 
-  /* Giới hạn chiều cao danh sách feedback để ô nhập luôn hiển thị đầy đủ */
   .modal-right-col .feedback-list {
     max-height: 140px !important;
   }
 
   .nav-menu.active {
-    right: 0; /* Trượt Menu ra */
+    right: 0;
   }
 
-  /* Khóa cứng trượt màn hình khi menu mobile mở */
   body.menu-open {
     overflow: hidden !important;
     touch-action: none;
   }
 
-  /* Ẩn thanh Music Player khi mở menu */
   body.menu-open #musicPlayer {
     opacity: 0 !important;
     visibility: hidden !important;
@@ -6150,26 +5964,22 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 
   .cat-speech-bubble {
-    /* Đặt lề phải sát với mép phải của bảng màu vàng */
+
     right: 0 !important;
     left: auto !important;
 
-    /* Ép chiều rộng chiếm đa số màn hình nhưng không vượt quá mép trái */
     width: 85vw !important;
-    max-width: 320px !important; /* Giới hạn tối đa nếu màn hình lớn hơn */
+    max-width: 320px !important;
 
-    /* Xử lý xuống dòng tuyệt đối cho văn bản */
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
 
-    /* Căn chỉnh lại spacing và chữ */
     font-size: 0.82rem !important;
     padding: 10px 12px !important;
     box-sizing: border-box !important;
   }
 
-  /* Giữ mũi tên chỉ đúng vị trí mascot con mèo bên dưới */
   .cat-speech-bubble::after {
     right: 18px !important;
     left: auto !important;
@@ -6191,14 +6001,12 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     font-size: 20px !important;
   }
 
-  /* Ẩn thanh công cụ ngoài khi menu mở để không bị trùng lặp ở góc trên */
   body.menu-open .nav-right-actions {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
   }
 
-  /* Menu trượt toàn màn hình */
   .nav-menu {
     position: fixed !important;
     top: 0 !important;
@@ -6231,7 +6039,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     font-size: 22px !important;
   }
 
-  /* HIỂN THỊ CẢ 2 NÚT BÊN DƯỚI TRẠM DỪNG CHÂN */
   .mobile-nav-btn-item {
     display: flex !important;
     justify-content: center !important;
@@ -6266,7 +6073,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     font-size: 1.1rem !important;
   }
 
-  /* 1. KHUNG CONTAINER CHÍNH */
   .profile-page-container {
     grid-template-columns: 1fr !important;
     gap: 20px !important;
@@ -6276,7 +6082,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     box-sizing: border-box !important;
   }
 
-  /* 2. CỘT HỘ CHIẾU (PASSPORT) */
   .passport-cover {
     max-width: 100% !important;
     padding: 24px 16px 20px !important;
@@ -6313,26 +6118,24 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     padding-bottom: 5px !important;
   }
 
-  /* 3. CỘT SỔ TAY HÀNH TRÌNH */
   .journal-content-col {
     padding: 18px 14px !important;
     border-radius: 10px !important;
     min-height: auto !important;
   }
 
-  /* Thanh chuyển Tab nằm ngang vuốt mượt mà */
   .journal-tabs-bar {
     gap: 8px !important;
     padding-bottom: 10px !important;
     margin-bottom: 16px !important;
     display: flex !important;
     overflow-x: auto !important;
-    scrollbar-width: none !important; /* Ẩn scrollbar trên Firefox */
+    scrollbar-width: none !important;
     -webkit-overflow-scrolling: touch !important;
   }
 
   .journal-tabs-bar::-webkit-scrollbar {
-    display: none !important; /* Ẩn scrollbar trên Chrome/Safari */
+    display: none !important;
   }
 
   .journal-tab-btn {
@@ -6349,15 +6152,13 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     font-size: 0.75rem !important;
   }
 
-  /* 4. LƯỚI DANH SÁCH & THẺ TRONG CÁC TAB */
   .medals-showcase-grid,
   .favorites-grid-container,
   .user-notes-grid-container {
-    grid-template-columns: 1fr !important; /* Hiển thị 1 cột dạng danh sách vừa vặn */
+    grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
 
-  /* Thẻ Huy Hiệu */
   .showcase-medal-card {
     padding: 14px 12px !important;
     gap: 12px !important;
@@ -6383,7 +6184,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     margin-top: 3px !important;
   }
 
-  /* Thẻ Mini Tri Kỷ */
   .fav-char-mini-card {
     padding: 10px 12px !important;
   }
@@ -6428,8 +6228,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 }
 
-
-/* ==================== SPA XEM NHÂN VẬT (MOBILE) ==================== */
 .modal-back-btn,
 .modal-mobile-tabs {
   display: none;
@@ -6450,7 +6248,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     overflow: hidden;
   }
 
-  /* Overlay -> toàn màn hình, không còn cảm giác popup */
   #botModal.modal-overlay {
     padding: 0 !important;
     align-items: stretch !important;
@@ -6465,7 +6262,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     animation: charViewIn 0.3s cubic-bezier(0.22, 0.8, 0.3, 1);
   }
 
-  /* Đóng: trượt ngược ra bên phải để lộ lại danh sách phía sau */
   #botModal.show.closing {
     pointer-events: none !important;
   }
@@ -6493,7 +6289,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     display: none !important;
   }
 
-  /* Thanh trên cùng: quay lại + tab */
   #botModal .modal-back-btn {
     display: flex;
     align-items: center;
@@ -6536,7 +6331,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     color: #fff;
   }
 
-  /* Nội dung cuộn trong màn hình, tab quyết định cột nào hiển thị */
   #botModal .modal-body {
     padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
     overflow-y: auto !important;
@@ -6576,13 +6370,11 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     max-height: none !important;
   }
 
-  /* >= 16px để iOS không tự phóng to khi focus ô nhập */
   #botModal #feedbackAuthor,
   #botModal #feedbackContent {
     font-size: 16px;
   }
 
-  /* Dark mode */
   body.dark-theme #botModal .modal-back-btn { color: #e5b95d; }
   body.dark-theme #botModal .modal-mobile-tabs { border-bottom-color: rgba(229, 185, 93, 0.25); }
   body.dark-theme #botModal .modal-tab {
@@ -6601,10 +6393,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   #botModal.show.closing .modal-card { animation: none; }
 }
 
-
-/* ==================== MODAL NHÂN VẬT: SỬA LỆCH PHẢI (MOBILE) ==================== */
-/* 100vw tính cả thanh cuộn của trình duyệt laptop -> nội dung bị đẩy sát/khuất mép phải.
-   Dùng left/right: 0 để overlay luôn vừa đúng vùng nhìn thấy. */
 @media (max-width: 767px) {
   #botModal.modal-overlay {
     left: 0 !important;
@@ -6635,7 +6423,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 }
 
-/* ==================== MODAL NHÂN VẬT: RỘNG HƠN TRÊN DESKTOP ==================== */
 @media (min-width: 768px) {
   #botModal .modal-card.modal-card-wide {
     width: 94%;
@@ -6657,7 +6444,6 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     max-height: 50vh;
   }
 
-  /* Khu lời nhắn: cao hơn hẳn để đọc thoải mái (trước đây chỉ 130px) */
   #botModal .modal-right-col .feedback-list,
   #botModal .modal-right-col .dynamic-feedback-list {
     max-height: 46vh !important;
@@ -6670,10 +6456,8 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 }
 
-
-/* ==================== KHÓA CUỘN TRANG NỀN KHI MỞ MODAL NHÂN VẬT ==================== */
 html.scroll-locked {
-  overflow-y: scroll !important; /* giữ thanh cuộn -> không bị giật ngang khi khóa */
+  overflow-y: scroll !important;
 }
 
 body.scroll-locked {
@@ -6683,7 +6467,6 @@ body.scroll-locked {
   width: 100%;
 }
 
-/* Cuộn trong modal không "lọt" ra trang nền */
 #botModal .modal-card,
 #botModal .modal-body,
 #botModal .modal-scroll-area,
@@ -6692,8 +6475,6 @@ body.scroll-locked {
   overscroll-behavior: contain;
 }
 
-
-/* ==================== FOOTER NGÀY VIẾT TRÊN BẢNG LỜI NHẮN (INDEX) ==================== */
 .cfs-note-item .note-footer {
   justify-content: flex-end;
   margin-top: 10px;
@@ -6712,8 +6493,6 @@ body.scroll-locked {
   font-size: 0.75rem;
 }
 
-
-/* Footer ngày viết luôn nằm sát đáy tờ note, thẳng hàng giữa các note cùng hàng */
 .cfs-board .cfs-note-item {
   display: flex;
   flex-direction: column;
@@ -6733,8 +6512,6 @@ body.scroll-locked {
   padding-top: 8px;
 }
 
-
-/* Footer bảng lời nhắn: tên người viết (trái) + ngày viết (phải) */
 .cfs-board .cfs-note-item .note-content {
   margin-bottom: 14px;
 }
@@ -6766,9 +6543,6 @@ body.scroll-locked {
   font-size: 10px;
 }
 
-
-/* ==================== NÚT FEEDBACK NGOÀI THẺ + POPUP FEEDBACK ==================== */
-/* Cùng font (Merriweather) với khung feedback khi mở ra */
 .bot-card .action-btn.btn-toggle-feedback {
   font-family: "Merriweather", serif;
   font-weight: 700;
@@ -6783,7 +6557,6 @@ body.scroll-locked {
   overflow-y: auto;
 }
 
-/* Ô nhập: Merriweather in nghiêng, cỡ 14px bằng các feedback cũ trong danh sách */
 #feedbackPopupModal .book-input {
   font-family: "Merriweather", serif;
   font-style: italic;
@@ -6791,7 +6564,6 @@ body.scroll-locked {
   font-size: 14px;
 }
 
-/* Khung book-modal-card thừa hưởng chữ sáng của diploma-modal-card -> ép lại chữ tối cho dễ đọc */
 #feedbackPopupModal .feedback-list {
   color: #4a3a2c;
 }
@@ -6823,7 +6595,6 @@ body.scroll-locked {
   font-size: 13px;
 }
 
-/* ==================== NÚT CHIA SẺ NHÂN VẬT TRONG MODAL ==================== */
 .modal-header-actions {
   display: flex;
   align-items: center;
@@ -6868,7 +6639,7 @@ body.dark-theme .modal-share-btn {
 }
 
 @media (max-width: 480px) {
-  /* Màn hình hẹp: chỉ hiện biểu tượng để không chen tiêu đề */
+
   .modal-share-btn span {
     display: none;
   }
@@ -6878,7 +6649,6 @@ body.dark-theme .modal-share-btn {
   }
 }
 
-/* ==================== NGÀY TẠO NHÂN VẬT ==================== */
 .bot-created {
   display: flex;
   align-items: center;
@@ -6898,19 +6668,6 @@ body.dark-theme .bot-created {
   color: #a8957f;
 }
 
-
-/* ==================== MÀN HÌNH CHỜ KHI MỞ TRANG ==================== */
-/* Phủ kín trang cho tới khi script.js thêm class "page-ready" vào <body>.
-   Không cần sửa HTML: dùng ::before (nền + tên tiệm) và ::after (quyển sách lật trang + dòng chữ) của body.
-   Quyển sách là ảnh SVG động nhúng thẳng trong CSS (nguồn dễ đọc: loader-book.svg). */
-/* ----- ĐỔI NỀN MÀN HÌNH CHỜ: chỉ cần sửa khối :root bên dưới -----
-   Mọi biến đều tuỳ chọn; xoá cả khối :root thì quay về nền trơn + quyển sách lật trang.
-
-   PRESET A (đang dùng): ảnh động nến + sách, chữ nằm phía dưới trên nền tối dần.
-   PRESET B: nền trơn + quyển sách lật trang -> xoá khối :root.
-   PRESET C: ảnh bất kỳ nhưng vẫn giữ quyển sách lật ở giữa:
-       --loader-bg-image: url("images/anh-khac.jpg");
-       --loader-bg-shade: linear-gradient(rgba(20, 15, 10, 0.55), rgba(20, 15, 10, 0.55));  */
 :root {
   --loader-bg-image: url("images/loader-bg.webp");
   --loader-bg-shade: linear-gradient(
@@ -6919,23 +6676,15 @@ body.dark-theme .bot-created {
     rgba(10, 7, 4, 0.6) 40%,
     rgba(10, 7, 4, 0.12) 100%
   );
-  --loader-book-image: none; /* ảnh đã có sách thật nên ẩn quyển sách SVG */
-  --loader-title-align: flex-end; /* tên tiệm nằm sát phía dưới */
+  --loader-book-image: none;
+  --loader-title-align: flex-end;
   --loader-title-pad-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
   --loader-caption-top: calc(100% - 140px - env(safe-area-inset-bottom, 0px));
   --loader-caption-pad-top: 0px;
 
-  /* Câu chào hiện dưới tên tiệm. \A = xuống dòng; sửa chữ tuỳ thích. */
   --loader-message: "Leng keng~ Chuông cửa khẽ ngân, có vị khách vừa bước vào tiệm.\A Chẳng biết hôm nay, cuốn sách nào sẽ được chọn đây\A0nhỉ?";
 }
 
-/* ----- NỀN VIDEO (tuỳ chọn, cần thêm 1 thẻ vào HTML) -----
-   Dán ngay sau thẻ <body> của mỗi trang:
-     <video id="loaderVideo" autoplay muted loop playsinline preload="auto"
-            poster="images/loader-poster.jpg">
-       <source src="videos/loader.mp4" type="video/mp4" />
-     </video>
-   rồi đặt trong :root: --loader-bg-image: none; --loader-bg-base: none; (và chỉnh --loader-bg-shade nếu cần) */
 #loaderVideo {
   position: fixed;
   top: 0;
@@ -6962,7 +6711,6 @@ body::after {
   z-index: 2147483000;
 }
 
-/* Tên tiệm: ánh đèn nhấp nháy như ngọn nến trong tiệm sách */
 body::before {
   content: "Tiệm Sách Evans";
   top: 0;
@@ -6994,7 +6742,6 @@ body::before {
     pageLoaderFailsafe 0.01s 12s forwards;
 }
 
-/* Quyển sách đang lật trang + dòng chữ nhỏ bên dưới */
 body::after {
   content: var(
     --loader-message,
@@ -7007,7 +6754,7 @@ body::after {
   padding-top: var(--loader-caption-pad-top, 104px);
   text-align: center;
   white-space: pre-line;
-  text-wrap: balance; /* chia đều chữ giữa các dòng, tránh dòng cuối chỉ còn 1-2 chữ */
+  text-wrap: balance;
   font-family: "Merriweather", "Playfair Display", serif;
   font-size: clamp(13px, 3.6vw, 15px);
   font-style: italic;
@@ -7022,7 +6769,6 @@ body::after {
     pageLoaderFailsafe 0.01s 12s forwards;
 }
 
-/* Tải xong: mờ dần rồi ẩn hẳn */
 body.page-ready::before,
 body.page-ready::after {
   opacity: 0;
@@ -7046,7 +6792,6 @@ body.page-ready::after {
   50%      { color: rgba(240, 220, 170, 0.95); }
 }
 
-/* Nếu script.js không chạy được (lỗi mạng...), tự mở trang sau 12 giây */
 @keyframes pageLoaderFailsafe {
   to { opacity: 0; visibility: hidden; pointer-events: none; }
 }
@@ -7056,13 +6801,8 @@ body.page-ready::after {
   body::after  { animation: pageLoaderFailsafe 0.01s 12s forwards; }
 }
 
-
-/* ==================== CHỐNG IPHONE TỰ PHÓNG TO KHI BẤM VÀO Ô NHẬP ==================== */
-/* Safari trên iPhone/iPad tự phóng to trang khi bấm vào ô nhập có chữ nhỏ hơn 16px,
-   và không tự thu nhỏ lại sau đó. Điều kiện @supports chỉ đúng trên iOS nên Android và
-   máy tính giữ nguyên cỡ chữ cũ. */
 @supports (-webkit-touch-callout: none) {
-  /* :not(#ios-zoom-fix) lặp lại chỉ để tăng độ ưu tiên, thắng cả các luật dùng #id như .feedback-form-box #feedbackContent */
+
   input:not(#ios-zoom-fix):not(#ios-zoom-fix):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):not([type="button"]),
   textarea:not(#ios-zoom-fix):not(#ios-zoom-fix),
   select:not(#ios-zoom-fix):not(#ios-zoom-fix) {
@@ -7070,8 +6810,6 @@ body.page-ready::after {
   }
 }
 
-
-/* ==================== CHUÔNG THÔNG BÁO ==================== */
 .notif-bell-btn[hidden],
 .notif-badge[hidden],
 .notif-markall[hidden],
@@ -7301,34 +7039,134 @@ body.dark-theme .notif-empty {
     right: 12px;
     width: auto;
   }
-
-  .nav-right-actions {
-    gap: 8px;
-  }
-
-  .notif-bell-btn {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    font-size: 0.95rem;
-  }
 }
 
-@media (max-width: 480px) {
-  .nav-right-actions .nav-auth-btn {
-    padding: 5px 10px !important;
-    gap: 6px !important;
+@media (max-width: 767px) {
+  .navbar {
+    flex-wrap: nowrap !important;
   }
 
-  .nav-right-actions .nav-auth-avatar-mini + span {
-    display: inline-block;
-    max-width: 68px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .nav-left-group {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .navbar .nav-logo {
+    min-width: 0;
   }
 
   .navbar .nav-logo span {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-right-actions {
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+
+  .nav-right-actions .theme-toggle-btn,
+  .notif-bell-btn {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .nav-right-actions .nav-auth-btn {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+  }
+
+  .nav-right-actions .nav-auth-btn span {
+    display: none !important;
+  }
+
+  .nav-right-actions .nav-auth-avatar-mini {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .nav-left-group {
+    gap: 8px !important;
+  }
+
+  .nav-right-actions {
+    gap: 6px;
+  }
+
+  .nav-logo span {
+    font-size: 18px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+  .navbar {
+    flex-wrap: nowrap !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    gap: 12px;
+  }
+
+  .navbar .nav-logo,
+  .nav-left-group {
+    flex-shrink: 0;
+  }
+
+  .navbar .nav-logo span {
+    font-size: 21px !important;
+    white-space: nowrap;
+  }
+
+  .nav-menu {
+    gap: 16px !important;
+    flex-wrap: nowrap;
+  }
+
+  .nav-menu .nav-link,
+  .nav-menu li a {
+    font-size: 17px !important;
+    white-space: nowrap;
+  }
+
+  .nav-right-actions {
+    flex-shrink: 0;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 960px) {
+  .nav-right-actions .nav-auth-btn {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+  }
+
+  .nav-right-actions .nav-auth-btn span {
+    display: none !important;
+  }
+
+  .nav-right-actions .nav-auth-avatar-mini {
+    width: 28px !important;
+    height: 28px !important;
   }
 }
