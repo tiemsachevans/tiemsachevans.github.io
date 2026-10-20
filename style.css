@@ -6074,7 +6074,7 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 
   .profile-page-container {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 20px !important;
     margin: 20px auto 40px !important;
     padding: 0 14px !important;
@@ -6082,8 +6082,26 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
     box-sizing: border-box !important;
   }
 
-  .passport-cover {
+  .profile-page-container > * {
+    min-width: 0 !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .journal-tabs-bar {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .journal-tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .passport-cover {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     padding: 24px 16px 20px !important;
     border-left-width: 10px !important;
     border-radius: 4px 12px 12px 4px !important;
@@ -6155,7 +6173,7 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   .medals-showcase-grid,
   .favorites-grid-container,
   .user-notes-grid-container {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 12px !important;
   }
 
