@@ -5841,9 +5841,13 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
   }
 
   .back-to-top-btn {
-    bottom: 66px !important;
+    bottom: calc(var(--fixed-bottom-offset, 52px) + 14px + env(safe-area-inset-bottom, 0px)) !important;
     right: 15px !important;
     z-index: 999 !important;
+  }
+
+  .footer-cat-wrapper {
+    right: 76px;
   }
 
   .music-capsule-player.hidden-by-menu {
@@ -7186,5 +7190,15 @@ body.dark-theme .notif-empty {
   .nav-right-actions .nav-auth-avatar-mini {
     width: 28px !important;
     height: 28px !important;
+  }
+}
+
+:root {
+  --toast-bottom-gap: 24px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --toast-bottom-gap: 80px;
   }
 }

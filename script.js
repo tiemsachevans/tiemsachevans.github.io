@@ -91,6 +91,59 @@ async function createSupabaseInstance() {
 // ==================== MÀN HÌNH CHỜ KHI MỞ TRANG ====================
 // CSS (khối "MÀN HÌNH CHỜ" trong style.css) phủ kín trang cho tới khi body có class page-ready,
 // nhờ vậy người xem không thấy nội dung mặc định/trống rồi mới nhảy sang dữ liệu thật.
+let fixedStackFullOffset = null;
+
+function updateFixedBottomOffset() {
+  const root = document.documentElement;
+  const player = document.getElementById("musicPlayer");
+  if (!player || getComputedStyle(player).display === "none") {
+    fixedStackFullOffset = null;
+    root.style.setProperty("--fixed-bottom-offset", "0px");
+    return;
+  }
+
+  const compact = ["minimized", "minimized-scroll", "hidden-by-menu", "hide-on-menu"].some((name) =>
+    player.classList.contains(name),
+  );
+
+  if (!compact || fixedStackFullOffset === null) {
+    const bottomGap = parseFloat(getComputedStyle(player).bottom) || 0;
+    const height = compact ? 72 : player.getBoundingClientRect().height;
+    fixedStackFullOffset = Math.round(bottomGap + height);
+  }
+
+  root.style.setProperty("--fixed-bottom-offset", `${fixedStackFullOffset}px`);
+}
+
+function initFixedBottomStack() {
+  if (window.__fixedBottomStackBound) return;
+  window.__fixedBottomStackBound = true;
+
+  let timer = null;
+  const schedule = () => {
+    updateFixedBottomOffset();
+    clearTimeout(timer);
+    timer = setTimeout(updateFixedBottomOffset, 350);
+  };
+
+  const player = document.getElementById("musicPlayer");
+  if (player) {
+    if ("ResizeObserver" in window) new ResizeObserver(schedule).observe(player);
+    new MutationObserver(schedule).observe(player, { attributes: true, attributeFilter: ["class", "style"] });
+    player.addEventListener("transitionend", updateFixedBottomOffset);
+  }
+  window.addEventListener("resize", () => {
+    fixedStackFullOffset = null;
+    schedule();
+  });
+  window.addEventListener("orientationchange", () => {
+    fixedStackFullOffset = null;
+    schedule();
+  });
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", schedule);
+  schedule();
+}
+
 function markPageReady() {
   document.body.classList.add("page-ready");
   // Nếu màn hình chờ dùng video nền thì dừng lại khi đã vào trang (đỡ tốn pin/CPU)
@@ -137,6 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       ["ajaxNav", initAjaxNavigation],
       ["charSwipe", initCharViewSwipe],
       ["musicPlayer", initMusicPlayer],
+      ["fixedBottomStack", initFixedBottomStack],
       ["menuToggle", initMenuToggle],
       ["catMascot", initCatMascot],
       ["dustParticles", initDustParticles],
@@ -304,7 +358,7 @@ function showToast(message, type = "success") {
     toastContainer.id = "toastContainer";
     toastContainer.style.cssText = `
       position: fixed;
-      bottom: 24px;
+      bottom: calc(var(--fixed-bottom-offset, 0px) + var(--toast-bottom-gap, 24px));
       left: 0;
       right: 0;
       z-index: 2147483647;
@@ -3596,8 +3650,12 @@ function updateNavUserUI(user) {
         <img src="${escapeHTML(avatar)}" class="nav-auth-avatar-mini" alt="Avatar" />
         <span>${escapeHTML(name)}</span>
       `;
+      navBtn.setAttribute("aria-label", `Tài khoản của ${name}`);
+      navBtn.title = name;
     } else {
       navBtn.innerHTML = `<i class="fa-solid fa-feather"></i> <span>Đóng Mộc / Nhận Thẻ</span>`;
+      navBtn.setAttribute("aria-label", "Đóng Mộc / Nhận Thẻ");
+      navBtn.title = "Đóng Mộc / Nhận Thẻ";
     }
   });
 }
@@ -5014,7 +5072,7 @@ async function checkNewCharacter() {
     const isRecent = targetDate ? (now - targetDate) / (1000 * 60 * 60 * 24) <= 15 : false;
 
     if (latestChar && latestChar.name && isRecent) {
-      bannerText.innerHTML = `Nhân vật mới cập nhật link: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
+      bannerText.innerHTML = `Nhân vật mới cập nhật: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
       bannerContainer.style.display = "block";
 
       const bannerBtn = document.getElementById("newCharBannerBtn");
