@@ -5072,7 +5072,7 @@ async function checkNewCharacter() {
     const isRecent = targetDate ? (now - targetDate) / (1000 * 60 * 60 * 24) <= 15 : false;
 
     if (latestChar && latestChar.name && isRecent) {
-      bannerText.innerHTML = `Nhân vật mới cập nhật: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
+      bannerText.innerHTML = `Tựa sách mới cập nhật: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
       bannerContainer.style.display = "block";
 
       const bannerBtn = document.getElementById("newCharBannerBtn");
