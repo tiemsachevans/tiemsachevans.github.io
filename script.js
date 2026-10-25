@@ -11,9 +11,8 @@ async function ensureSupabaseScriptLoaded() {
     return true;
   }
 
-  // Danh sách CDN dự phòng (jsDelivr và unpkg)
   const cdnSources = [
-    "https://cdn.jsdelivr.532799.cn/npm/@supabase/supabase-js@2", // Hoặc cdn.jsdelivr.net chính hãng
+    "https://cdn.jsdelivr.532799.cn/npm/@supabase/supabase-js@2",
     "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
     "https://unpkg.com/@supabase/supabase-js@2"
   ];
@@ -38,8 +37,6 @@ async function ensureSupabaseScriptLoaded() {
   return false;
 }
 
-// Hàm kiểm tra và chờ thư viện Supabase CDN nạp hoàn tất (chờ tối đa 3 giây)
-// Nhiều tác vụ khởi động gọi getSupabase() cùng lúc -> chỉ tạo MỘT client, mọi nơi dùng chung kết quả
 let _supabasePromise = null;
 
 async function getSupabase() {
@@ -47,7 +44,7 @@ async function getSupabase() {
   if (!_supabasePromise) {
     _supabasePromise = createSupabaseInstance().then(
       (inst) => {
-        if (!inst) _supabasePromise = null; // thất bại -> cho phép thử lại lần sau
+        if (!inst) _supabasePromise = null;
         return inst;
       },
       (err) => {
@@ -62,8 +59,7 @@ async function getSupabase() {
 async function createSupabaseInstance() {
   if (_supabaseInstance) return _supabaseInstance;
 
-  // Tăng thời gian chờ lên 6 giây và chủ động kiểm tra/nạp lại script dự phòng
-  let retries = 60; // 60 lần x 100ms = 6 giây
+  let retries = 60;
   while (
     retries > 0 &&
     (typeof window.supabase === "undefined" || !window.supabase.createClient)
@@ -89,8 +85,6 @@ async function createSupabaseInstance() {
 }
 
 // ==================== MÀN HÌNH CHỜ KHI MỞ TRANG ====================
-// CSS (khối "MÀN HÌNH CHỜ" trong style.css) phủ kín trang cho tới khi body có class page-ready,
-// nhờ vậy người xem không thấy nội dung mặc định/trống rồi mới nhảy sang dữ liệu thật.
 let fixedStackFullOffset = null;
 
 function updateFixedBottomOffset() {
@@ -146,12 +140,10 @@ function initFixedBottomStack() {
 
 function markPageReady() {
   document.body.classList.add("page-ready");
-  // Nếu màn hình chờ dùng video nền thì dừng lại khi đã vào trang (đỡ tốn pin/CPU)
   const loaderVideo = document.getElementById("loaderVideo");
   if (loaderVideo) setTimeout(() => loaderVideo.pause(), 500);
 }
 
-// Chờ tối đa `ms` mili giây (không bao giờ ném lỗi) để màn hình chờ không kẹt khi mạng chậm
 function waitAtMost(promises, ms) {
   return Promise.race([
     Promise.allSettled(promises),
@@ -159,7 +151,6 @@ function waitAtMost(promises, ms) {
   ]);
 }
 
-// Chạy một tác vụ khởi động mà không bao giờ ném lỗi ra ngoài: một phần lỗi không làm hỏng cả trang
 function runStartupTask(label, fn) {
   try {
     return Promise.resolve(fn()).catch((err) => {
@@ -172,14 +163,12 @@ function runStartupTask(label, fn) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Chốt an toàn: dù có chuyện gì cũng mở trang sau 9 giây
   const readyFailsafe = setTimeout(markPageReady, 9000);
 
   try {
     hoistSharedModals();
     renderCharacterCreatedDates();
 
-    // 1. Phần không cần mạng: chạy ngay
     [
       ["theme", initThemeMode],
       ["colorPicker", initColorPicker],
@@ -193,11 +182,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       ["fixedBottomStack", initFixedBottomStack],
       ["menuToggle", initMenuToggle],
       ["catMascot", initCatMascot],
-      ["dustParticles", initDustParticles],
+      // ["dustParticles", initDustParticles],
+      ["halloweenEffect", initHalloweenEffect],
       ["unlockedPuzzles", checkUnlockedPuzzles],
     ].forEach(([label, fn]) => runStartupTask(label, fn));
 
-    // 2. Phần cần Supabase: chạy SONG SONG thay vì nối đuôi nhau, tổng thời gian chờ ≈ lần gọi chậm nhất
     const startupTasks = [
       ["maintenance", checkMaintenanceMode],
       ["profile", initProfilePage],
@@ -212,7 +201,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       ["deepLink", restoreCharViewFromHash],
     ].map(([label, fn]) => runStartupTask(label, fn));
 
-    // Chờ dữ liệu + font tải xong (tối đa 6 giây) rồi mới mở màn hình chờ
     if (document.fonts && document.fonts.ready) startupTasks.push(document.fonts.ready);
     await waitAtMost(startupTasks, 6000);
   } finally {
@@ -221,13 +209,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Chỉ chấp nhận mã màu hợp lệ trước khi đưa vào thuộc tính style (tránh chèn CSS/HTML lạ từ dữ liệu)
 function safeCssColor(value, fallback = "#fff2b2") {
   const v = String(value || "").trim();
   return /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(v) ? v : fallback;
 }
 
-// Hàm escape HTML chống XSS
 function escapeHTML(str) {
   if (!str) return "";
   const p = document.createElement("p");
@@ -266,7 +252,6 @@ function parseQuotesData(rawQuotes) {
       const parsed = JSON.parse(trimmed);
       if (Array.isArray(parsed)) return parsed;
     } catch (e) {
-      // Bóc tách thủ công nếu JSON.parse lỗi do chứa ký tự ngoặc kép
       const clean = trimmed.replace(/^\[\s*|\s*\]$/g, "");
       return clean
         .split(/",\s*"/)
@@ -315,8 +300,6 @@ async function loadRandomDailyQuote() {
     }
   }
 
-  // DỰ PHÒNG: Nếu Supabase không có dữ liệu/lỗi/chưa có quote của nhân vật khác,
-  // dùng danh sách dự phòng đa dạng nhân vật để giao diện luôn luôn xoay tua
   if (allQuotes.length === 0) {
     console.warn(
       "Không tìm thấy quote từ Supabase, chuyển sang danh sách dự phòng.",
@@ -339,7 +322,6 @@ async function loadRandomDailyQuote() {
 
   console.log("Tổng số câu trích dẫn khả dụng:", allQuotes.length, allQuotes);
 
-  // Bốc ngẫu nhiên 1 câu
   const randomIndex = Math.floor(Math.random() * allQuotes.length);
   const selected = allQuotes[randomIndex];
 
@@ -425,23 +407,18 @@ function initGlobalListeners() {
   });
 
   document.addEventListener("click", (e) => {
-    // Chỉ nút/chip khóa mới mở bảng giải đố. Thẻ nhân vật (.bot-card) cũng mang
-    // data-puzzle-id nên nếu dùng closest("[data-puzzle-id]") thì bấm bất kỳ đâu
-    // trên thẻ cũng bật bảng giải đố, che mất modal thông tin nhân vật.
     const lockedChip = e.target.closest("a[data-puzzle-id], .chip-btn[data-puzzle-id]");
     if (lockedChip) {
       const puzzleId = lockedChip.getAttribute("data-puzzle-id");
       if (puzzleId) {
-        // Đã giải đố (có link do server cấp) -> đắp href rồi để trình duyệt mở link mặc định
         if (getPuzzleLink(puzzleId)) {
           unlockCharacterLinks(puzzleId);
           const targetHref = lockedChip.href;
           if (targetHref && targetHref !== "#" && !targetHref.includes("javascript")) {
-            return; // Cho phép sự kiện mở link mặc định diễn ra
+            return;
           }
         }
-      
-        // Nếu chưa mở khóa thì chặn lại và bật Modal giải mã
+
         e.preventDefault();
         e.stopPropagation();
         if (typeof openPuzzleModal === "function") {
@@ -451,7 +428,6 @@ function initGlobalListeners() {
     }
   });
 
-  // Sự kiện gửi feedback trực tiếp trong Modal
   document
     .getElementById("submitFeedbackBtn")
     ?.addEventListener("click", async () => {
@@ -475,13 +451,12 @@ function initGlobalListeners() {
 
       const supabase = await getSupabase();
       if (supabase && currentTitle) {
-        // 🌟 Hứng biến error để kiểm tra kết quả thực tế từ Supabase
         const { error } = await supabase
           .from("feedbacks")
           .insert([
-            { 
-              char_name: currentTitle, 
-              author_name: author, 
+            {
+              char_name: currentTitle,
+              author_name: author,
               content: content,
               user_id: userId,
               avatar_url: avatarUrl,
@@ -492,7 +467,7 @@ function initGlobalListeners() {
         if (error) {
           console.error("❌ Lỗi Supabase khi gửi feedback:", error);
           showToast(spamErrorMessage(error, "Gửi đánh giá thất bại: " + error.message), "error");
-          return; // Dừng lại không báo thành công giả mạo nữa
+          return;
         }
       }
 
@@ -565,12 +540,12 @@ function loadTrack(index) {
     currentTrackIndex = index;
     const track = playlist[currentTrackIndex];
     audio.src = track.src;
-    
+
     if (trackTitle) {
       trackTitle.textContent = track.title;
-      trackTitle.dataset.originalTitle = track.title; 
+      trackTitle.dataset.originalTitle = track.title;
     }
-    
+
     audio.load();
     updatePlaylistUI();
   }
@@ -656,12 +631,10 @@ function loadTrack(index) {
       if (durationTimeEl)
         durationTimeEl.textContent = formatTime(audio.duration);
 
-      // --- LOGIC HIỂN THỊ VÀ KHÔI PHỤC MÃ MORSE ---
       const trackTitleEl = document.querySelector(".track-title");
       const currentTime = Math.floor(audio.currentTime);
 
       if (trackTitleEl) {
-        // 1. Nếu chưa lưu tên bài gốc thì tự lưu vào dataset
         if (
           !trackTitleEl.dataset.originalTitle &&
           !trackTitleEl.innerHTML.includes("Morse:")
@@ -669,12 +642,10 @@ function loadTrack(index) {
           trackTitleEl.dataset.originalTitle = trackTitleEl.textContent;
         }
 
-        // 2. Kiểm tra khoảng thời gian 3:16 (196s) -> 3:20 (200s)
         if (currentTime >= 196 && currentTime <= 200) {
           trackTitleEl.innerHTML =
             "<span style='color: #6475f1; font-weight: bold;'>48696d69747375</span>";
         } else {
-          // 3. Nếu nằm ngoài khoảng thời gian, trả về tên gốc đã lưu trong dataset
           if (trackTitleEl.dataset.originalTitle) {
             trackTitleEl.textContent = trackTitleEl.dataset.originalTitle;
           }
@@ -745,7 +716,6 @@ function initAjaxNavigation() {
 
     e.preventDefault();
 
-    // Đóng hoàn toàn menu và gỡ khóa scroll trước khi chuyển trang
     closeMobileMenu();
 
     loadPageViaAjax(href);
@@ -754,12 +724,10 @@ function initAjaxNavigation() {
   window.addEventListener("popstate", (e) => {
     closeMobileMenu();
 
-    // Đang xem nhân vật -> Back chỉ đóng màn hình nhân vật, không tải lại trang
     if (isBotModalOpen()) {
       closeBotModal(true);
       return;
     }
-    // Forward về lại màn hình nhân vật
     if (
       e.state &&
       e.state.charView &&
@@ -771,16 +739,13 @@ function initAjaxNavigation() {
     }
 
     const path = window.location.pathname.split("/").pop() || "index.html";
-    if (path === currentPagePath) return; // cùng trang: giữ nguyên danh sách/bộ lọc
+    if (path === currentPagePath) return;
     loadPageViaAjax(path, false);
   });
 }
 
-// Modal dùng chung (nhân vật + giải đố) phải nằm NGOÀI #main-content, nếu không chúng bị
-// xóa khi chuyển trang AJAX (vd: Tủ sách -> Trang chủ) và top 3/random không mở được modal.
 const SHARED_MODAL_IDS = ["botModal", "puzzleModal", "feedbackPopupModal"];
 
-// Khai báo cho trình đọc màn hình biết đây là hộp thoại
 function applyDialogA11y() {
   [
     ["botModal", "Thông tin nhân vật"],
@@ -806,9 +771,9 @@ function hoistSharedModals() {
       (el) => !main.contains(el),
     );
     if (persistent) {
-      inMain.remove(); // đã có bản bền vững ngoài main -> bỏ bản trùng của trang mới
+      inMain.remove();
     } else {
-      document.body.appendChild(inMain); // trang đầu tiên: nhấc modal ra khỏi main
+      document.body.appendChild(inMain);
     }
   });
   applyDialogA11y();
@@ -851,7 +816,7 @@ async function loadPageViaAjax(url, pushHistory = true) {
       currentPagePath =
         url.split("#")[0].split("?")[0].split("/").pop() || "index.html";
       const pageTasks = reinitializePageScripts();
-      await waitAtMost(pageTasks || [], 3500); // dữ liệu trang mới sẵn sàng rồi mới hiện, tránh nháy nội dung mặc định
+      await waitAtMost(pageTasks || [], 3500);
 
       mainContent.style.opacity = "1";
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -863,9 +828,8 @@ async function loadPageViaAjax(url, pushHistory = true) {
 }
 
 function reinitializePageScripts() {
-  // Modal nằm trong #main-content nên bị thay khi chuyển trang -> gỡ khóa cuộn còn sót
   document.body.classList.remove("modal-open", "char-view-open");
-  unlockPageScroll(false); // trang mới: không khôi phục vị trí cuộn của trang cũ
+  unlockPageScroll(false);
   renderCharacterCreatedDates();
   const pageTasks = [
     syncCharacterVotes(),
@@ -879,16 +843,16 @@ function reinitializePageScripts() {
   initSearchAndFilter();
   initModal();
   initCatMascot();
-  initDustParticles();
+  // initDustParticles();
+  initHalloweenEffect();
   checkUnlockedPuzzles();
   autofillUserNames();
-  
+
   if (document.querySelector(".profile-page-container")) {
     pageTasks.push(initProfilePage());
   }
   return pageTasks;
 }
-// Chuyển trang profile mượt mà qua AJAX
 function handleNavAuthClick() {
   closeMobileMenu();
   if (currentUser) {
@@ -915,7 +879,6 @@ function initSearchAndFilter() {
 
   let activeFilter = "all";
 
-  // Hàm kiểm tra từ khóa manh mối
   function isCatClue(term) {
     const keywords = ["himitsu", "Himitsu", "HIMITSU"];
     return keywords.some((key) => term.includes(key));
@@ -928,7 +891,6 @@ function initSearchAndFilter() {
     const hasCatClue = isCatClue(searchTerm);
 
     botCards.forEach((card) => {
-      // Nếu là thẻ ẩn chú mèo
       if (card.classList.contains("secret-cat-card")) {
         if (hasCatClue) {
           card.style.display = "block";
@@ -938,7 +900,6 @@ function initSearchAndFilter() {
         return;
       }
 
-      // Logic lọc thẻ thông thường
       const name =
         card.querySelector(".bot-name")?.textContent.toLowerCase() || "";
       const tags =
@@ -957,16 +918,13 @@ function initSearchAndFilter() {
     });
   }
 
-  // Sự kiện nhập ô tìm kiếm
   searchInput?.addEventListener("input", filterCards);
 
-  // Toggle Menu Thể loại
   filterToggleBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     genreContainer?.classList.toggle("show");
   });
 
-  // Chọn thể loại
   genreOptions.forEach((option) => {
     option.addEventListener("click", () => {
       genreOptions.forEach((opt) => opt.classList.remove("active"));
@@ -982,7 +940,6 @@ function initSearchAndFilter() {
     });
   });
 
-  // Đóng dropdown khi click ra ngoài
   document.addEventListener("click", (e) => {
     if (
       genreContainer &&
@@ -999,27 +956,23 @@ function initSearchAndFilter() {
 let isModalInitialized = false;
 
 function initModal() {
-  // Tránh gắn trùng listener mỗi lần chuyển trang AJAX
   if (isModalInitialized) return;
   isModalInitialized = true;
 
   document.addEventListener("click", async (e) => {
     const modal = document.getElementById("botModal");
 
-    // Tab Thông tin / Lời nhắn (mobile)
     const tabBtn = e.target.closest(".modal-tab");
     if (tabBtn && modal && modal.contains(tabBtn)) {
       setModalTab(tabBtn.dataset.tab);
       return;
     }
 
-    // Nút chia sẻ nhân vật
     if (e.target.closest("#modalShareBtn")) {
       shareCurrentCharacter();
       return;
     }
 
-    // Khi bấm nút đóng (×), nút quay lại (mobile) hoặc bấm ra vùng nền mờ bên ngoài
     if (
       e.target.closest("#modalClose") ||
       e.target.closest("#modalBackBtn") ||
@@ -1039,9 +992,9 @@ function initModal() {
         card.dataset.secret === "true" ||
         card.classList.contains("secret-cat-card")
       ) {
-        return; 
+        return;
       }
-      
+
       const charName = card.querySelector(".bot-name")?.textContent.trim();
       if (charName && charName !== "Coming Soon...") {
         e.preventDefault();
@@ -1052,19 +1005,14 @@ function initModal() {
 }
 
 // ==================== SPA XEM NHÂN VẬT (MOBILE) ====================
-// Trên điện thoại, modal nhân vật hoạt động như một "màn hình" riêng:
-// có history (nút Back / vuốt cạnh trái đóng được), deep link #nv=<tên>,
-// giữ nguyên bộ lọc + vị trí cuộn của danh sách khi quay lại.
 let charViewScrollY = 0;
 
-// Khóa cuộn trang nền bằng position: fixed (body đang có overflow-y: auto !important
-// nên overflow: hidden không có tác dụng; cách này cũng chặn được cuộn nền trên iOS).
 function lockPageScroll() {
   const body = document.body;
   if (body.classList.contains("scroll-locked")) return;
   charViewScrollY = window.scrollY;
   body.style.top = `-${charViewScrollY}px`;
-  document.documentElement.classList.add("scroll-locked"); // giữ chỗ thanh cuộn, tránh giật layout
+  document.documentElement.classList.add("scroll-locked");
   body.classList.add("scroll-locked");
 }
 
@@ -1102,13 +1050,12 @@ function setModalTab(tab) {
 
 function openBotModalUI(modal, charName) {
   setModalTab("info");
-  lockPageScroll(); // desktop + mobile: không cho trang nền cuộn khi modal đang mở
+  lockPageScroll();
   modal.classList.add("show");
   if (!isMobileView()) return;
 
   document.body.classList.add("char-view-open");
 
-  // Chỉ push khi chưa đang ở một entry của màn hình nhân vật (popstate/forward)
   if (!(window.history.state && window.history.state.charView)) {
     window.history.pushState(
       { path: currentPagePath, charView: charName },
@@ -1134,7 +1081,6 @@ function closeBotModal(fromPopstate = false) {
     document.body.classList.remove("modal-open", "char-view-open");
     charViewClosing = false;
     unlockPageScroll();
-    // Desktop: bỏ #nv=... khỏi thanh địa chỉ sau khi đóng (mobile đã tự lùi history)
     if (!wasMobileView && /^#nv=/.test(window.location.hash)) {
       window.history.replaceState(
         window.history.state,
@@ -1144,24 +1090,21 @@ function closeBotModal(fromPopstate = false) {
     }
   };
 
-  // Chặn đóng lặp khi popstate đến trong lúc đang chạy hiệu ứng
   const animate = wasMobileView && !reduceMotion;
   if (animate) charViewClosing = true;
 
-  // Đóng bằng nút/vuốt -> lùi 1 bước history để bỏ entry #nv=
   if (!fromPopstate && window.history.state && window.history.state.charView) {
     window.history.back();
   }
 
   if (animate) {
-    modal.classList.add("closing"); // trượt ra bên phải
+    modal.classList.add("closing");
     setTimeout(finish, 260);
   } else {
     finish();
   }
 }
 
-// Vuốt từ mép trái sang phải để quay lại (Android / trình duyệt không có cử chỉ back)
 function initCharViewSwipe() {
   if (window.__charSwipeInit) return;
   window.__charSwipeInit = true;
@@ -1198,7 +1141,6 @@ function initCharViewSwipe() {
   );
 }
 
-// Mở thẳng màn hình nhân vật khi vào bằng link/refresh có #nv=<tên>
 async function restoreCharViewFromHash() {
   const m = window.location.hash.match(/^#nv=(.+)$/);
   if (!m || !document.getElementById("botModal")) return;
@@ -1209,23 +1151,19 @@ async function restoreCharViewFromHash() {
     return;
   }
   if (isMobileView()) {
-    // Đưa entry hiện tại về trang danh sách, rồi push màn hình chi tiết lên trên
     window.history.replaceState(
       { path: currentPagePath },
       "",
       window.location.pathname + window.location.search,
     );
   }
-  // Desktop: chỉ mở modal; hash được dọn khi đóng
   await openBotModalByName(name);
 }
 
-// Bổ sung quét lại thẻ khóa sau khi Modal thông tin nhân vật vừa tải xong
 window.openBotModalByName = async function (name) {
   const modal = document.getElementById("botModal");
   if (!modal) return;
 
-  // Khóa cứng cuộn nền ngay khi mở Modal
   document.body.classList.add("modal-open");
 
   const normalize = (str) => (str || "").trim().toLowerCase().replace(/[’']/g, "'");
@@ -1276,15 +1214,12 @@ window.openBotModalByName = async function (name) {
   }
 };
 
-// 💥 HÀM ĐỒNG BỘ FEEDBACK TRIỆT ĐỂ
 async function syncModalFeedbacks(charName, botCard) {
   const modalFeedbackList = document.getElementById("dynamicFeedbackList");
   if (!modalFeedbackList) return;
 
-  // Xóa sạch nội dung cũ trong Modal trước khi tải
   modalFeedbackList.innerHTML = "";
 
-  // 1. Nếu trên Card ngoài đã có các .feedback-item do đã render trước đó
   const cardFeedbackItems = botCard.querySelectorAll(
     ".feedback-list .feedback-item",
   );
@@ -1296,7 +1231,6 @@ async function syncModalFeedbacks(charName, botCard) {
     return;
   }
 
-  // 2. Nếu Card chưa có dữ liệu (hoặc chứa text mặc định từ HTML), thực hiện Fetch trực tiếp từ Supabase
   try {
     const supabase = await getSupabase();
     if (supabase && charName) {
@@ -1307,7 +1241,6 @@ async function syncModalFeedbacks(charName, botCard) {
         .order("created_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
-        // Cập nhật lại vào cả Card ngoài lẫn Modal
         const cardFeedbackContainer = botCard.querySelector(".feedback-list");
         if (cardFeedbackContainer) cardFeedbackContainer.innerHTML = "";
 
@@ -1329,7 +1262,6 @@ async function syncModalFeedbacks(charName, botCard) {
     console.error("Lỗi khi tải feedback cho Modal:", err);
   }
 
-  // 3. Nếu thực sự không có feedback nào trong CSDDL
   modalFeedbackList.innerHTML = `
     <p class="no-feedback-text" style="opacity:0.7; font-style:italic; padding: 8px 0;">
       Chưa có lời nhắn nào cho ${escapeHTML(charName)}. Hãy là người đầu tiên gửi feedback!
@@ -1337,7 +1269,6 @@ async function syncModalFeedbacks(charName, botCard) {
   `;
 }
 
-// 💥 HÀM BỔ SUNG: Render danh sách feedback sang Modal
 function renderModalFeedbacks(charName, botCard) {
   const modalFeedbackList = document.getElementById("dynamicFeedbackList");
   if (!modalFeedbackList) return;
@@ -1366,11 +1297,9 @@ window.openBotModalByName = async function (name) {
     return;
   }
 
-  // Chuẩn hóa dấu nháy đơn và khoảng trắng
   const normalize = (str) => (str || "").trim().toLowerCase().replace(/[’']/g, "'");
   const cleanTargetName = normalize(name);
 
-  // 1. Lấy dữ liệu nhân vật
   const characters = await getAllCharacters();
   const char = characters.find((c) => normalize(c.name) === cleanTargetName);
 
@@ -1410,10 +1339,8 @@ window.openBotModalByName = async function (name) {
 
     renderModalCreated(char.created);
 
-    // 2. Mở Modal (mobile: mở như một màn hình riêng, có history)
     openBotModalUI(modal, char.name);
 
-    // 3. Tải feedback
     checkUnlockedPuzzles();
     await syncModalFeedbacksByName(char.name);
   } else {
@@ -1421,12 +1348,10 @@ window.openBotModalByName = async function (name) {
   }
 };
 
-// Hàm tải feedback trực tiếp theo tên nhân vật vào Modal
 async function syncModalFeedbacksByName(charName, { silent = false } = {}) {
   const modalFeedbackList = document.getElementById("dynamicFeedbackList");
   if (!modalFeedbackList) return;
 
-  // silent = làm mới ngầm sau khi gửi: giữ nguyên danh sách cũ cho tới khi có dữ liệu mới, không nháy chữ "Đang tải"
   const prevScroll = modalFeedbackList.scrollTop;
   if (!silent) {
     modalFeedbackList.innerHTML = `<span style="font-size:0.85rem; opacity:0.7; font-style:italic;">Đang tải cảm nhận...</span>`;
@@ -1505,7 +1430,6 @@ async function syncModalFeedbacksByName(charName, { silent = false } = {}) {
   `;
 }
 
-// Đồng bộ số tim + trạng thái "đã thích" giữa nút vừa bấm, các thẻ và modal
 function applyLikeUI(charName, count, liked, btn, countSpan) {
   if (btn) btn.classList.toggle("liked", liked);
   if (countSpan) countSpan.textContent = count;
@@ -1545,18 +1469,14 @@ window.toggleLike = async function (btn) {
 
   let count = parseInt(countSpan.textContent) || 0;
 
-  // Xác định trạng thái mới dựa trên việc nút đang được like hay chưa
   const willBeLiked = !btn.classList.contains("liked");
 
-  // 1. Lưu trạng thái vào thiết bị người dùng (localStorage)
   saveLocalLikeState(charName, willBeLiked);
 
-  // 2. Cập nhật số đếm và class trên UI
   btn.classList.toggle("liked", willBeLiked);
   count = willBeLiked ? count + 1 : Math.max(0, count - 1);
   countSpan.textContent = count;
 
-  // 3. Đồng bộ giao diện giữa tất cả các thẻ và Modal
   document.querySelectorAll(".bot-card").forEach((card) => {
     const name = card.querySelector(".bot-name")?.textContent.trim();
     if (name === charName) {
@@ -1573,7 +1493,6 @@ window.toggleLike = async function (btn) {
     showToast(`Bạn không còn yêu thích ${charName} nữa rồi`, "error");
   }
 
-  // 4. Lưu lượt tim lên Supabase qua RPC (mỗi người chỉ được 1 tim / nhân vật, có giới hạn tần suất)
   const supabase = await getSupabase();
   if (supabase) {
     const { data: newTotal, error } = await supabase.rpc("set_vote", {
@@ -1584,7 +1503,6 @@ window.toggleLike = async function (btn) {
 
     if (error) {
       console.error("❌ Lỗi Supabase khi lưu tim:", error);
-      // Hoàn tác giao diện vì server không ghi nhận
       const revertedCount = willBeLiked ? Math.max(0, count - 1) : count + 1;
       saveLocalLikeState(charName, !willBeLiked);
       applyLikeUI(charName, revertedCount, !willBeLiked, btn, countSpan);
@@ -1592,7 +1510,6 @@ window.toggleLike = async function (btn) {
       return;
     }
 
-    // Số tim chuẩn do server trả về
     if (typeof newTotal === "number") {
       applyLikeUI(charName, newTotal, willBeLiked, btn, countSpan);
     }
@@ -1621,7 +1538,7 @@ async function handleLikeClick(characterId, currentVotes) {
   const newVotes = currentVotes + 1;
 
   const supabase = await getSupabase();
-  if (!supabase) return; // Bảo vệ code không bị crash nếu mất mạng / lỗi SDK
+  if (!supabase) return;
 
   const { data, error } = await supabase
     .from("characters")
@@ -1637,16 +1554,14 @@ async function handleLikeClick(characterId, currentVotes) {
 }
 
 // ==================== NGÀY TẠO NHÂN VẬT ====================
-// Thêm ngày tạo cho một nhân vật: gắn data-created="2026-08-26" (hoặc "26/08/2026") vào thẻ .bot-card
-// trong characters.html. Không có thuộc tính này thì không hiển thị gì.
 function formatCreatedDate(raw) {
   const v = String(raw || "").trim();
   if (!v) return "";
-  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); // YYYY-MM-DD (không dùng Date để khỏi lệch múi giờ)
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m) return `${m[3].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[1]}`;
-  m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); // DD/MM/YYYY
+  m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
   if (m) return `${m[1].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[3]}`;
-  return v; // giữ nguyên nếu là chữ tự do, vd "Mùa hè 2026"
+  return v;
 }
 
 function createdDateHTML(text) {
@@ -1691,10 +1606,6 @@ function renderModalCreated(raw) {
 }
 
 // ==================== THÔNG BÁO (CHUÔNG TRÊN THANH ĐIỀU HƯỚNG) ====================
-// Dữ liệu do trigger trong supabase/003_notifications.sql tạo ra:
-//  - Chủ tiệm: có người gửi feedback mới.
-//  - Lữ khách (đã đăng nhập): có người phản hồi feedback của mình.
-// Chuông chỉ hiện sau khi tải được bảng thông báo, nên chưa chạy SQL thì web không có gì thay đổi.
 const NOTIF_LIMIT = 30;
 const notifState = {
   userId: null,
@@ -1789,7 +1700,7 @@ function toggleNotifPanel() {
     panel.hidden = false;
     document.getElementById("notifBellBtn")?.setAttribute("aria-expanded", "true");
     renderNotifications();
-    fetchNotifications(); // làm mới ngầm mỗi lần mở
+    fetchNotifications();
   } else {
     closeNotifPanel();
   }
@@ -1853,7 +1764,7 @@ async function fetchNotifications() {
     if (error) throw error;
     notifState.items = data || [];
     const bell = document.getElementById("notifBellBtn");
-    if (bell) bell.hidden = false; // tải được bảng -> mới hiện chuông
+    if (bell) bell.hidden = false;
     renderNotifications();
   } catch (err) {
     console.warn("Chưa tải được thông báo (đã chạy supabase/003_notifications.sql chưa?):", err);
@@ -1880,7 +1791,6 @@ async function markAllNotifRead() {
   notifState.items.forEach((n) => (n.is_read = true));
   renderNotifications();
   try {
-    // Đánh dấu cả những thông báo cũ hơn 30 mục đang hiển thị (RLS chỉ cho sửa thông báo của mình)
     await notifState.supabase?.from("notifications").update({ is_read: true }).eq("is_read", false);
   } catch (err) {
     console.warn("Lỗi đánh dấu tất cả đã đọc:", err);
@@ -1895,11 +1805,9 @@ async function handleNotifClick(idStr) {
   await openNotificationTarget(n);
 }
 
-// Mở nhân vật liên quan, chuyển sang phần lời nhắn và nháy sáng đúng feedback/phản hồi mới
 async function openNotificationTarget(n) {
   if (!n.char_name) return;
 
-  // Trang không có modal nhân vật (about, station...) -> chuyển tới Tủ Sách với link sâu
   if (!document.getElementById("botModal")) {
     window.location.href = `characters.html#nv=${encodeURIComponent(n.char_name)}`;
     return;
@@ -1934,7 +1842,7 @@ function handleIncomingNotification(n) {
 
 async function initNotifications(user) {
   if (!user) return teardownNotifications();
-  if (notifState.userId === user.id) return; // đã chạy cho tài khoản này rồi
+  if (notifState.userId === user.id) return;
   teardownNotifications();
 
   const supabase = await getSupabase();
@@ -1945,9 +1853,8 @@ async function initNotifications(user) {
   if (!ensureNotifUI()) return;
 
   await fetchNotifications();
-  if (notifState.userId !== user.id) return; // trong lúc chờ đã đổi/đăng xuất
+  if (notifState.userId !== user.id) return;
 
-  // Thông báo hiện ngay khi đang mở web (cần bảng đã nằm trong publication realtime)
   try {
     notifState.channel = supabase
       .channel(`notif-${user.id}`)
@@ -1961,7 +1868,6 @@ async function initNotifications(user) {
     console.warn("Không bật được thông báo realtime:", err);
   }
 
-  // Dự phòng khi realtime không chạy: hỏi lại mỗi 90 giây (chỉ khi đang xem tab) và mỗi khi quay lại tab
   notifState.timer = setInterval(() => {
     if (document.visibilityState === "visible") fetchNotifications();
   }, 90000);
@@ -1990,8 +1896,6 @@ function teardownNotifications() {
 }
 
 // ==================== CHỐNG SPAM (PHÍA CLIENT) ====================
-// Lớp bảo vệ thật nằm ở Supabase (supabase/002_anti_spam.sql). Phần này chỉ giúp báo lỗi
-// thân thiện và tránh gửi những yêu cầu chắc chắn bị từ chối.
 const SPAM_RULES = {
   feedback: { cooldownMs: 15000, maxLen: 500 },
   reply: { cooldownMs: 10000, maxLen: 300 },
@@ -2040,7 +1944,6 @@ function markSpamSent(kind, content) {
   } catch (_) {}
 }
 
-// Đổi mã lỗi từ trigger/RPC của Supabase thành câu thân thiện
 function spamErrorMessage(error, fallback) {
   const msg = String(error?.message || "");
   if (msg.includes("RATE_LIMITED")) return "Bạn thao tác hơi nhanh, đợi một lát rồi thử lại nhé!";
@@ -2051,7 +1954,6 @@ function spamErrorMessage(error, fallback) {
   return fallback;
 }
 
-// Mã thiết bị ẩn danh: giúp server đếm "1 tim / thiết bị" cho khách chưa đăng nhập
 function getDeviceId() {
   try {
     let id = localStorage.getItem("evans_device_id");
@@ -2075,7 +1977,6 @@ function shareKey(name) {
   return String(name || "").normalize("NFC").trim().toLowerCase();
 }
 
-// share/map.json do tools/build_share_pages.py tạo ra: { "tên nhân vật": "slug" }
 function loadShareMap() {
   if (!shareMapPromise) {
     shareMapPromise = fetch("share/map.json", { cache: "no-cache" })
@@ -2088,7 +1989,6 @@ function loadShareMap() {
 async function buildShareUrl(name) {
   const map = await loadShareMap();
   const slug = map[shareKey(name)];
-  // Có trang chia sẻ riêng -> link có ảnh xem trước đúng nhân vật; không thì dùng link sâu thẳng vào modal
   return slug
     ? new URL(`share/${slug}.html`, document.baseURI).href
     : new URL(`characters.html#nv=${encodeURIComponent(name)}`, document.baseURI).href;
@@ -2123,7 +2023,6 @@ window.shareCurrentCharacter = async function () {
   const url = await buildShareUrl(name);
   const subtitle = document.getElementById("modalSubtitle")?.textContent.trim() || "";
 
-  // Điện thoại: mở bảng chia sẻ của hệ điều hành
   if (isMobileView() && navigator.share) {
     try {
       await navigator.share({
@@ -2133,7 +2032,7 @@ window.shareCurrentCharacter = async function () {
       });
       return;
     } catch (err) {
-      if (err && err.name === "AbortError") return; // người dùng tự đóng bảng chia sẻ
+      if (err && err.name === "AbortError") return;
     }
   }
 
@@ -2146,9 +2045,6 @@ window.shareCurrentCharacter = async function () {
   );
 };
 
-// FEEDBACK SUBMISSION LOGIC
-// Nút "Gửi Thư / Feedback" ngoài thẻ: mở popup (giống bảng giải đố) thay vì mở rộng thẻ.
-// Nút feedback trong modal chi tiết nhân vật không đi qua hàm này.
 window.toggleFeedback = async function (btn) {
   const card = btn.closest(".bot-card");
   if (!card) return;
@@ -2161,7 +2057,6 @@ function getFeedbackPopupCard(charName) {
   );
 }
 
-// Đổ danh sách feedback của thẻ (đã được loadFeedbacks điền) vào popup
 function renderFeedbackPopupList() {
   const popup = document.getElementById("feedbackPopupModal");
   const listEl = document.getElementById("feedbackPopupList");
@@ -2178,7 +2073,6 @@ function renderFeedbackPopupList() {
   listEl.scrollTop = prevScroll;
 }
 
-// Cuộn tới phần vừa gửi và nháy sáng nhẹ để người viết thấy ngay
 function flashAndReveal(el) {
   if (!el) return;
   el.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -2221,7 +2115,6 @@ window.openFeedbackPopup = async function (card) {
   const nameEl = document.getElementById("feedbackPopupCharName");
   if (nameEl) nameEl.textContent = charName;
 
-  // Điền sẵn tên nếu đã đăng nhập
   const nameInput = popup.querySelector(".input-name");
   const loggedInName = currentUser?.user_metadata?.display_name || "";
   if (nameInput && !nameInput.value.trim() && loggedInName) {
@@ -2232,7 +2125,6 @@ window.openFeedbackPopup = async function (card) {
   lockPageScroll();
   popup.classList.add("active");
 
-  // Tải dữ liệu mới nhất rồi vẽ lại danh sách (loadFeedbacks tự làm mới popup khi đang mở)
   await loadFeedbacks();
 };
 
@@ -2243,7 +2135,6 @@ window.closeFeedbackPopup = function () {
   if (!isBotModalOpen()) unlockPageScroll();
 };
 
-// Phím Esc: đóng lớp trên cùng trước (giải đố -> popup feedback -> modal nhân vật)
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (document.getElementById("notifPanel") && !document.getElementById("notifPanel").hidden) {
@@ -2279,7 +2170,6 @@ window.toggleReplyBox = function(btn) {
 };
 
 window.sendFeedback = async function (btn) {
-  // Ngăn chặn mọi hành vi nổi bọt hoặc submit mặc định nếu có
   if (event) {
     event.preventDefault();
     event.stopPropagation();
@@ -2287,7 +2177,6 @@ window.sendFeedback = async function (btn) {
 
   console.log("👉 Đã nhấn nút gửi feedback!");
 
-  // Tìm kiếm linh hoạt khung chứa input dựa vào card hoặc modal
   const box = btn.closest(".feedback-input-box") || btn.closest(".modal-right-col") || btn.closest(".feedback-section");
   const nameInput = box?.querySelector(".input-name") || document.getElementById("feedbackAuthor");
   const contentInput = box?.querySelector(".input-content") || document.getElementById("feedbackContent");
@@ -2295,7 +2184,7 @@ window.sendFeedback = async function (btn) {
   const card = btn.closest(".bot-card");
   const feedbackPopup = btn.closest("#feedbackPopupModal");
   let charName = "";
-  
+
   if (feedbackPopup) {
     charName = feedbackPopup.dataset.charName || "";
   } else if (card) {
@@ -2353,10 +2242,10 @@ window.sendFeedback = async function (btn) {
   if (contentInput) contentInput.value = "";
   showToast("Gửi đánh giá thành công!", "success");
   btn.disabled = false;
-  
+
   const listSelector = feedbackListSelectorFor(btn);
   await loadFeedbacks();
-  
+
   if (typeof syncModalFeedbacksByName === "function" && charName) {
     await syncModalFeedbacksByName(charName, { silent: true });
   }
@@ -2385,7 +2274,7 @@ window.sendReply = async function(btn, parentId) {
   if (!checkSpamGuard("reply", content)) return;
 
   btn.disabled = true;
-  
+
   const userId = currentUser ? currentUser.id : null;
   const avatarUrl = currentUser?.user_metadata?.avatar_url || "./images/default_avt.jpg";
 
@@ -2413,9 +2302,8 @@ window.sendReply = async function(btn, parentId) {
   markSpamSent("reply", content);
   showToast("Phản hồi thành công!", "success");
 
-  // Làm mới danh sách mà người viết đang xem để phản hồi hiện ra NGAY (không cần đóng/mở lại)
   const listSelector = feedbackListSelectorFor(btn);
-  await loadFeedbacks(); // cập nhật các thẻ + popup (nếu đang mở)
+  await loadFeedbacks();
   if (listSelector === "#dynamicFeedbackList" && charName) {
     await syncModalFeedbacksByName(charName, { silent: true });
   }
@@ -2457,13 +2345,13 @@ async function loadFeedbacks() {
           const itemEl = document.createElement("div");
           itemEl.className = "feedback-item-wrapper";
           itemEl.dataset.feedbackId = parent.id;
-          
+
           const parentAvatar = parent.avatar_url || "./images/default_avt.jpg";
           const isOwnerParent = parent.user_id === OWNER_USER_ID;
           const parentOwnerBadge = isOwnerParent ? `<i class="fa-solid fa-feather-pointed" style="color: #d4af37; margin-left: 4px;" title="Chủ Tiệm Sách Evans"></i>` : "";
 
           const childReplies = replies.filter(r => r.parent_id === parent.id);
-          
+
           let repliesHTML = childReplies.map(r => {
             const replyAvatar = r.avatar_url || "./images/default_avt.jpg";
             const isOwnerReply = r.user_id === OWNER_USER_ID;
@@ -2512,99 +2400,235 @@ async function loadFeedbacks() {
   }
 }
 
-// // ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
-function initDustParticles() {
-  let canvas = document.getElementById("dustCanvas");
-  if (!canvas) {
-    canvas = document.createElement("canvas");
-    canvas.id = "dustCanvas";
-    document.body.appendChild(canvas);
-  }
+// ==================== HIỆU ỨNG HALLOWEEN ====================
+const HALLOWEEN_ENABLED = true;
 
-  const ctx = canvas.getContext("2d");
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
-
-  window.addEventListener("resize", () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
-
-  // Số lượng hạt bụi (tối ưu hiệu năng từ PC đến Mobile)
-  const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
-  const particles = [];
-
-  class DustParticle {
-    constructor() {
-      this.reset(true);
-    }
-
-    reset(initial = false) {
-      this.x = Math.random() * width;
-      this.y = initial ? Math.random() * height : -10;
-      this.radius = Math.random() * 2.2 + 0.8; // Kích thước hạt từ 0.8px - 3px
-      this.vx = (Math.random() - 0.5) * 0.4; // Tốc độ dạt ngang nhẹ
-      this.vy = Math.random() * 0.5 + 0.2;  // Tốc độ rơi từ từ
-      this.opacity = Math.random() * 0.6 + 0.3;
-      this.fadeSpeed = Math.random() * 0.008 + 0.003;
-      this.growing = Math.random() > 0.5;
-      
-      // Màu sắc bụi vàng kim & bụi giấy ấm áp
-      const colors = [
-        "255, 235, 170", // Vàng sáng
-        "212, 175, 55",  // Vàng đồng vintage
-        "245, 222, 179", // Vàng lúa mạch
-        "255, 255, 255"  // Đốm trắng sáng li ti
-      ];
-      this.color = colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
-
-      // Hiệu ứng nhấp nháy mờ ảo
-      if (this.growing) {
-        this.opacity += this.fadeSpeed;
-        if (this.opacity >= 0.85) this.growing = false;
-      } else {
-        this.opacity -= this.fadeSpeed;
-        if (this.opacity <= 0.15) this.growing = true;
-      }
-
-      // Khi hạt trôi ra khỏi màn hình thì đưa trở lại phía trên
-      if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
-        this.reset();
-      }
-    }
-
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-      ctx.shadowBlur = 6;
-      ctx.shadowColor = `rgba(${this.color}, 0.8)`;
-      ctx.fill();
-    }
-  }
-
-  for (let i = 0; i < particleCount; i++) {
-    particles.push(new DustParticle());
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-    for (let i = 0; i < particles.length; i++) {
-      particles[i].update();
-      particles[i].draw();
-    }
-    requestAnimationFrame(animate);
-  }
-
-  animate();
+function hwSprite(body, width = 64, height = 64) {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${width} ${height}'>${body}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-// Hàm đóng menu mobile và mở lại cuộn trang
+function hwCandy(main, accent) {
+  return hwSprite(
+    `<path d='M3 18 L19 28 V36 L3 46Z' fill='${accent}'/><path d='M61 18 L45 28 V36 L61 46Z' fill='${accent}'/><ellipse cx='32' cy='32' rx='18' ry='13' fill='${main}' stroke='rgba(0,0,0,0.25)' stroke-width='1.5'/><path d='M22 21 Q31 33 22 43 M33 19 Q42 32 33 45' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='3' stroke-linecap='round'/>`,
+  );
+}
+
+function hwLeaf(fill) {
+  return hwSprite(
+    `<path d='M32 4 C37 15 45 14 54 11 C50 22 56 29 61 32 C51 35 51 43 55 52 C45 49 39 51 34 60 V63 H30 V60 C25 51 19 49 9 52 C13 43 13 35 3 32 C8 29 14 22 10 11 C19 14 27 15 32 4Z' fill='${fill}' stroke='rgba(0,0,0,0.2)' stroke-width='1'/><path d='M32 14 V58 M32 30 L20 22 M32 36 L44 28 M32 44 L22 40' stroke='rgba(0,0,0,0.28)' stroke-width='1.6' fill='none' stroke-linecap='round'/>`,
+  );
+}
+
+const HW_SPRITES = {
+  pumpkin: hwSprite(
+    `<ellipse cx='20' cy='38' rx='14' ry='18' fill='#f2740f'/><ellipse cx='44' cy='38' rx='14' ry='18' fill='#f2740f'/><ellipse cx='32' cy='38' rx='15' ry='20' fill='#ff9a2e'/><rect x='29' y='10' width='7' height='11' rx='2.5' fill='#5b3a1a'/><path d='M36 12 C41 10 44 7 45 3' stroke='#4a7c2a' stroke-width='2.5' fill='none' stroke-linecap='round'/><path d='M20 34 L27 34 L23.5 26Z M37 34 L44 34 L40.5 26Z' fill='#3b1500'/><path d='M32 38 L28.5 44 H35.5Z' fill='#3b1500'/><path d='M20 47 Q32 58 44 47 L40.5 52 L36 48 L32 53 L28 48 L23.5 52Z' fill='#3b1500'/><path d='M21 33 L26 33 L23.5 28Z M38 33 L43 33 L40.5 28Z' fill='#ffd54a' opacity='0.7'/>`,
+  ),
+  ghost: hwSprite(
+    `<path d='M10 57 V26 A22 22 0 0 1 54 26 V57 L48 51 L42 57 L36 51 L32 57 L28 51 L22 57 L16 51Z' fill='#f6f3ff' stroke='#cdc4ee' stroke-width='1.5' stroke-linejoin='round'/><ellipse cx='24' cy='28' rx='4' ry='5.5' fill='#2b2142'/><ellipse cx='40' cy='28' rx='4' ry='5.5' fill='#2b2142'/><ellipse cx='32' cy='40' rx='4' ry='5' fill='#2b2142'/><circle cx='17' cy='36' r='3' fill='#ffb3c8' opacity='0.6'/><circle cx='47' cy='36' r='3' fill='#ffb3c8' opacity='0.6'/>`,
+  ),
+  bat: hwSprite(
+    `<path d='M32 18 C26 8 14 6 2 12 C8 14 10 18 9 24 C14 21 18 22 21 27 C24 23 28 23 32 29 C36 23 40 23 43 27 C46 22 50 21 55 24 C54 18 56 14 62 12 C50 6 38 8 32 18Z' fill='#1b1128'/><path d='M27 17 L29 7 L32 14 L35 7 L37 17Z' fill='#1b1128'/><circle cx='30' cy='18' r='1.4' fill='#ff4d4d'/><circle cx='34' cy='18' r='1.4' fill='#ff4d4d'/>`,
+    64,
+    40,
+  ),
+  spider: hwSprite(
+    `<g fill='none' stroke='#17101f' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M16 24 L5 15 L2 22 M16 28 L3 29 L1 37 M17 32 L6 41 L9 46 M19 34 L13 44 L17 48'/><path d='M32 24 L43 15 L46 22 M32 28 L45 29 L47 37 M31 32 L42 41 L39 46 M29 34 L35 44 L31 48'/></g><circle cx='24' cy='28' r='9' fill='#17101f'/><circle cx='24' cy='17' r='6' fill='#17101f'/><circle cx='21.5' cy='16' r='1.3' fill='#ff4d4d'/><circle cx='26.5' cy='16' r='1.3' fill='#ff4d4d'/><path d='M22 25 H26 L24 28 L26 31 H22 L24 28Z' fill='#d42a2a'/>`,
+    48,
+    48,
+  ),
+  candyCorn: hwSprite(
+    `<defs><clipPath id='c'><path d='M32 5 C36 5 40 13 52 50 C53 55 50 59 46 59 H18 C14 59 11 55 12 50 C24 13 28 5 32 5Z'/></clipPath></defs><g clip-path='url(#c)'><rect width='64' height='22' fill='#fff8e7'/><rect y='22' width='64' height='18' fill='#ff9a2e'/><rect y='40' width='64' height='24' fill='#ffd23f'/></g><path d='M32 5 C36 5 40 13 52 50 C53 55 50 59 46 59 H18 C14 59 11 55 12 50 C24 13 28 5 32 5Z' fill='none' stroke='rgba(0,0,0,0.18)' stroke-width='1.5'/>`,
+  ),
+  skull: hwSprite(
+    `<path d='M32 6 C17 6 10 17 10 28 C10 36 14 40 18 43 V52 H46 V43 C50 40 54 36 54 28 C54 17 47 6 32 6Z' fill='#f2efe6' stroke='#cfc9b6' stroke-width='1.5'/><ellipse cx='23' cy='29' rx='6.5' ry='7.5' fill='#1a1320'/><ellipse cx='41' cy='29' rx='6.5' ry='7.5' fill='#1a1320'/><path d='M32 36 L28 44 H36Z' fill='#1a1320'/><path d='M24 52 V46 M32 52 V46 M40 52 V46' stroke='#cfc9b6' stroke-width='2'/>`,
+  ),
+  candyPink: hwCandy('#ff6fae', '#ffc2dc'),
+  candyPurple: hwCandy('#9b5de5', '#d8b9ff'),
+  candyGreen: hwCandy('#6fd66b', '#c4f2c1'),
+  leafOrange: hwLeaf('#e8741a'),
+  leafRed: hwLeaf('#c0392b'),
+  leafBrown: hwLeaf('#a0522d'),
+};
+
+function initHalloweenEffect() {
+  if (!HALLOWEEN_ENABLED || document.getElementById("halloweenLayer")) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const layer = document.createElement("div");
+  layer.id = "halloweenLayer";
+  layer.setAttribute("aria-hidden", "true");
+  document.body.appendChild(layer);
+
+  const mobile = window.matchMedia("(max-width: 767px)").matches;
+  const count = mobile ? { fall: 9, ghost: 2, bat: 2, spider: 2 } : { fall: 18, ghost: 4, bat: 4, spider: 3 };
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+  const place = (parent, className, sprite, width, height, style) => {
+    const el = document.createElement("div");
+    el.className = className;
+    el.style.backgroundImage = sprite;
+    el.style.width = `${Math.round(width)}px`;
+    el.style.height = `${Math.round(height)}px`;
+    Object.entries(style).forEach(([key, value]) => {
+      if (key.startsWith("--")) el.style.setProperty(key, value);
+      else el.style[key] = value;
+    });
+    parent.appendChild(el);
+    return el;
+  };
+
+  const fallSprites = [
+    HW_SPRITES.pumpkin,
+    HW_SPRITES.candyPink,
+    HW_SPRITES.candyPurple,
+    HW_SPRITES.candyGreen,
+    HW_SPRITES.candyCorn,
+    HW_SPRITES.leafOrange,
+    HW_SPRITES.leafRed,
+    HW_SPRITES.leafBrown,
+    HW_SPRITES.skull,
+  ];
+
+  for (let i = 0; i < count.fall; i++) {
+    const size = mobile ? rand(22, 36) : rand(28, 48);
+    const duration = rand(10, 20);
+    place(layer, "hw-item hw-fall", pick(fallSprites), size, size, {
+      left: `${rand(0, 96)}%`,
+      "--hw-drift": `${rand(-90, 90)}px`,
+      "--hw-spin": `${rand(-420, 420)}deg`,
+      animationDuration: `${duration}s`,
+      animationDelay: `${-rand(0, duration)}s`,
+    });
+  }
+
+  for (let i = 0; i < count.ghost; i++) {
+    const size = mobile ? rand(38, 52) : rand(46, 68);
+    const duration = rand(16, 26);
+    place(layer, "hw-item hw-ghost", HW_SPRITES.ghost, size, size, {
+      left: `${rand(4, 88)}%`,
+      "--hw-drift": `${rand(-70, 70)}px`,
+      animationDuration: `${duration}s`,
+      animationDelay: `${-rand(0, duration)}s`,
+    });
+  }
+
+  for (let i = 0; i < count.bat; i++) {
+    const width = mobile ? rand(36, 48) : rand(44, 64);
+    const duration = rand(20, 32);
+    const flyLeft = Math.random() > 0.5;
+    const bat = place(layer, "hw-item hw-bat", "none", width, width * 0.625, {
+      top: `${rand(8, 55)}%`,
+      animationName: flyLeft ? "hwBatLeft" : "hwBatRight",
+      animationDuration: `${duration}s`,
+      animationDelay: `${-rand(0, duration)}s`,
+    });
+    place(bat, "hw-bat-wing", HW_SPRITES.bat, width, width * 0.625, {
+      "--hw-flip": flyLeft ? "-1" : "1",
+    });
+  }
+
+  for (let i = 0; i < count.spider; i++) {
+    const size = mobile ? rand(26, 34) : rand(32, 44);
+    const duration = rand(9, 15);
+    place(layer, "hw-item hw-spider", HW_SPRITES.spider, size, size, {
+      left: `${rand(6, 92)}%`,
+      "--hw-depth": `${Math.round(rand(110, mobile ? 220 : 300))}px`,
+      animationDuration: `${duration}s`,
+      animationDelay: `${-rand(0, duration)}s`,
+    });
+  }
+}
+
+// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
+// function initDustParticles() {
+//   let canvas = document.getElementById("dustCanvas");
+//   if (!canvas) {
+//     canvas = document.createElement("canvas");
+//     canvas.id = "dustCanvas";
+//     document.body.appendChild(canvas);
+//   }
+//
+//   const ctx = canvas.getContext("2d");
+//   let width = (canvas.width = window.innerWidth);
+//   let height = (canvas.height = window.innerHeight);
+//
+//   window.addEventListener("resize", () => {
+//     width = canvas.width = window.innerWidth;
+//     height = canvas.height = window.innerHeight;
+//   });
+//
+//   const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
+//   const particles = [];
+//
+//   class DustParticle {
+//     constructor() {
+//       this.reset(true);
+//     }
+//
+//     reset(initial = false) {
+//       this.x = Math.random() * width;
+//       this.y = initial ? Math.random() * height : -10;
+//       this.radius = Math.random() * 2.2 + 0.8;
+//       this.vx = (Math.random() - 0.5) * 0.4;
+//       this.vy = Math.random() * 0.5 + 0.2;
+//       this.opacity = Math.random() * 0.6 + 0.3;
+//       this.fadeSpeed = Math.random() * 0.008 + 0.003;
+//       this.growing = Math.random() > 0.5;
+//
+//       const colors = [
+//         "255, 235, 170",
+//         "212, 175, 55",
+//         "245, 222, 179",
+//         "255, 255, 255"
+//       ];
+//       this.color = colors[Math.floor(Math.random() * colors.length)];
+//     }
+//
+//     update() {
+//       this.x += this.vx;
+//       this.y += this.vy;
+//
+//       if (this.growing) {
+//         this.opacity += this.fadeSpeed;
+//         if (this.opacity >= 0.85) this.growing = false;
+//       } else {
+//         this.opacity -= this.fadeSpeed;
+//         if (this.opacity <= 0.15) this.growing = true;
+//       }
+//
+//       if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+//         this.reset();
+//       }
+//     }
+//
+//     draw() {
+//       ctx.beginPath();
+//       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+//       ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+//       ctx.shadowBlur = 6;
+//       ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+//       ctx.fill();
+//     }
+//   }
+//
+//   for (let i = 0; i < particleCount; i++) {
+//     particles.push(new DustParticle());
+//   }
+//
+//   function animate() {
+//     ctx.clearRect(0, 0, width, height);
+//     for (let i = 0; i < particles.length; i++) {
+//       particles[i].update();
+//       particles[i].draw();
+//     }
+//     requestAnimationFrame(animate);
+//   }
+//
+//   animate();
+// }
+
 function closeMobileMenu() {
   const navMenu = document.getElementById("navMenu");
   const menuToggle = document.getElementById("menuToggle");
@@ -2612,7 +2636,7 @@ function closeMobileMenu() {
 
   if (navMenu) navMenu.classList.remove("show");
   if (menuToggle) menuToggle.classList.remove("active");
-  document.body.classList.remove("menu-open"); // Gỡ bỏ class khóa cuộn trang
+  document.body.classList.remove("menu-open");
 
   if (musicPlayer) {
     musicPlayer.classList.remove("hidden-by-menu");
@@ -2640,7 +2664,6 @@ function initMenuToggle() {
     }
   });
 
-  // Đóng menu và mở lại cuộn khi click ra ngoài vùng menu
   document.addEventListener("click", (e) => {
     if (
       navMenu &&
@@ -2681,21 +2704,18 @@ function toggleDonateQR() {
 let _allCharactersInflight = null;
 
 async function getAllCharacters() {
-  // Khi mở trang, nhiều tác vụ (tim, top 3, nhân vật ngẫu nhiên...) cùng cần danh sách này:
-  // dùng chung một lần tải đang chạy. Lần gọi sau đó (vd: sau khi thả tim) vẫn tải mới.
   if (!_allCharactersInflight) {
     _allCharactersInflight = fetchAllCharacters().finally(() => {
       _allCharactersInflight = null;
     });
   }
   const list = await _allCharactersInflight;
-  return Array.isArray(list) ? list.map((c) => ({ ...c })) : list; // mỗi nơi nhận bản riêng để sắp xếp thoải mái
+  return Array.isArray(list) ? list.map((c) => ({ ...c })) : list;
 }
 
 async function fetchAllCharacters() {
   const supabase = await getSupabase();
 
-  // 1. Dữ liệu mới nhất (đặc biệt là cột votes) từ Supabase
   const cloudTask = (async () => {
     if (!supabase) return [];
     try {
@@ -2707,7 +2727,6 @@ async function fetchAllCharacters() {
     return [];
   })();
 
-  // 2. Chi tiết (Mục lục, trích đoạn, chips) từ thẻ trên trang hoặc từ characters.html — chạy song song với bước 1
   const readCard = (card) => ({
     name: card.querySelector(".bot-name")?.textContent.trim() || "",
     title: card.querySelector(".bot-tags")?.textContent.trim() || "",
@@ -2744,7 +2763,6 @@ async function fetchAllCharacters() {
 
   const [cloudCharacters, htmlCharacters] = await Promise.all([cloudTask, htmlTask]);
 
-  // 3. Hợp nhất: Lấy số vote từ Supabase và chi tiết mô tả từ file HTML
   const mergedList = htmlCharacters.map((hChar) => {
     const matchedCloud = cloudCharacters.find(
       (c) => c.name && c.name.trim().toLowerCase() === hChar.name.trim().toLowerCase()
@@ -2775,7 +2793,6 @@ async function syncCharacterVotes() {
 
   const userLikedList = getLocalLikedCharacters();
 
-  // 1. Cập nhật các thẻ bot-card ngoài trang
   const cards = document.querySelectorAll(".bot-card");
   cards.forEach((card) => {
     const nameEl = card.querySelector(".bot-name");
@@ -2797,7 +2814,6 @@ async function syncCharacterVotes() {
     }
   });
 
-  // 2. Cập nhật cho Modal nếu đang hiển thị
   const modalTitle = document.getElementById("modalTitle")?.textContent.trim();
   const modalVoteCount = document.getElementById("modalVoteCount");
   const modalVoteBtn = document.getElementById("modalVoteBtn");
@@ -2833,8 +2849,8 @@ async function loadTopRanking() {
     container.innerHTML = sorted
       .map((char, index) => {
         const rank = index + 1;
-        const badgeHTML = rank === 1 
-          ? `<i class="bi bi-trophy-fill"></i> Top 1` 
+        const badgeHTML = rank === 1
+          ? `<i class="bi bi-trophy-fill"></i> Top 1`
           : `<i class="bi bi-award-fill"></i> Top ${rank}`;
 
         return `
@@ -2850,7 +2866,6 @@ async function loadTopRanking() {
       })
       .join("");
 
-    // Gán sự kiện click trực tiếp, an toàn tuyệt đối 100% với mọi ký tự đặc biệt
     container.querySelectorAll(".ranking-card").forEach((card) => {
       card.addEventListener("click", () => {
         const name = card.getAttribute("data-char-name");
@@ -2901,7 +2916,6 @@ async function displayRandomCharacter() {
         </div>
       `;
 
-      // Gán sự kiện click trực tiếp cho thẻ Random
       const randomContent = container.querySelector(".random-card-content");
       if (randomContent) {
         randomContent.addEventListener("click", () => {
@@ -2956,7 +2970,6 @@ window.submitCfsNote = async function () {
 
   if (submitBtn) submitBtn.disabled = true;
 
-  // 1. Dán tờ note lên bảng ngay lập tức trên giao diện
   const cfsBoard = document.getElementById("cfsBoard");
   if (cfsBoard && cfsBoard.querySelector("div[style*='italic']")) {
     cfsBoard.innerHTML = "";
@@ -2965,7 +2978,7 @@ window.submitCfsNote = async function () {
   const isHolo = color === "hologram";
   const noteEl = document.createElement("div");
   noteEl.className = `cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}`;
-  
+
   if (!isHolo) {
     noteEl.style.backgroundColor = color;
   }
@@ -2976,16 +2989,14 @@ window.submitCfsNote = async function () {
   `;
   cfsBoard?.prepend(noteEl);
 
-  // 2. Thử lưu vào Supabase (nếu lỗi chỉ thông báo console, không chặn Modal)
   const supabase = await getSupabase();
   if (supabase) {
-    const noteData = { 
-      author: author, 
-      content: content, 
-      bg_color: color 
+    const noteData = {
+      author: author,
+      content: content,
+      bg_color: color
     };
-    
-    // Nếu user đã đăng nhập, gắn thêm user_id vào để sau này load lên Profile cá nhân chính xác tuyệt đối
+
     if (currentUser) {
       noteData.user_id = currentUser.id;
     }
@@ -2993,10 +3004,9 @@ window.submitCfsNote = async function () {
     const { error } = await supabase
       .from("cfs_notes")
       .insert([noteData]);
-      
+
     if (error) {
       console.error("❌ Lỗi lưu Supabase:", error);
-      // Server từ chối (spam / lỗi) -> gỡ tờ note vừa dán thử và không báo thành công giả
       noteEl.remove();
       if (submitBtn) submitBtn.disabled = false;
       showToast(spamErrorMessage(error, "Chưa gửi được tâm thư, bạn thử lại sau nhé!"), "error");
@@ -3005,12 +3015,11 @@ window.submitCfsNote = async function () {
     markSpamSent("note", content);
   }
 
-  // 3. Reset input và hiển thị Modal Cảm Ơn
   if (authorInput) authorInput.value = "";
   if (contentInput) contentInput.value = "";
   if (submitBtn) submitBtn.disabled = false;
 
-  showThankYouLetterModal(author); // Gọi hiển thị Modal
+  showThankYouLetterModal(author);
 };
 
 function showThankYouLetterModal(author) {
@@ -3067,10 +3076,8 @@ window.closeThankYouModal = function () {
   if (modal) modal.classList.remove("show");
 };
 
-// Định dạng created_at (timestamptz của Supabase) -> ngày theo múi giờ của người xem
 function formatNoteDate(createdAt) {
   if (!createdAt) return null;
-  // Chuẩn hóa: "2026-10-12 03:20:00.123456+00" -> ISO 8601 mà mọi trình duyệt đều đọc được
   const iso = String(createdAt)
     .replace(" ", "T")
     .replace(/(\.\d{3})\d+/, "$1")
@@ -3100,7 +3107,6 @@ async function loadCfsNotes() {
   const supabase = await getSupabase();
   if (!supabase) return;
 
-  // Lấy danh sách tâm thư từ bảng 'cfs_notes' sắp xếp mới nhất lên đầu
   const { data, error } = await supabase
     .from("cfs_notes")
     .select("*")
@@ -3122,12 +3128,11 @@ async function loadCfsNotes() {
     return;
   }
 
-  // Đổ danh sách note ra bảng dán ghi chú
   data.forEach((note) => {
     const noteEl = document.createElement("div");
     const isHolo = note.bg_color === "hologram";
     noteEl.className = `cfs-note-item sticky-note ${isHolo ? "hologram-note" : ""}`;
-    
+
     if (!isHolo) {
       noteEl.style.backgroundColor = note.bg_color || "#fff2b2";
     }
@@ -3137,7 +3142,6 @@ async function loadCfsNotes() {
       ? `<span class="note-date" title="${escapeHTML(noteDate.full)}"><i class="bi bi-calendar3"></i> ${escapeHTML(noteDate.date)}</span>`
       : "";
 
-    // Footer: tên người viết (trái) + ngày viết (phải)
     noteEl.innerHTML = `
       <p class="note-content">"${escapeHTML(note.content)}"</p>
       <div class="note-footer">
@@ -3147,10 +3151,10 @@ async function loadCfsNotes() {
     `;
     cfsBoard.appendChild(noteEl);
   });
-  initDustParticles();
+  // initDustParticles();
+  initHalloweenEffect();
 }
 
-// CAT MASCOT INTERACTION
 function initCatMascot() {
   const catBtn = document.getElementById("catMascotBtn");
   const catBubble = document.getElementById("catBubble");
@@ -3171,44 +3175,36 @@ function initCatMascot() {
   ];
 
   catBtn.addEventListener("click", () => {
-    // Hiệu ứng nhún nhảy / nẩy mèo
     catBtn.classList.remove("purr");
     void catBtn.offsetWidth;
     catBtn.classList.add("purr");
 
     petCount++;
 
-    // KIỂM TRA CHẶNG GIẢI ĐỐ: Đủ 10 lần bấm
     if (petCount === 10) {
       catBubble.innerHTML = catBubble.innerHTML =
         "<i class='fa-solid fa-key' style='color: #f1c40f;'></i> <b>Meow! Đã nhận 10 lần xoa đầu của Lữ khách! (Đừng nói cho Evans biết nha!)</b><br>Mimi trao cho bạn mảnh mật mã cuối cùng: <span style='font-weight: 900; color: #d35400; font-family: monospace; font-size: 1.05em;'>RVVSRUtB</span>.<br><span style='font-size:0.8rem; opacity:0.9;'>Chúc bạn may mắn! Meow~</span>";
 
-      // Tạo hiệu ứng đặc biệt hoặc phát âm thanh nếu muốn
       catBtn.style.transform = "scale(1.2)";
       setTimeout(() => (catBtn.style.transform = "scale(1)"), 200);
     } else if (petCount > 10) {
-      // Bấm thêm lần nữa sau khi đã nhận mã -> Hiện Modal nhập mật mã nhận bằng
       catBubble.innerHTML = "🐱 Đang mở Két Sách Bí Mật...";
 
-      // Gọi hàm hiển thị Modal Nhận Bằng
       if (typeof openDiplomaPasscodeModal === "function") {
         openDiplomaPasscodeModal();
       } else {
-        showDiplomaModalDirect(); // Hàm dự phòng nếu nhập trực tiếp
+        showDiplomaModalDirect();
       }
 
-      petCount = 0; // Reset lại đếm
+      petCount = 0;
     } else {
-      // Các lần bấm từ 1 -> 9: Hiển thị quote ngẫu nhiên
       const randomQuote =
         catQuotes[Math.floor(Math.random() * catQuotes.length)];
       catBubble.innerHTML = randomQuote;
     }
 
-    // Hiển thị bóng thoại
     catBubble.classList.add("show");
 
-    // Giữ bóng thoại lâu hơn một chút (4.5s) ở mốc 10 để người chơi kịp đọc mã
     clearTimeout(window.catTimer);
     const displayTime = petCount >= 10 ? 4500 : 3000;
 
@@ -3237,9 +3233,6 @@ function saveLocalLikeState(charName, isLiked) {
   localStorage.setItem("liked_characters", JSON.stringify(likedList));
 }
 
-// PUZZLE SYSTEM - PC & MOBILE COMPATIBLE
-// 1. CHẶNG 2: Tương tác Player Nhạc theo Thời gian (đã có)
-// 2. CHẶNG 3: Kích hoạt Thẻ Bí Mật từ ô Tìm Kiếm
 const characterSearchInput = document.getElementById("searchInput");
 const secretBotCard = document.getElementById("secretBotCard");
 
@@ -3247,7 +3240,6 @@ if (characterSearchInput) {
   characterSearchInput.addEventListener("input", (e) => {
     const val = e.target.value.trim().toUpperCase();
     if (val === "BOOK_R77") {
-      // Hiện thẻ nhân vật bí mật
       if (secretBotCard) {
         secretBotCard.style.display = "block";
         secretBotCard.scrollIntoView({ behavior: "smooth" });
@@ -3256,8 +3248,6 @@ if (characterSearchInput) {
   });
 }
 
-// 3. CHẶNG 4: Nhận Bằng Cử Nhân
-// HÀM MỞ MODAL NHẬN BẰNG CỬ NHÂN / CHỨNG NHẬN
 let wrongAttempts = 0;
 
 function openDiplomaPasscodeModal() {
@@ -3297,7 +3287,6 @@ function openDiplomaPasscodeModal() {
     document.body.appendChild(modal);
   }
 
-  // Focus trực tiếp vào ô input khi mở
   modal.classList.add("active");
   setTimeout(() => {
     const input = document.getElementById("finalPasscode");
@@ -3312,7 +3301,6 @@ function closeDiplomaModal() {
   }
 }
 
-// Kiểm tra mật mã cuối cùng để nhận Giấy chứng nhận
 async function verifyFinalPasscode() {
   const input = document.getElementById("finalPasscode");
   const hintEl = document.getElementById("diplomaHint");
@@ -3326,7 +3314,6 @@ async function verifyFinalPasscode() {
   const codeVal = input ? input.value : "";
   const code = codeVal.trim().toLowerCase();
 
-  // Đáp án hợp lệ
   const validAnswers = ["613himitsueureka"];
 
   if (validAnswers.includes(code)) {
@@ -3339,7 +3326,6 @@ async function verifyFinalPasscode() {
     if (confirmBtn) confirmBtn.disabled = true;
     let solverOrder = null;
 
-    // Lưu vào Supabase & lấy STT giải mã
     const supabase = await getSupabase();
     if (supabase) {
       try {
@@ -3419,7 +3405,6 @@ async function submitFinalPuzzleCode() {
     .trim()
     .toLowerCase();
 
-  // Kiểm tra đáp án
   if (userCode === "613himitsueureka") {
     const usernameInput = document.getElementById("playerNameInput");
     const playerName =
@@ -3427,17 +3412,14 @@ async function submitFinalPuzzleCode() {
         ? usernameInput.value.trim()
         : "Lữ khách ẩn danh";
 
-    // Vô hiệu hóa nút bấm tạm thời để tránh bấm 2 lần
     const confirmBtn = document.querySelector(".btn-diploma-confirm");
     if (confirmBtn) confirmBtn.disabled = true;
 
     let solverOrder = null;
 
-    // --- LƯU THÔNG TIN VÀO SUPABASE & LẤY SỐ THỨ TỰ ---
     const supabase = await getSupabase();
     if (supabase) {
       try {
-        // Insert lữ khách vào database và trả về thông tin dòng vừa chèn
         const { data, error } = await supabase
           .from("puzzle_solvers")
           .insert([{ player_name: playerName }])
@@ -3446,17 +3428,15 @@ async function submitFinalPuzzleCode() {
         if (error) {
           console.error("❌ Lỗi khi lưu người giải mã vào Supabase:", error);
         } else if (data && data.length > 0) {
-          solverOrder = data[0].id; // id tự tăng chính là số thứ tự lượt giải
+          solverOrder = data[0].id;
         }
       } catch (err) {
         console.error("❌ Lỗi kết nối Supabase:", err);
       }
     }
 
-    // Đóng Modal nhập mã
     closeDiplomaModal();
 
-    // Hiển thị Giấy Chứng Nhận với tên và số thứ tự
     showDiplomaSuccess(playerName, solverOrder);
 
     if (confirmBtn) confirmBtn.disabled = false;
@@ -3554,38 +3534,33 @@ function showDiplomaSuccess(
     modal.classList.add("show");
   }
 
-  // Bắn pháo hoa chúc mừng
   if (typeof triggerCelebrationConfetti === "function") {
     triggerCelebrationConfetti();
   }
 }
 
-// Hàm tạo hiệu ứng Confetti chúc mừng
 function triggerCelebrationConfetti() {
   if (typeof confetti === "function") {
-    // Bắn từ bên TRÁI chéo sang
     confetti({
-      particleCount: 200, // Số lượng hạt pháo hoa
-      angle: 60, // Góc bắn chéo hướng vào giữa
-      spread: 70, // Độ xòe của pháo hoa
-      origin: { x: 0, y: 0.75 }, // Xuất phát từ mép trái
-      zIndex: 999999, // Nổi lên trên Giấy chứng nhận
+      particleCount: 200,
+      angle: 60,
+      spread: 70,
+      origin: { x: 0, y: 0.75 },
+      zIndex: 999999,
     });
 
-    // Bắn từ bên PHẢI chéo sang
     confetti({
-      particleCount: 200, // Số lượng hạt pháo hoa
-      angle: 120, // Góc bắn chéo hướng vào giữa
-      spread: 70, // Độ xòe của pháo hoa
-      origin: { x: 1, y: 0.75 }, // Xuất phát từ mép phải
-      zIndex: 999999, // Nổi lên trên Giấy chứng nhận
+      particleCount: 200,
+      angle: 120,
+      spread: 70,
+      origin: { x: 1, y: 0.75 },
+      zIndex: 999999,
     });
   } else {
     console.warn("Chưa nhúng thư viện canvas-confetti!");
   }
 }
 
-// Hàm đóng Modal Bằng
 function closeDiplomaModal() {
   const modal = document.getElementById("diplomaInputModal");
   if (modal) {
@@ -3597,7 +3572,6 @@ function closeDiplomaModal() {
 let isSignUpMode = false;
 let currentUser = null;
 
-// 1. Kiểm tra phiên đăng nhập hiện tại khi tải trang
 async function checkUserSession() {
   const supabase = await getSupabase();
   if (!supabase) return;
@@ -3615,7 +3589,6 @@ async function checkUserSession() {
     teardownNotifications();
   }
 
-  // Lắng nghe thay đổi trạng thái đăng nhập
   supabase.auth.onAuthStateChange(async (event, session) => {
     currentUser = session ? session.user : null;
     updateNavUserUI(currentUser);
@@ -3627,7 +3600,6 @@ async function checkUserSession() {
   });
 }
 
-// Hàm gộp toàn bộ quá trình đồng bộ dữ liệu
 async function syncAllUserData(user) {
   if (!user) return;
   await syncAccountFavorites(user);
@@ -3635,7 +3607,6 @@ async function syncAllUserData(user) {
   await syncAccountPuzzles(user);
 }
 
-// 2. Cập nhật giao diện Navbar (Avatar + Tên lữ khách)
 function updateNavUserUI(user) {
   const navBtns = document.querySelectorAll(".nav-auth-btn");
   if (navBtns.length === 0) return;
@@ -3660,20 +3631,18 @@ function updateNavUserUI(user) {
   });
 }
 
-// 3. Ẩn/Hiện mật khẩu
 function togglePasswordVisibility(inputId, btn) {
   const input = document.getElementById(inputId);
   if (!input) return;
   const isPassword = input.type === "password";
   input.type = isPassword ? "text" : "password";
-  
+
   const icon = btn.querySelector("i");
   if (icon) {
     icon.className = isPassword ? "bi bi-eye-slash" : "bi bi-eye";
   }
 }
 
-// 4. Mở/Đóng Modal Thẻ Độc Giả
 async function openAuthModal() {
   const modal = document.getElementById("authModal");
   if (!modal) return;
@@ -3691,7 +3660,7 @@ async function openAuthModal() {
     const username = currentUser.email ? currentUser.email.split("@")[0] : displayName;
 
     document.getElementById("profileDisplayName").textContent = displayName;
-    
+
     const emailEl = document.getElementById("profileDisplayEmail");
     if (emailEl) {
       emailEl.textContent = `@${username}`;
@@ -3700,7 +3669,6 @@ async function openAuthModal() {
     document.getElementById("userAvatarImg").src = avatarUrl;
     cancelEditName();
 
-    // Đồng bộ lại dữ liệu khi mở hồ sơ
     await syncAllUserData(currentUser);
   } else {
     if (formState) formState.style.display = "block";
@@ -3715,7 +3683,6 @@ function closeAuthModal() {
   if (modal) modal.classList.remove("show");
 }
 
-// Hàm xử lý bật/tắt thông báo quên mật khẩu
 window.toggleForgotPasswordNotice = function() {
   const notice = document.getElementById("forgotPasswordNotice");
   if (notice) {
@@ -3723,7 +3690,6 @@ window.toggleForgotPasswordNotice = function() {
   }
 };
 
-// 5. Chuyển đổi giữa Đăng Nhập & Đăng Ký
 function toggleAuthMode() {
   isSignUpMode = !isSignUpMode;
   const title = document.getElementById("authFormTitle");
@@ -3740,8 +3706,7 @@ function toggleAuthMode() {
     if (btnText) btnText.textContent = "Đăng Ký Nhận Thẻ";
     if (switchText) switchText.textContent = "Đã có thẻ độc giả?";
     if (switchBtn) switchBtn.textContent = "Đăng nhập ngay";
-    
-    // Ẩn phần quên mật khẩu khi ở chế độ Đăng ký
+
     if (forgotPwGroup) forgotPwGroup.style.display = "none";
     if (forgotNotice) forgotNotice.style.display = "none";
   } else {
@@ -3750,19 +3715,16 @@ function toggleAuthMode() {
     if (btnText) btnText.textContent = "Xác Nhận Đăng Nhập";
     if (switchText) switchText.textContent = "Chưa có thẻ độc giả?";
     if (switchBtn) switchBtn.textContent = "Đăng ký nhận thẻ";
-    
-    // Hiển thị lại phần quên mật khẩu khi ở chế độ Đăng nhập
+
     if (forgotPwGroup) forgotPwGroup.style.display = "block";
   }
 }
 
-// Tạo email ảo từ Username
 function formatVirtualEmail(username) {
   const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
   return `${cleanUsername}@tiemsach.local`;
 }
 
-// 6. Xử lý Đăng Ký / Đăng Nhập
 async function handleAuthSubmit(e) {
   e.preventDefault();
   const supabase = await getSupabase();
@@ -3791,7 +3753,6 @@ async function handleAuthSubmit(e) {
 
   try {
     if (isSignUpMode) {
-      // 1. ĐĂNG KÝ
       const { data, error } = await supabase.auth.signUp({
         email: virtualEmail,
         password: password,
@@ -3813,7 +3774,6 @@ async function handleAuthSubmit(e) {
       currentUser = data.user;
       showToast(`Đăng ký thẻ thành công! Chào mừng ${rawUsername}.`, "success");
     } else {
-      // 2. ĐĂNG NHẬP
       const { data, error } = await supabase.auth.signInWithPassword({
         email: virtualEmail,
         password: password
@@ -3855,7 +3815,6 @@ async function handleAuthSubmit(e) {
   }
 }
 
-// 7. Tự động nén & Đổi ảnh Avatar
 async function handleAvatarUpload(event) {
   const file = event.target.files[0];
   if (!file || !currentUser) return;
@@ -3898,22 +3857,18 @@ async function handleAvatarUpload(event) {
             updated_at: new Date().toISOString()
           }, { onConflict: "user_id" });
 
-        // Cập nhật state chung của user hiện tại
         currentUser.user_metadata.avatar_url = compressedAvatarUrl;
-        
-        // 🌟 1. Cập nhật ngay lập tức cho ảnh lớn trên hộ chiếu trang Profile (#profilePageAvatar)
+
         const profilePageAvatar = document.getElementById("profilePageAvatar");
         if (profilePageAvatar) {
           profilePageAvatar.src = compressedAvatarUrl;
         }
 
-        // 🌟 2. Cập nhật cho ảnh trong Modal (nếu có trên trang)
         const avatarModal = document.getElementById("userAvatarImg");
         if (avatarModal) {
           avatarModal.src = compressedAvatarUrl;
         }
 
-        // 🌟 3. Cập nhật đồng bộ ảnh nhỏ trên thanh Navbar
         updateNavUserUI(currentUser);
 
         showToast("Đổi ảnh đại diện thành công!", "success");
@@ -3927,7 +3882,6 @@ async function handleAvatarUpload(event) {
   reader.readAsDataURL(file);
 }
 
-// 8. Chỉnh sửa tên hiển thị Inline
 function startEditName() {
   const nameDisplayRow = document.getElementById("nameDisplayRow");
   const nameEditRow = document.getElementById("nameEditRow");
@@ -3956,18 +3910,15 @@ async function saveInlineName() {
   const supabase = await getSupabase();
   if (!supabase || !currentUser) return;
 
-  // Lấy tên cũ trước khi đổi để dùng làm điều kiện tìm kiếm cập nhật
-  const oldName = currentUser.user_metadata?.display_name || 
+  const oldName = currentUser.user_metadata?.display_name ||
                   (currentUser.email ? currentUser.email.split("@")[0] : "");
 
   try {
-    // 1. Cập nhật tên trong Auth Metadata
     const { error: authError } = await supabase.auth.updateUser({
       data: { display_name: newName }
     });
     if (authError) throw authError;
 
-    // 2. Cập nhật / Upsert vào bảng profiles
     await supabase
       .from("profiles")
       .upsert({
@@ -3976,7 +3927,6 @@ async function saveInlineName() {
         updated_at: new Date().toISOString()
       }, { onConflict: "user_id" });
 
-    // 3. ĐỒNG BỘ: Cập nhật tên tác giả trong bảng feedbacks
     if (oldName) {
       await supabase
         .from("feedbacks")
@@ -3984,7 +3934,6 @@ async function saveInlineName() {
         .eq("author_name", oldName);
     }
 
-    // 4. ĐỒNG BỘ: Cập nhật tên tác giả trong bảng cfs_notes
     if (oldName) {
       await supabase
         .from("cfs_notes")
@@ -3992,18 +3941,16 @@ async function saveInlineName() {
         .or(`user_id.eq.${currentUser.id},author.eq.${oldName}`);
     }
 
-    // 5. Cập nhật state & giao diện tại chỗ
     currentUser.user_metadata.display_name = newName;
     const profileNameEl = document.getElementById("profileDisplayName");
     if (profileNameEl) profileNameEl.textContent = newName;
-    
+
     const profilePageNameEl = document.getElementById("profilePageDisplayName");
     if (profilePageNameEl) profilePageNameEl.textContent = newName;
 
     updateNavUserUI(currentUser);
     cancelEditName();
-    
-    // Tải lại feedback và cfs ngoài UI nếu có mặt trên trang
+
     await loadFeedbacks();
     await loadCfsNotes();
 
@@ -4014,7 +3961,6 @@ async function saveInlineName() {
   }
 }
 
-// 9. Đăng xuất
 async function handleLogout() {
   const supabase = await getSupabase();
   if (!supabase) return;
@@ -4033,17 +3979,14 @@ async function handleLogout() {
 
 // ==================== ĐỒNG BỘ LOCALSTORAGE & TÀI KHOẢN SUPABASE ====================
 
-// Đồng bộ danh sách tim từ localStorage lên bảng user_favorites
 async function syncAccountFavorites(user) {
   if (!user) return;
   const supabase = await getSupabase();
   if (!supabase) return;
 
   try {
-    // 1. Lấy danh sách tim đang có trên thiết bị hiện tại
     let localLikes = getLocalLikedCharacters();
 
-    // 2. Lấy danh sách tim đã lưu trên Supabase Cloud của tài khoản này
     const { data: cloudFavorites, error } = await supabase
       .from("user_favorites")
       .select("char_name")
@@ -4056,13 +3999,10 @@ async function syncAccountFavorites(user) {
 
     const cloudNames = cloudFavorites ? cloudFavorites.map((f) => f.char_name.trim()) : [];
 
-    // 3. Hợp nhất hai danh sách (Loại bỏ trùng lặp)
     const mergedLikes = Array.from(new Set([...localLikes, ...cloudNames]));
-    
-    // Lưu danh sách đầy đủ vào lại localStorage của thiết bị
+
     localStorage.setItem("liked_characters", JSON.stringify(mergedLikes));
 
-    // 4. Nếu có tim từ localStorage mà trên Supabase chưa có -> Tự động Insert lên Cloud
     const newItemsToPush = localLikes.filter((name) => !cloudNames.includes(name));
     if (newItemsToPush.length > 0) {
       const rowsToInsert = newItemsToPush.map((charName) => ({
@@ -4075,14 +4015,12 @@ async function syncAccountFavorites(user) {
         .upsert(rowsToInsert, { onConflict: "user_id, char_name" });
     }
 
-    // 5. Cập nhật lại giao diện để toàn bộ nút tim chuyển sang màu đỏ
     await syncCharacterVotes();
   } catch (err) {
     console.warn("Lỗi trong quá trình syncAccountFavorites:", err);
   }
 }
 
-// Đồng bộ tiến trình giải đố / nhận bằng chứng nhận
 async function syncAccountProgress(user) {
   if (!user) return;
   const supabase = await getSupabase();
@@ -4099,13 +4037,11 @@ async function syncAccountProgress(user) {
       .maybeSingle();
 
     if (!error && data && data.diploma_unlocked) {
-      // Nếu trên cloud đã có -> lưu vào localStorage
       localStorage.setItem("evans_diploma_unlocked", "true");
       if (data.solver_order) {
         localStorage.setItem("evans_solver_order", data.solver_order.toString());
       }
     } else if (isLocalUnlocked) {
-      // Nếu trên máy đã mở khóa mà cloud chưa có -> đẩy lên Supabase
       await supabase.from("user_progress").upsert({
         user_id: user.id,
         diploma_unlocked: true,
@@ -4121,15 +4057,12 @@ async function syncAccountProgress(user) {
 
 // ==================== QUẢN LÝ THEME DARK / LIGHT TỰ ĐỘNG & SYSTEM TRACKING ====================
 
-// 1. Kiểm tra ưu tiên: Theme thủ công > Theme hệ điều hành của máy > Giờ thực tế
 function getSystemTheme() {
-  // Kiểm tra cài đặt Darkmode của hệ thống thiết bị (Windows/Mac/iOS/Android)
   const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").media !== "not all") {
     return prefersDark ? "dark" : "light";
   }
 
-  // Dự phòng theo giờ thực tế (6h - 18h là ngày)
   const currentHour = new Date().getHours();
   return currentHour >= 6 && currentHour < 18 ? "light" : "dark";
 }
@@ -4171,14 +4104,11 @@ function updateThemeUI(theme) {
 
 function initThemeMode() {
   const savedTheme = localStorage.getItem("evans_theme");
-  // Nếu người dùng chưa từng bấm nút chọn theme, tự động đồng bộ theo hệ điều hành của máy
   const activeTheme = savedTheme ? savedTheme : getSystemTheme();
   updateThemeUI(activeTheme);
 
-  // Tự động lắng nghe khi người dùng đổi theme trên máy tính/điện thoại ngoài desktop
   if (window.matchMedia) {
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-      // Chỉ tự động đổi nếu người dùng chưa chọn thủ công
       if (!localStorage.getItem("evans_theme")) {
         updateThemeUI(e.matches ? "dark" : "light");
       }
@@ -4186,7 +4116,6 @@ function initThemeMode() {
   }
 }
 
-// Hàm bấm nút chuyển đổi thủ công
 window.toggleThemeMode = function () {
   const isCurrentlyDark = document.body.classList.contains("dark-theme");
   const newTheme = isCurrentlyDark ? "light" : "dark";
@@ -4202,9 +4131,7 @@ window.toggleThemeMode = function () {
 };
 
 // ==================== LOGIC ĐIỀU HƯỚNG & QUẢN LÝ PROFILE PAGE ====================
-// Khởi tạo toàn bộ dữ liệu trang profile.html
 async function initProfilePage() {
-  // Kiểm tra tồn tại giao diện Profile trên DOM thay vì chỉ check URL
   const isProfileDOM = document.querySelector(".profile-page-container");
   if (!isProfileDOM) return;
 
@@ -4227,8 +4154,7 @@ async function initProfilePage() {
   await loadUserMedals(currentUser);
 }
 
-// Hiển thị thông tin Hộ Chiếu & Tiêu đề Cuốn Sách Yêu Thích
-const OWNER_USER_ID = "c836f3a3-eea1-41ff-8c89-df2a62eeb2b6"; // Nhập User UID của bạn vào đây
+const OWNER_USER_ID = "c836f3a3-eea1-41ff-8c89-df2a62eeb2b6";
 
 async function renderProfileInfo(user) {
   const supabase = await getSupabase();
@@ -4268,7 +4194,7 @@ async function renderProfileInfo(user) {
   if (nameEl) nameEl.textContent = displayName;
   if (usernameEl) usernameEl.textContent = `@${username}`;
   if (bioEl) bioEl.textContent = `"${bio}"`;
-  
+
   if (favTabTitle) {
     favTabTitle.textContent = `Cuốn sách yêu thích của ${displayName}`;
   }
@@ -4278,9 +4204,8 @@ async function renderProfileInfo(user) {
     joinDateEl.textContent = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
   }
 
-  // KIỂM TRA ĐẶC QUYỀN CHỦ TIỆM SÁCH EVANS
   const cleanUser = (username || "").toLowerCase().trim();
-  const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) || 
+  const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) ||
                   ["fevans", "evans", "iamevans"].includes(cleanUser);
 
   if (avatarFrame && stampBadge) {
@@ -4296,7 +4221,6 @@ async function renderProfileInfo(user) {
   }
 }
 
-// Các hàm chỉnh sửa Tên Inline trên Profile
 window.startEditName = function () {
   const viewRow = document.getElementById("viewNameRow");
   const editRow = document.getElementById("editNameRow");
@@ -4328,17 +4252,15 @@ window.saveInlineName = async function () {
   const supabase = await getSupabase();
   if (!supabase || !currentUser) return;
 
-  const oldName = currentUser.user_metadata?.display_name || 
+  const oldName = currentUser.user_metadata?.display_name ||
                   (currentUser.email ? currentUser.email.split("@")[0] : "");
 
   try {
-    // 1. Cập nhật Auth metadata
     const { error: authError } = await supabase.auth.updateUser({
       data: { display_name: newName }
     });
     if (authError) throw authError;
 
-    // 2. Ghi đè / Upsert trực tiếp vào bảng profiles
     const { error: profileError } = await supabase.from("profiles").upsert({
       user_id: currentUser.id,
       display_name: newName,
@@ -4347,7 +4269,6 @@ window.saveInlineName = async function () {
 
     if (profileError) throw profileError;
 
-    // 3. Đồng bộ tên mới sang bảng feedbacks & cfs_notes
     if (oldName) {
       await supabase.from("feedbacks").update({ author_name: newName }).eq("author_name", oldName);
       await supabase.from("cfs_notes").update({ author: newName }).or(`user_id.eq.${currentUser.id},author.eq.${oldName}`);
@@ -4355,7 +4276,6 @@ window.saveInlineName = async function () {
 
     currentUser.user_metadata.display_name = newName;
 
-    // Cập nhật lại UI lập tức
     await renderProfileInfo(currentUser);
     window.cancelEditName();
     updateNavUserUI(currentUser);
@@ -4367,7 +4287,6 @@ window.saveInlineName = async function () {
   }
 };
 
-// Các hàm chỉnh sửa Bio Inline trên Profile
 window.startEditBio = function () {
   const viewBio = document.getElementById("viewBioRow");
   const editBio = document.getElementById("editBioRow");
@@ -4400,13 +4319,11 @@ window.saveInlineBio = async function () {
   if (!supabase || !currentUser) return;
 
   try {
-    // 1. Cập nhật Auth metadata
     const { error: authError } = await supabase.auth.updateUser({
       data: { bio: newBio }
     });
     if (authError) throw authError;
 
-    // 2. Cập nhật bảng profiles
     await supabase.from("profiles").upsert({
       user_id: currentUser.id,
       bio: newBio,
@@ -4425,7 +4342,6 @@ window.saveInlineBio = async function () {
   }
 };
 
-// Chuyển Tab trong Sổ Tay
 function switchJournalTab(tabName, btn) {
   document.querySelectorAll(".journal-tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".journal-tab-pane").forEach(p => p.style.display = "none");
@@ -4441,7 +4357,6 @@ function switchJournalTab(tabName, btn) {
   }
 }
 
-// Tải danh sách Nhân vật yêu thích của tài khoản
 async function loadUserFavorites(user) {
   const container = document.getElementById("profileFavoritesList");
   const countEl = document.getElementById("profileFavCount");
@@ -4473,7 +4388,6 @@ async function loadUserFavorites(user) {
     </div>
   `).join("");
 
-  // Gán sự kiện mở modal cho mini card trong sổ tay
   container.querySelectorAll(".fav-char-mini-card").forEach((card) => {
     card.addEventListener("click", () => {
       const name = card.getAttribute("data-char-name");
@@ -4482,13 +4396,12 @@ async function loadUserFavorites(user) {
   });
 }
 
-// Bỏ thích trực tiếp từ trang Profile
 async function removeFavoriteDirectly(charName) {
   const supabase = await getSupabase();
   if (!supabase || !currentUser) return;
 
   await supabase.from("user_favorites").delete().eq("user_id", currentUser.id).eq("char_name", charName);
-  
+
   let localLikes = getLocalLikedCharacters().filter(n => n.trim().toLowerCase() !== charName.trim().toLowerCase());
   localStorage.setItem("liked_characters", JSON.stringify(localLikes));
 
@@ -4497,7 +4410,6 @@ async function removeFavoriteDirectly(charName) {
   await syncCharacterVotes();
 }
 
-// Tải danh sách Tâm thư CFS của người dùng
 async function loadUserNotes(user) {
   const container = document.getElementById("profileNotesList");
   const countEl = document.getElementById("profileNoteCount");
@@ -4544,14 +4456,12 @@ async function loadUserMedals(user) {
 
   if (supabase && user) {
     try {
-      // 1. Lấy thông tin từ bảng profiles (chỉ cần lấy các cột thực tế đang dùng)
       const { data: profileData } = await supabase
         .from("profiles")
         .select("title, created_at")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      // 2. Kiểm tra tiến trình giải đố từ bảng puzzle_solvers
       const { data: solverData } = await supabase
         .from("puzzle_solvers")
         .select("id, created_at")
@@ -4571,7 +4481,6 @@ async function loadUserMedals(user) {
     }
   }
 
-  // Dự phòng local
   if (!isDiplomaUnlocked) {
     isDiplomaUnlocked = localStorage.getItem("evans_diploma_unlocked") === "true";
     solverOrder = localStorage.getItem("evans_solver_order");
@@ -4587,13 +4496,11 @@ async function loadUserMedals(user) {
     joinDateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
   }
 
-  // --- KIỂM TRA QUYỀN CHỦ TIỆM SÁCH ---
   const username = user.email ? user.email.split("@")[0] : "";
   const cleanUser = (username || "").toLowerCase().trim();
-  const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) || 
+  const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) ||
                   ["fevans", "evans", "iamevans"].includes(cleanUser);
 
-  // --- TEMPLATE HUY HIỆU ---
   const secretUnlockedHTML = `
     <div class="showcase-medal-card unlocked-secret" onclick="viewSavedDiploma()" title="Nhấp để xem lại Bằng Chứng Nhận">
       <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%);"><i class="fa-solid fa-skeleton-key"></i></div>
@@ -4641,7 +4548,6 @@ async function loadUserMedals(user) {
     `;
   }
 
-  // Chủ tiệm không cần "Kẻ Vén Màn Bí Mật" (dành cho người chơi) -> có thành tựu đặc quyền riêng
   const ownerKeeperMedalHTML = `
     <div class="showcase-medal-card owner-exclusive-medal" style="border: 1px solid #d4af37; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(139, 58, 58, 0.05));">
       <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%); color: #8b3a3a;"><i class="fa-solid fa-key"></i></div>
@@ -4665,7 +4571,6 @@ async function loadUserMedals(user) {
   container.innerHTML = finalMedalsHTML;
 }
 
-// Xem lại bằng chứng nhận
 window.viewSavedDiploma = function () {
   const name = currentUser?.user_metadata?.display_name || "Lữ khách";
   const order = localStorage.getItem("evans_solver_order") || "1";
@@ -4673,7 +4578,6 @@ window.viewSavedDiploma = function () {
 };
 
 // ==================== HỆ THỐNG MẬT MÃ KHÓA NHÂN VẬT ====================
-// Cấu hình đáp án, tiêu đề và Toast riêng biệt cho từng nhân vật
 const puzzleConfigs = {
   delmare: {
     title: "Vực Sâu Danh Dự",
@@ -4712,7 +4616,6 @@ const puzzleConfigs = {
   }
 };
 
-// Mở Modal Giải Mã
 window.openPuzzleModal = function(puzzleId) {
   const modal = document.getElementById("puzzleModal");
   if(modal) {
@@ -4720,12 +4623,12 @@ window.openPuzzleModal = function(puzzleId) {
       modal.dataset.currentPuzzle = puzzleId;
       document.getElementById("puzzlePasscodeInput").value = "";
       document.getElementById("puzzleErrorMsg").classList.remove("show");
-      
+
       const modalTitle = modal.querySelector(".modal-title");
       const modalSubtitle = modal.querySelector(".modal-subtitle");
       const hintBox = modal.querySelector(".book-hint-box");
       const formatHint = modal.querySelector(".book-form-group div");
-      
+
       if (puzzleId === "huy") {
         huyWrongAttempts = 0;
         if (modalTitle) modalTitle.textContent = "Một Đêm Say";
@@ -4872,26 +4775,22 @@ window.openPuzzleModal = function(puzzleId) {
         }
         if (formatHint) formatHint.textContent = "Gợi ý định dạng: 6 chữ cái, viết liền không dấu";
       }
-      
+
       setTimeout(() => {
         document.getElementById("puzzlePasscodeInput").focus();
       }, 100);
   }
 }
 
-// Đóng Modal Giải Mã
 window.closePuzzleModal = function() {
   const modal = document.getElementById("puzzleModal");
   if(modal) modal.classList.remove("active");
 }
 
-// Kiểm tra mã nhập vào và Thêm biến đếm số lần nhập sai riêng cho Dương Khắc Huy
 let huyWrongAttempts = 0;
 
 let puzzleVerifying = false;
 
-// Đáp án và link thật chỉ nằm trên Supabase (supabase/001_puzzle_secrets.sql).
-// Trình duyệt chỉ gửi đáp án lên để kiểm tra và nhận link về nếu đúng.
 function getPuzzleLink(puzzleId) {
   const link = localStorage.getItem(`puzzle_link_${puzzleId}`);
   return link && /^https:\/\//.test(link) ? link : null;
@@ -4909,7 +4808,7 @@ window.verifyPuzzleCode = async function() {
   const modal = document.getElementById("puzzleModal");
   const input = document.getElementById("puzzlePasscodeInput");
   const errorMsg = document.getElementById("puzzleErrorMsg");
-  
+
   const puzzleId = modal.dataset.currentPuzzle;
   const code = input.value.trim().toLowerCase();
 
@@ -4958,10 +4857,9 @@ window.verifyPuzzleCode = async function() {
     input.classList.add("error-shake");
     setTimeout(() => input.classList.remove("error-shake"), 400);
 
-    // Xử lý riêng cho Dương Khắc Huy tăng dần qua từng lần sai
     if (puzzleId === "huy") {
       huyWrongAttempts++;
-      
+
       if (huyWrongAttempts === 1) {
         errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;"><i class='fa-solid fa-paw'></i> Meow? (1/3)</span>`;
       } else if (huyWrongAttempts === 2) {
@@ -4974,12 +4872,11 @@ window.verifyPuzzleCode = async function() {
     } else {
       errorMsg.innerHTML = `<span style="font-family: 'Merriweather', serif; color: #8b3a3a; font-weight: 600; font-size: 0.88rem; display: block; line-height: 1.4;">❌ Đáp án chưa chính xác. Cố lên nào!</span>`;
     }
-    
+
     errorMsg.classList.add("show");
   }
 }
 
-// Hàm phụ trợ lấy toàn bộ trạng thái unlock hiện tại từ localStorage dưới dạng Object
 function getLocalUnlockedPuzzlesMap() {
   const puzzleIds = ["delmare", "huy", "seol", "arashi", "tam", "ngon", "salfozziel"];
   const map = {};
@@ -4991,7 +4888,6 @@ function getLocalUnlockedPuzzlesMap() {
   return map;
 }
 
-// Hàm "Giải phóng Link": đắp link thật (nhận từ Supabase khi giải đúng) vào các nút đã khóa
 window.unlockCharacterLinks = function(puzzleId) {
     const realHref = getPuzzleLink(puzzleId);
     if (!realHref) return;
@@ -5000,8 +4896,8 @@ window.unlockCharacterLinks = function(puzzleId) {
         link.href = realHref;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        
-        const innerLock = link.querySelector(".inner-lock") || link.querySelector(".lock-icon"); 
+
+        const innerLock = link.querySelector(".inner-lock") || link.querySelector(".lock-icon");
         if (innerLock) {
             innerLock.className = "bi bi-unlock-fill inner-lock";
             innerLock.style.color = "#2ecc71";
@@ -5013,7 +4909,7 @@ window.unlockCharacterLinks = function(puzzleId) {
 
 window.checkUnlockedPuzzles = function() {
   const puzzleIds = ["delmare", "huy", "seol", "arashi", "tam", "ngon", "salfozziel"];
-  
+
   puzzleIds.forEach(puzzleId => {
     if (getPuzzleLink(puzzleId)) {
       unlockCharacterLinks(puzzleId);
@@ -5027,7 +4923,6 @@ async function syncAccountPuzzles(user) {
   if (!supabase) return;
 
   try {
-    // Server chỉ trả link của những câu mà tài khoản này đã thật sự giải đúng
     const { data, error } = await supabase.rpc("get_my_puzzle_links");
     if (error) throw error;
 
@@ -5051,7 +4946,6 @@ async function checkNewCharacter() {
   }
 
   try {
-    // Chỉ sắp xếp dựa trên thời gian cập nhật link/thêm nhân vật (link_updated_at)
     const { data, error } = await supabase
       .from("characters")
       .select("*")
@@ -5067,12 +4961,11 @@ async function checkNewCharacter() {
     const latestChar = data[0];
     const targetDate = latestChar.link_updated_at ? new Date(latestChar.link_updated_at) : null;
     const now = new Date();
-    
-    // Kiểm tra xem thời gian cập nhật link có nằm trong vòng 15 ngày gần đây không
+
     const isRecent = targetDate ? (now - targetDate) / (1000 * 60 * 60 * 24) <= 15 : false;
 
     if (latestChar && latestChar.name && isRecent) {
-      bannerText.innerHTML = `Tựa sách mới cập nhật: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
+      bannerText.innerHTML = `Nhân vật mới cập nhật link: <b>${escapeHTML(latestChar.name)}</b> <span class="new-char-sub">— <i>${escapeHTML(latestChar.title || "Khám phá ngay")}</i></span>`;
       bannerContainer.style.display = "block";
 
       const bannerBtn = document.getElementById("newCharBannerBtn");
@@ -5090,29 +4983,24 @@ async function checkNewCharacter() {
   }
 }
 
-// Hàm tự động điền tên tài khoản vào các ô nhập tên (CFS và Feedback) nếu user đã đăng nhập
 function autofillUserNames() {
   if (!currentUser) return;
-  
-  // Lấy tên hiển thị ưu tiên từ metadata hoặc email
-  const displayName = currentUser.user_metadata?.display_name || 
+
+  const displayName = currentUser.user_metadata?.display_name ||
                       (currentUser.email ? currentUser.email.split("@")[0] : "");
 
   if (!displayName) return;
 
-  // 1. Tự động điền vào ô nhập tên của bảng CFS (trang chủ)
   const cfsAuthorInput = document.getElementById("cfsAuthorInput");
   if (cfsAuthorInput && !cfsAuthorInput.value.trim()) {
     cfsAuthorInput.value = displayName;
   }
 
-  // 2. Tự động điền vào ô nhập tên trong Modal chi tiết nhân vật (#feedbackAuthor)
   const modalAuthorInput = document.getElementById("feedbackAuthor");
   if (modalAuthorInput && !modalAuthorInput.value.trim()) {
     modalAuthorInput.value = displayName;
   }
 
-  // 3. Tự động điền vào tất cả các ô nhập tên Feedback ngoài card trên trang
   document.querySelectorAll(".input-name").forEach((input) => {
     if (!input.value.trim()) {
       input.value = displayName;
@@ -5125,22 +5013,19 @@ async function checkMaintenanceMode() {
   if (!supabase) return;
 
   try {
-    // 🌟 Lấy trực tiếp session hiện tại để nhận diện chính xác chủ tiệm ngay từ giây đầu tiên
     const { data: { session } } = await supabase.auth.getSession();
     const user = session ? session.user : null;
 
     const { data } = await supabase.from("settings").select("value").eq("key", "maintenance").maybeSingle();
-    
+
     if (data && data.value === true) {
       const email = user?.email || "";
       const username = email.split("@")[0].toLowerCase();
       const cleanUser = username.trim();
-      
-      // Kiểm tra đặc quyền chủ tiệm
-      const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) || 
+
+      const isOwner = (user && user.id && user.id.startsWith(OWNER_USER_ID)) ||
                       ["fevans", "evans", "iamevans"].includes(cleanUser);
 
-      // Nếu không phải chủ tiệm thì mới hiển thị màn hình bảo trì
       if (!isOwner) {
         document.body.innerHTML = `
         <style>
@@ -5198,11 +5083,11 @@ async function checkMaintenanceMode() {
         </div>
         `;
 
-        if (typeof initDustParticles === "function") {
-          initDustParticles();
-        }
-        
-        // Dừng toàn bộ các tiến trình tiếp theo của trang khi đang bảo trì
+        // if (typeof initDustParticles === "function") {
+        //   initDustParticles();
+        // }
+        initHalloweenEffect();
+
         throw new Error("Website is under maintenance.");
       }
     }

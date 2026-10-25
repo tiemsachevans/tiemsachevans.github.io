@@ -7009,7 +7009,6 @@ body.page-ready::after {
   overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2; 
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -7201,5 +7200,191 @@ body.dark-theme .notif-empty {
 @media (max-width: 767px) {
   :root {
     --toast-bottom-gap: 80px;
+  }
+}
+
+#halloweenLayer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 900;
+}
+
+#halloweenLayer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32%;
+  background: linear-gradient(to top, rgba(140, 80, 190, 0.1), rgba(140, 80, 190, 0));
+}
+
+.hw-item {
+  position: absolute;
+  top: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  backface-visibility: hidden;
+  animation-iteration-count: infinite;
+}
+
+.hw-fall {
+  opacity: 0;
+  animation-name: hwFall;
+  animation-timing-function: linear;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+
+.hw-ghost {
+  opacity: 0;
+  animation-name: hwGhost;
+  animation-timing-function: ease-in-out;
+  filter: drop-shadow(0 0 8px rgba(190, 170, 255, 0.55));
+}
+
+.hw-bat {
+  background-image: none !important;
+  animation-timing-function: linear;
+}
+
+.hw-bat-wing {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  animation: hwBatFlap 0.22s ease-in-out infinite alternate;
+}
+
+.hw-spider {
+  animation-name: hwSpider;
+  animation-timing-function: ease-in-out;
+  transform: translate3d(0, -80px, 0);
+}
+
+.hw-spider::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 70%;
+  width: 1px;
+  height: 100vh;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.6));
+}
+
+@keyframes hwFall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate3d(var(--hw-drift, 40px), 50vh, 0) rotate(calc(var(--hw-spin, 240deg) * 0.5));
+  }
+  92% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(calc(var(--hw-drift, 40px) * -0.4), 112vh, 0) rotate(var(--hw-spin, 240deg));
+    opacity: 0;
+  }
+}
+
+@keyframes hwGhost {
+  0% {
+    transform: translate3d(0, 108vh, 0) scale(0.9);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(var(--hw-drift, 40px), 50vh, 0) scale(1.05);
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(calc(var(--hw-drift, 40px) * -1), -25vh, 0) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes hwBatRight {
+  0% {
+    transform: translate3d(-20vw, 0, 0);
+  }
+  10% {
+    transform: translate3d(0vw, -24px, 0);
+  }
+  22% {
+    transform: translate3d(25vw, 18px, 0);
+  }
+  34% {
+    transform: translate3d(50vw, -22px, 0);
+  }
+  46% {
+    transform: translate3d(78vw, 20px, 0);
+  }
+  58%,
+  100% {
+    transform: translate3d(115vw, -10px, 0);
+  }
+}
+
+@keyframes hwBatLeft {
+  0% {
+    transform: translate3d(115vw, 0, 0);
+  }
+  10% {
+    transform: translate3d(90vw, -24px, 0);
+  }
+  22% {
+    transform: translate3d(62vw, 18px, 0);
+  }
+  34% {
+    transform: translate3d(36vw, -22px, 0);
+  }
+  46% {
+    transform: translate3d(10vw, 20px, 0);
+  }
+  58%,
+  100% {
+    transform: translate3d(-20vw, -10px, 0);
+  }
+}
+
+@keyframes hwBatFlap {
+  from {
+    transform: scale(var(--hw-flip, 1), 1);
+  }
+  to {
+    transform: scale(var(--hw-flip, 1), 0.55);
+  }
+}
+
+@keyframes hwSpider {
+  0% {
+    transform: translate3d(0, -80px, 0);
+  }
+  30% {
+    transform: translate3d(0, var(--hw-depth, 160px), 0);
+  }
+  45% {
+    transform: translate3d(0, calc(var(--hw-depth, 160px) - 16px), 0);
+  }
+  60% {
+    transform: translate3d(0, var(--hw-depth, 160px), 0);
+  }
+  100% {
+    transform: translate3d(0, -80px, 0);
   }
 }
