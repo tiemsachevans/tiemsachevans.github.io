@@ -5778,15 +5778,33 @@ body.dark-theme .auth-card-vintage .auth-switch-btn {
 
 @media (max-width: 767px) {
   .banner-bg {
-    height: 220px;
+    height: clamp(190px, 52vw, 230px);
+  }
+  .banner::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(10, 6, 3, 0.28), rgba(10, 6, 3, 0.58));
+  }
+  .banner-content {
+    width: 92%;
   }
   .banner-avatar {
-    width: 65px;
-    height: 65px;
-    margin-bottom: 8px;
+    width: clamp(78px, 23vw, 96px);
+    height: clamp(78px, 23vw, 96px);
+    margin-bottom: 10px;
+    border-width: 4px;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.65), 0 6px 18px rgba(0, 0, 0, 0.5);
   }
   .banner-title {
-    font-size: 20px;
+    font-size: clamp(22px, 6.6vw, 27px);
+    line-height: 1.25;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.8);
   }
 
   .navbar {
