@@ -4568,6 +4568,11 @@ async function loadUserMedals(user) {
     finalMedalsHTML += memberMedalHTML + secretLockedHTML;
   }
 
+  if (!isOwner && user) {
+    const progress = await fetchPuzzleProgress(true);
+    if (progress) finalMedalsHTML += buildPuzzleAchievementsHTML(progress);
+  }
+
   container.innerHTML = finalMedalsHTML;
 }
 
@@ -4851,6 +4856,7 @@ window.verifyPuzzleCode = async function() {
     unlockCharacterLinks(puzzleId);
     const customToastMsg = puzzleConfigs[puzzleId]?.toastMsg || "Đã giải mã thành công! Nút Google AI Studio đã mở.";
     showToast(customToastMsg, "success");
+    announcePuzzleAchievement(puzzleId);
   } else if (result.error === "RATE_LIMITED") {
     showPuzzleError("Lữ khách thử hơi nhiều rồi, hãy nghỉ vài phút rồi quay lại nhé!");
   } else {
@@ -4928,9 +4934,91 @@ async function syncAccountPuzzles(user) {
 
     (data || []).forEach((row) => storePuzzleUnlock(row.puzzle_id, row.link));
     checkUnlockedPuzzles();
+    await claimLocalPuzzleUnlocks(supabase, new Set((data || []).map((row) => row.puzzle_id)));
   } catch (err) {
     console.warn("Lỗi đồng bộ trạng thái puzzle tài khoản:", err);
   }
+}
+
+// ==================== THÀNH TỰU GIẢI MÃ NHÂN VẬT ====================
+let puzzleProgressCache = null;
+
+function puzzleCharName(puzzleId) {
+  return puzzleConfigs[puzzleId]?.subtitle || puzzleId;
+}
+
+function formatShortDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+}
+
+async function fetchPuzzleProgress(force = false) {
+  if (!currentUser) return null;
+  if (puzzleProgressCache && !force) return puzzleProgressCache;
+  const supabase = await getSupabase();
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.rpc("get_my_puzzle_progress");
+    if (error) throw error;
+    if (!data || !Array.isArray(data.solved)) return null;
+    puzzleProgressCache = { solved: data.solved };
+    return puzzleProgressCache;
+  } catch (err) {
+    console.warn("Chưa tải được thành tựu giải mã (đã chạy supabase/005_puzzle_achievements.sql chưa?):", err);
+    return null;
+  }
+}
+
+function buildPuzzleAchievementsHTML(progress) {
+  return (progress.solved || [])
+    .filter((item) => puzzleConfigs[item.puzzle_id])
+    .slice()
+    .sort((a, b) => new Date(b.unlocked_at) - new Date(a.unlocked_at))
+    .map((item) => {
+      const cfg = puzzleConfigs[item.puzzle_id];
+      const name = escapeHTML(puzzleCharName(item.puzzle_id));
+      const dateTag = item.exact
+        ? `<i class="bi bi-calendar-check"></i> Đạt được: ${escapeHTML(formatShortDate(item.unlocked_at))}`
+        : `<i class="bi bi-clock-history"></i> Đã giải từ trước khi có hệ thống ghi nhận`;
+      return `
+        <div class="showcase-medal-card puzzle-achievement-card">
+          <div class="medal-emblem-circle" style="background: radial-gradient(circle, #ffe082 0%, #d4af37 100%);"><i class="fa-solid fa-lock-open"></i></div>
+          <div class="medal-info-wrap">
+            <strong class="medal-title-text">Giải Mã: ${name}</strong>
+            <span class="medal-desc-text">Đã mở khóa “${escapeHTML(cfg.title)}”</span>
+            <span class="medal-date-tag">${dateTag}</span>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+async function announcePuzzleAchievement(puzzleId) {
+  if (!currentUser) {
+    setTimeout(() => showToast("Đăng nhập để lưu thành tựu giải mã vào hồ sơ của bạn nhé!", "success"), 900);
+    return;
+  }
+  const progress = await fetchPuzzleProgress(true);
+  if (!progress) return;
+  const count = progress.solved.length;
+  setTimeout(() => {
+    showToast(`🏅 Thành tựu mới: Giải Mã ${puzzleCharName(puzzleId)}! Bạn đã giải được ${count} Két Sách.`, "success");
+  }, 900);
+}
+
+async function claimLocalPuzzleUnlocks(supabase, serverIds) {
+  let claimed = false;
+  for (const puzzleId of Object.keys(puzzleConfigs)) {
+    const link = getPuzzleLink(puzzleId);
+    if (!link || serverIds.has(puzzleId)) continue;
+    try {
+      const { data } = await supabase.rpc("claim_puzzle_unlock", { p_puzzle_id: puzzleId, p_link: link });
+      if (data === true) claimed = true;
+    } catch (_) {}
+  }
+  if (claimed) puzzleProgressCache = null;
 }
 
 // ==================== KIỂM TRA NHÂN VẬT MỚI TỪ SUPABASE ====================
