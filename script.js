@@ -1565,7 +1565,7 @@ function formatCreatedDate(raw) {
 }
 
 function createdDateHTML(text) {
-  return `<i class="bi bi-calendar3"></i> Ngày tạo: ${escapeHTML(text)}`;
+  return `<i class="bi bi-calendar3"></i> Ngày xuất bản: ${escapeHTML(text)}`;
 }
 
 function renderCharacterCreatedDates() {
