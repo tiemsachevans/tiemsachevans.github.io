@@ -2450,6 +2450,598 @@ const HW_SPRITES = {
 };
 
 // ==================== HIỆU ỨNG TUYẾT RƠI GIÁNG SINH ====================
+// function initDustParticles() {
+//   let canvas = document.getElementById("dustCanvas");
+//   if (!canvas) {
+//     canvas = document.createElement("canvas");
+//     canvas.id = "dustCanvas";
+//     document.body.appendChild(canvas);
+//   }
+//   if (canvas.dataset.xmasActive === "1") return;
+//   canvas.dataset.xmasActive = "1";
+
+//   const ctx = canvas.getContext("2d");
+//   let width = (canvas.width = window.innerWidth);
+//   let height = (canvas.height = window.innerHeight);
+
+//   window.addEventListener("resize", () => {
+//     width = canvas.width = window.innerWidth;
+//     height = canvas.height = window.innerHeight;
+//   });
+
+//   const particleCount = Math.min(Math.floor((width * height) / 14000), 90);
+//   const particles = [];
+//   const sparks = [];
+//   const bulbColors = ["255, 70, 70", "255, 205, 80", "90, 220, 120", "90, 170, 255"];
+//   const baubleColors = ["220, 50, 60", "40, 140, 80", "212, 175, 55", "70, 130, 220"];
+//   let shootingStar = null;
+//   let sleigh = null;
+//   const reduceMotion =
+//     typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+//   class SnowParticle {
+//     constructor() {
+//       this.reset(true);
+//     }
+
+//     reset(initial = false) {
+//       const roll = Math.random();
+//       this.type =
+//         roll < 0.6 ? "dot" : roll < 0.8 ? "crystal" : roll < 0.88 ? "star" : roll < 0.95 ? "bauble" : "cane";
+//       this.x = Math.random() * width;
+//       this.y = initial ? Math.random() * height : -20;
+
+//       if (this.type === "dot") {
+//         this.radius = Math.random() * 2.4 + 1;
+//         this.vy = Math.random() * 0.7 + 0.35;
+//         this.color = "255, 255, 255";
+//       } else if (this.type === "crystal") {
+//         this.radius = Math.random() * 5 + 5;
+//         this.vy = Math.random() * 0.45 + 0.25;
+//         this.color = Math.random() > 0.5 ? "225, 240, 255" : "255, 255, 255";
+//       } else if (this.type === "star") {
+//         this.radius = Math.random() * 3 + 3;
+//         this.vy = Math.random() * 0.35 + 0.2;
+//         this.color = Math.random() > 0.4 ? "255, 215, 90" : "255, 120, 120";
+//       } else if (this.type === "bauble") {
+//         this.radius = Math.random() * 3 + 6;
+//         this.vy = Math.random() * 0.35 + 0.3;
+//         this.color = baubleColors[Math.floor(Math.random() * baubleColors.length)];
+//       } else {
+//         this.radius = Math.random() * 4 + 9;
+//         this.vy = Math.random() * 0.3 + 0.25;
+//         this.color = "255, 255, 255";
+//       }
+
+//       this.opacity =
+//         this.type === "bauble" || this.type === "cane" ? 0.92 : Math.random() * 0.5 + 0.4;
+//       this.swayAmp = Math.random() * 0.6 + 0.2;
+//       this.swaySpeed = Math.random() * 0.02 + 0.008;
+//       this.phase = Math.random() * Math.PI * 2;
+//       this.angle = Math.random() * Math.PI * 2;
+//       this.spin = (Math.random() - 0.5) * 0.03;
+//       this.twinkle = Math.random() * Math.PI * 2;
+//     }
+
+//     update() {
+//       this.phase += this.swaySpeed;
+//       this.x += Math.sin(this.phase) * this.swayAmp + 0.12;
+//       this.y += this.vy;
+//       this.angle += this.spin;
+//       this.twinkle += 0.05;
+
+//       if (this.y > height + 20 || this.x < -20 || this.x > width + 20) {
+//         this.reset();
+//         this.y = -20;
+//       }
+//     }
+
+//     draw() {
+//       ctx.save();
+//       ctx.translate(this.x, this.y);
+
+//       if (this.type === "dot") {
+//         ctx.beginPath();
+//         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+//         ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+//         ctx.shadowBlur = 8;
+//         ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
+//         ctx.fill();
+//       } else if (this.type === "crystal") {
+//         ctx.rotate(this.angle);
+//         ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
+//         ctx.lineWidth = 1.3;
+//         ctx.lineCap = "round";
+//         ctx.shadowBlur = 6;
+//         ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
+//         const r = this.radius;
+//         ctx.beginPath();
+//         for (let k = 0; k < 6; k++) {
+//           ctx.rotate(Math.PI / 3);
+//           ctx.moveTo(0, 0);
+//           ctx.lineTo(0, r);
+//           ctx.moveTo(0, r * 0.55);
+//           ctx.lineTo(r * 0.3, r * 0.8);
+//           ctx.moveTo(0, r * 0.55);
+//           ctx.lineTo(-r * 0.3, r * 0.8);
+//         }
+//         ctx.stroke();
+//       } else if (this.type === "star") {
+//         const pulse = 0.55 + 0.45 * Math.sin(this.twinkle);
+//         const r = this.radius * (0.8 + 0.4 * pulse);
+//         ctx.rotate(this.angle * 0.5);
+//         ctx.fillStyle = `rgba(${this.color}, ${this.opacity * pulse + 0.2})`;
+//         ctx.shadowBlur = 12;
+//         ctx.shadowColor = `rgba(${this.color}, 0.9)`;
+//         ctx.beginPath();
+//         for (let k = 0; k < 8; k++) {
+//           const rad = k % 2 === 0 ? r : r * 0.28;
+//           const a = (Math.PI / 4) * k;
+//           ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+//         }
+//         ctx.closePath();
+//         ctx.fill();
+//       } else if (this.type === "bauble") {
+//         const r = this.radius;
+//         ctx.rotate(Math.sin(this.phase) * 0.35);
+//         ctx.shadowBlur = 10;
+//         ctx.shadowColor = `rgba(${this.color}, 0.7)`;
+//         ctx.beginPath();
+//         ctx.arc(0, 0, r, 0, Math.PI * 2);
+//         ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+//         ctx.fill();
+//         ctx.shadowBlur = 0;
+//         ctx.beginPath();
+//         ctx.arc(-r * 0.35, -r * 0.35, r * 0.28, 0, Math.PI * 2);
+//         ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+//         ctx.fill();
+//         ctx.fillStyle = "rgba(212, 175, 55, 0.95)";
+//         ctx.fillRect(-r * 0.3, -r - r * 0.28, r * 0.6, r * 0.32);
+//         ctx.strokeStyle = "rgba(212, 175, 55, 0.95)";
+//         ctx.lineWidth = 1.2;
+//         ctx.beginPath();
+//         ctx.arc(0, -r - r * 0.5, r * 0.22, 0, Math.PI * 2);
+//         ctx.stroke();
+//       } else {
+//         const r = this.radius;
+//         const hook = r * 0.35;
+//         ctx.rotate(Math.sin(this.phase * 1.3) * 0.5);
+//         ctx.lineCap = "round";
+//         ctx.shadowBlur = 6;
+//         ctx.shadowColor = "rgba(255, 255, 255, 0.6)";
+//         const tracePath = () => {
+//           ctx.beginPath();
+//           ctx.moveTo(0, r * 0.5);
+//           ctx.lineTo(0, -r * 0.5 + hook);
+//           ctx.arc(hook, -r * 0.5 + hook, hook, Math.PI, 0);
+//         };
+//         ctx.lineWidth = 4.2;
+//         ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+//         tracePath();
+//         ctx.stroke();
+//         ctx.shadowBlur = 0;
+//         ctx.setLineDash([3, 3.5]);
+//         ctx.strokeStyle = `rgba(220, 40, 55, ${this.opacity})`;
+//         tracePath();
+//         ctx.stroke();
+//       }
+
+//       ctx.restore();
+//     }
+//   }
+
+//   for (let i = 0; i < particleCount; i++) {
+//     particles.push(new SnowParticle());
+//   }
+
+//   function navBottom() {
+//     const nav = document.querySelector(".navbar");
+//     if (!nav) return 0;
+//     return Math.max(0, nav.getBoundingClientRect().bottom);
+//   }
+
+//   function drawLights(t) {
+//     const swagWidth = width < 600 ? 110 : 170;
+//     const swags = Math.max(2, Math.round(width / swagWidth));
+//     const w = width / swags;
+//     const sag = width < 600 ? 14 : 20;
+
+//     ctx.save();
+//     ctx.translate(0, navBottom());
+//     ctx.lineWidth = 1.4;
+//     ctx.strokeStyle = "rgba(40, 60, 45, 0.9)";
+//     ctx.beginPath();
+//     for (let s = 0; s < swags; s++) {
+//       ctx.moveTo(s * w, 0);
+//       ctx.quadraticCurveTo(s * w + w / 2, sag * 2, (s + 1) * w, 0);
+//     }
+//     ctx.stroke();
+
+//     let n = 0;
+//     for (let s = 0; s < swags; s++) {
+//       for (let b = 1; b <= 4; b++) {
+//         const u = b / 5;
+//         const x = s * w + w * u;
+//         const y = 4 * (1 - u) * u * sag;
+//         const pulse = 0.5 + 0.5 * Math.sin(t * 0.003 + n * 1.7);
+//         const color = bulbColors[n % bulbColors.length];
+
+//         ctx.shadowBlur = 14 * pulse + 4;
+//         ctx.shadowColor = `rgba(${color}, 0.95)`;
+//         ctx.fillStyle = `rgba(${color}, ${0.35 + 0.65 * pulse})`;
+//         ctx.beginPath();
+//         ctx.ellipse(x, y + 5, 3, 4.5, 0, 0, Math.PI * 2);
+//         ctx.fill();
+
+//         ctx.shadowBlur = 0;
+//         ctx.fillStyle = "rgba(40, 60, 45, 0.95)";
+//         ctx.fillRect(x - 1.5, y, 3, 2.5);
+//         n++;
+//       }
+//     }
+//     ctx.restore();
+//   }
+
+//   function drawShootingStar() {
+//     if (!shootingStar && !reduceMotion && Math.random() < 0.0012) {
+//       shootingStar = {
+//         x: Math.random() * width * 0.8 + width * 0.2,
+//         y: Math.random() * height * 0.3,
+//         vx: -(Math.random() * 4 + 8),
+//         vy: Math.random() * 2 + 3.5,
+//         life: 1,
+//       };
+//     }
+//     if (!shootingStar) return;
+
+//     const s = shootingStar;
+//     s.x += s.vx;
+//     s.y += s.vy;
+//     s.life -= 0.012;
+//     if (s.life <= 0 || s.x < -120 || s.y > height + 120) {
+//       shootingStar = null;
+//       return;
+//     }
+
+//     const tailX = s.x - s.vx * 9;
+//     const tailY = s.y - s.vy * 9;
+//     const grad = ctx.createLinearGradient(s.x, s.y, tailX, tailY);
+//     grad.addColorStop(0, `rgba(255, 250, 220, ${s.life})`);
+//     grad.addColorStop(1, "rgba(255, 250, 220, 0)");
+
+//     ctx.save();
+//     ctx.strokeStyle = grad;
+//     ctx.lineWidth = 2.2;
+//     ctx.lineCap = "round";
+//     ctx.shadowBlur = 10;
+//     ctx.shadowColor = "rgba(255, 240, 180, 0.9)";
+//     ctx.beginPath();
+//     ctx.moveTo(s.x, s.y);
+//     ctx.lineTo(tailX, tailY);
+//     ctx.stroke();
+//     ctx.beginPath();
+//     ctx.arc(s.x, s.y, 2.4, 0, Math.PI * 2);
+//     ctx.fillStyle = `rgba(255, 255, 240, ${s.life})`;
+//     ctx.fill();
+//     ctx.restore();
+//   }
+
+//   function drawReindeer(x, lead, t) {
+//     const swing = reduceMotion ? 0 : Math.sin(t * 0.012 + x) * 0.5;
+//     ctx.save();
+//     ctx.translate(x, 0);
+//     ctx.lineCap = "round";
+//     ctx.strokeStyle = "rgba(100, 62, 36, 0.98)";
+//     ctx.lineWidth = 2;
+//     ctx.beginPath();
+//     ctx.moveTo(-6, -10);
+//     ctx.lineTo(-6 + swing * 7, 0);
+//     ctx.moveTo(-3, -10);
+//     ctx.lineTo(-3 - swing * 7, 0);
+//     ctx.moveTo(5, -10);
+//     ctx.lineTo(5 + swing * 7, 0);
+//     ctx.moveTo(8, -10);
+//     ctx.lineTo(8 - swing * 7, 0);
+//     ctx.stroke();
+
+//     ctx.fillStyle = "rgba(139, 90, 60, 0.98)";
+//     ctx.beginPath();
+//     ctx.ellipse(1, -14, 11, 5.5, 0, 0, Math.PI * 2);
+//     ctx.fill();
+
+//     ctx.strokeStyle = "rgba(139, 90, 60, 0.98)";
+//     ctx.lineWidth = 4;
+//     ctx.beginPath();
+//     ctx.moveTo(8, -17);
+//     ctx.lineTo(13, -25);
+//     ctx.stroke();
+
+//     ctx.beginPath();
+//     ctx.ellipse(16, -26, 4.5, 3, 0.3, 0, Math.PI * 2);
+//     ctx.fill();
+
+//     ctx.strokeStyle = "rgba(214, 186, 140, 0.98)";
+//     ctx.lineWidth = 1.2;
+//     ctx.beginPath();
+//     ctx.moveTo(15, -29);
+//     ctx.lineTo(13, -36);
+//     ctx.moveTo(13.6, -33);
+//     ctx.lineTo(10, -35);
+//     ctx.moveTo(16, -29);
+//     ctx.lineTo(19, -36);
+//     ctx.moveTo(18.2, -33);
+//     ctx.lineTo(21.5, -34);
+//     ctx.stroke();
+
+//     ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+//     ctx.beginPath();
+//     ctx.ellipse(-11, -16, 2.4, 1.8, 0, 0, Math.PI * 2);
+//     ctx.fill();
+
+//     if (lead) {
+//       ctx.shadowBlur = 12;
+//       ctx.shadowColor = "rgba(255, 60, 60, 1)";
+//       ctx.fillStyle = "rgba(255, 70, 70, 1)";
+//       ctx.beginPath();
+//       ctx.arc(20.5, -25.5, 2, 0, Math.PI * 2);
+//       ctx.fill();
+//     }
+//     ctx.restore();
+//   }
+
+//   function drawSleigh(t) {
+//     if (!sleigh && !reduceMotion && Math.random() < 0.0004) {
+//       const dir = Math.random() < 0.5 ? 1 : -1;
+//       sleigh = {
+//         dir,
+//         x: dir === 1 ? -170 : width + 170,
+//         y: navBottom() + (width < 768 ? 85 : 95) + Math.random() * Math.max(30, height * 0.1),
+//         speed: width < 768 ? 1.5 : 2.1,
+//         bob: Math.random() * Math.PI * 2,
+//       };
+//     }
+//     if (!sleigh) return;
+
+//     const s = sleigh;
+//     s.x += s.dir * s.speed;
+//     if (s.x < -200 || s.x > width + 200) {
+//       sleigh = null;
+//       return;
+//     }
+
+//     const scale = width < 768 ? 0.65 : 1;
+//     if (Math.floor(t / 16) % 4 === 0 && sparks.length < 150) {
+//       sparks.push({
+//         x: s.x - s.dir * 38 * scale,
+//         y: s.y,
+//         vx: -s.dir * (Math.random() * 0.4 + 0.1),
+//         vy: Math.random() * 0.5 + 0.2,
+//         life: 0.9,
+//         size: Math.random() + 1.4,
+//         color: "255, 215, 90",
+//       });
+//     }
+
+//     ctx.save();
+//     ctx.translate(s.x, s.y + Math.sin(t * 0.004 + s.bob) * 4);
+//     ctx.scale(s.dir * scale, scale);
+//     ctx.globalAlpha = 0.9;
+
+//     ctx.strokeStyle = "rgba(212, 175, 55, 0.85)";
+//     ctx.lineWidth = 1;
+//     ctx.beginPath();
+//     ctx.moveTo(30, -12);
+//     ctx.lineTo(62, -14);
+//     ctx.lineTo(94, -14);
+//     ctx.stroke();
+
+//     drawReindeer(94, true, t);
+//     drawReindeer(62, false, t);
+
+//     ctx.lineCap = "round";
+//     ctx.strokeStyle = "rgba(212, 175, 55, 0.98)";
+//     ctx.lineWidth = 2.5;
+//     ctx.beginPath();
+//     ctx.moveTo(-34, 2);
+//     ctx.lineTo(26, 2);
+//     ctx.quadraticCurveTo(38, 2, 36, -9);
+//     ctx.moveTo(-18, -4);
+//     ctx.lineTo(-18, 2);
+//     ctx.moveTo(12, -4);
+//     ctx.lineTo(12, 2);
+//     ctx.stroke();
+
+//     ctx.fillStyle = "rgba(192, 40, 45, 0.98)";
+//     ctx.beginPath();
+//     ctx.moveTo(-30, -4);
+//     ctx.quadraticCurveTo(-34, -22, -18, -24);
+//     ctx.lineTo(14, -24);
+//     ctx.quadraticCurveTo(26, -24, 30, -10);
+//     ctx.lineTo(24, -4);
+//     ctx.closePath();
+//     ctx.fill();
+//     ctx.strokeStyle = "rgba(212, 175, 55, 0.95)";
+//     ctx.lineWidth = 1.4;
+//     ctx.stroke();
+
+//     ctx.fillStyle = "rgba(139, 90, 43, 0.98)";
+//     ctx.beginPath();
+//     ctx.arc(-21, -29, 7.5, 0, Math.PI * 2);
+//     ctx.fill();
+
+//     ctx.fillStyle = "rgba(192, 40, 45, 0.98)";
+//     ctx.beginPath();
+//     ctx.ellipse(-2, -28, 6, 6.5, 0, 0, Math.PI * 2);
+//     ctx.fill();
+//     ctx.fillStyle = "rgba(246, 211, 176, 0.98)";
+//     ctx.beginPath();
+//     ctx.arc(-2, -37, 4, 0, Math.PI * 2);
+//     ctx.fill();
+//     ctx.fillStyle = "rgba(255, 255, 255, 0.98)";
+//     ctx.beginPath();
+//     ctx.ellipse(-2, -34.5, 3.6, 3, 0, 0, Math.PI * 2);
+//     ctx.fill();
+//     ctx.fillStyle = "rgba(192, 40, 45, 0.98)";
+//     ctx.beginPath();
+//     ctx.moveTo(-6.5, -39.5);
+//     ctx.lineTo(2.5, -39.5);
+//     ctx.lineTo(-9, -47);
+//     ctx.closePath();
+//     ctx.fill();
+//     ctx.fillStyle = "rgba(255, 255, 255, 0.98)";
+//     ctx.beginPath();
+//     ctx.arc(-9, -47, 2, 0, Math.PI * 2);
+//     ctx.fill();
+
+//     ctx.restore();
+//   }
+
+//   function drawTree(t) {
+//     if (width < 768) return;
+//     const tl = reduceMotion ? 0 : t;
+//     const tiers = [
+//       { half: 34, base: -10, apex: -48 },
+//       { half: 27, base: -34, apex: -68 },
+//       { half: 20, base: -58, apex: -90 },
+//     ];
+//     const bulbs = [
+//       [-14, -18],
+//       [12, -24],
+//       [-6, -40],
+//       [16, -44],
+//       [-10, -58],
+//       [8, -62],
+//       [-4, -76],
+//       [5, -80],
+//     ];
+
+//     ctx.save();
+//     ctx.translate(58, height - 10);
+//     ctx.globalAlpha = 0.92;
+
+//     ctx.fillStyle = "rgba(110, 70, 40, 0.98)";
+//     ctx.fillRect(-5, -10, 10, 10);
+
+//     for (let i = 0; i < tiers.length; i++) {
+//       const tier = tiers[i];
+//       ctx.beginPath();
+//       ctx.moveTo(0, tier.apex);
+//       ctx.lineTo(tier.half, tier.base);
+//       ctx.lineTo(-tier.half, tier.base);
+//       ctx.closePath();
+//       ctx.fillStyle = "rgba(30, 110, 60, 0.98)";
+//       ctx.fill();
+//       ctx.strokeStyle = "rgba(15, 70, 35, 0.9)";
+//       ctx.lineWidth = 1;
+//       ctx.stroke();
+//     }
+
+//     for (let i = 0; i < bulbs.length; i++) {
+//       const pulse = 0.5 + 0.5 * Math.sin(tl * 0.004 + i * 1.9);
+//       const color = bulbColors[i % bulbColors.length];
+//       ctx.shadowBlur = 10 * pulse + 3;
+//       ctx.shadowColor = `rgba(${color}, 0.95)`;
+//       ctx.fillStyle = `rgba(${color}, ${0.45 + 0.55 * pulse})`;
+//       ctx.beginPath();
+//       ctx.arc(bulbs[i][0], bulbs[i][1], 2.6, 0, Math.PI * 2);
+//       ctx.fill();
+//     }
+
+//     const starPulse = 0.6 + 0.4 * Math.sin(tl * 0.005);
+//     ctx.shadowBlur = 16 * starPulse + 4;
+//     ctx.shadowColor = "rgba(255, 215, 90, 0.95)";
+//     ctx.fillStyle = `rgba(255, 215, 90, ${0.7 + 0.3 * starPulse})`;
+//     ctx.beginPath();
+//     for (let k = 0; k < 10; k++) {
+//       const rad = k % 2 === 0 ? 7.5 : 3.2;
+//       const a = -Math.PI / 2 + (Math.PI / 5) * k;
+//       ctx.lineTo(Math.cos(a) * rad, -93 + Math.sin(a) * rad);
+//     }
+//     ctx.closePath();
+//     ctx.fill();
+
+//     ctx.shadowBlur = 0;
+//     ctx.fillStyle = "rgba(192, 40, 45, 0.98)";
+//     ctx.fillRect(34, -11, 14, 11);
+//     ctx.fillStyle = "rgba(212, 175, 55, 0.98)";
+//     ctx.fillRect(40, -11, 2.5, 11);
+//     ctx.fillRect(34, -6.5, 14, 2.5);
+//     ctx.fillStyle = "rgba(70, 130, 220, 0.98)";
+//     ctx.fillRect(-48, -9, 12, 9);
+//     ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+//     ctx.fillRect(-43, -9, 2.2, 9);
+
+//     ctx.restore();
+//   }
+
+//   function drawSparks() {
+//     ctx.save();
+//     for (let i = sparks.length - 1; i >= 0; i--) {
+//       const p = sparks[i];
+//       p.x += p.vx;
+//       p.y += p.vy;
+//       p.vy += 0.06;
+//       p.vx *= 0.98;
+//       p.life -= 0.022;
+//       if (p.life <= 0) {
+//         sparks.splice(i, 1);
+//         continue;
+//       }
+//       ctx.beginPath();
+//       ctx.arc(p.x, p.y, p.size * p.life + 0.4, 0, Math.PI * 2);
+//       ctx.fillStyle = `rgba(${p.color}, ${p.life})`;
+//       ctx.shadowBlur = 8;
+//       ctx.shadowColor = `rgba(${p.color}, 0.9)`;
+//       ctx.fill();
+//     }
+//     ctx.restore();
+//   }
+
+//   function burstSparks(x, y) {
+//     if (sparks.length > 150) return;
+//     for (let i = 0; i < 12; i++) {
+//       const a = (Math.PI * 2 * i) / 12 + Math.random() * 0.4;
+//       const speed = Math.random() * 2.5 + 1.5;
+//       sparks.push({
+//         x,
+//         y,
+//         vx: Math.cos(a) * speed,
+//         vy: Math.sin(a) * speed - 0.8,
+//         life: 1,
+//         size: Math.random() * 2 + 1.5,
+//         color: bulbColors[Math.floor(Math.random() * bulbColors.length)],
+//       });
+//     }
+//   }
+
+//   const onClick = (e) => {
+//     if (!canvas.isConnected) {
+//       document.removeEventListener("click", onClick);
+//       return;
+//     }
+//     burstSparks(e.clientX, e.clientY);
+//   };
+//   document.addEventListener("click", onClick);
+
+//   function animate(t) {
+//     if (!canvas.isConnected) return;
+//     ctx.clearRect(0, 0, width, height);
+//     for (let i = 0; i < particles.length; i++) {
+//       particles[i].update();
+//       particles[i].draw();
+//     }
+//     drawShootingStar();
+//     drawSleigh(t || 0);
+//     drawSparks();
+//     drawTree(t || 0);
+//     drawLights(t || 0);
+//     requestAnimationFrame(animate);
+//   }
+
+//   requestAnimationFrame(animate);
+// }
+
+// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH (BẢN CŨ) ====================
 function initDustParticles() {
   let canvas = document.getElementById("dustCanvas");
   if (!canvas) {
@@ -2457,8 +3049,6 @@ function initDustParticles() {
     canvas.id = "dustCanvas";
     document.body.appendChild(canvas);
   }
-  if (canvas.dataset.xmasActive === "1") return;
-  canvas.dataset.xmasActive = "1";
 
   const ctx = canvas.getContext("2d");
   let width = (canvas.width = window.innerWidth);
@@ -2469,109 +3059,62 @@ function initDustParticles() {
     height = canvas.height = window.innerHeight;
   });
 
-  const particleCount = Math.min(Math.floor((width * height) / 14000), 90);
+  const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
   const particles = [];
 
-  class SnowParticle {
+  class DustParticle {
     constructor() {
       this.reset(true);
     }
 
     reset(initial = false) {
-      const roll = Math.random();
-      this.type = roll < 0.68 ? "dot" : roll < 0.9 ? "crystal" : "star";
       this.x = Math.random() * width;
-      this.y = initial ? Math.random() * height : -20;
+      this.y = initial ? Math.random() * height : -10;
+      this.radius = Math.random() * 2.2 + 0.8;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = Math.random() * 0.5 + 0.2;
+      this.opacity = Math.random() * 0.6 + 0.3;
+      this.fadeSpeed = Math.random() * 0.008 + 0.003;
+      this.growing = Math.random() > 0.5;
 
-      if (this.type === "dot") {
-        this.radius = Math.random() * 2.4 + 1;
-        this.vy = Math.random() * 0.7 + 0.35;
-        this.color = "255, 255, 255";
-      } else if (this.type === "crystal") {
-        this.radius = Math.random() * 5 + 5;
-        this.vy = Math.random() * 0.45 + 0.25;
-        this.color = Math.random() > 0.5 ? "225, 240, 255" : "255, 255, 255";
-      } else {
-        this.radius = Math.random() * 3 + 3;
-        this.vy = Math.random() * 0.35 + 0.2;
-        this.color = Math.random() > 0.4 ? "255, 215, 90" : "255, 120, 120";
-      }
-
-      this.opacity = Math.random() * 0.5 + 0.4;
-      this.swayAmp = Math.random() * 0.6 + 0.2;
-      this.swaySpeed = Math.random() * 0.02 + 0.008;
-      this.phase = Math.random() * Math.PI * 2;
-      this.angle = Math.random() * Math.PI * 2;
-      this.spin = (Math.random() - 0.5) * 0.03;
-      this.twinkle = Math.random() * Math.PI * 2;
+      const colors = [
+        "255, 235, 170",
+        "212, 175, 55",
+        "245, 222, 179",
+        "255, 255, 255"
+      ];
+      this.color = colors[Math.floor(Math.random() * colors.length)];
     }
 
     update() {
-      this.phase += this.swaySpeed;
-      this.x += Math.sin(this.phase) * this.swayAmp + 0.12;
+      this.x += this.vx;
       this.y += this.vy;
-      this.angle += this.spin;
-      this.twinkle += 0.05;
 
-      if (this.y > height + 20 || this.x < -20 || this.x > width + 20) {
+      if (this.growing) {
+        this.opacity += this.fadeSpeed;
+        if (this.opacity >= 0.85) this.growing = false;
+      } else {
+        this.opacity -= this.fadeSpeed;
+        if (this.opacity <= 0.15) this.growing = true;
+      }
+
+      if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
         this.reset();
-        this.y = -20;
       }
     }
 
     draw() {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-
-      if (this.type === "dot") {
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
-        ctx.fill();
-      } else if (this.type === "crystal") {
-        ctx.rotate(this.angle);
-        ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
-        ctx.lineWidth = 1.3;
-        ctx.lineCap = "round";
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
-        const r = this.radius;
-        ctx.beginPath();
-        for (let k = 0; k < 6; k++) {
-          ctx.rotate(Math.PI / 3);
-          ctx.moveTo(0, 0);
-          ctx.lineTo(0, r);
-          ctx.moveTo(0, r * 0.55);
-          ctx.lineTo(r * 0.3, r * 0.8);
-          ctx.moveTo(0, r * 0.55);
-          ctx.lineTo(-r * 0.3, r * 0.8);
-        }
-        ctx.stroke();
-      } else {
-        const pulse = 0.55 + 0.45 * Math.sin(this.twinkle);
-        const r = this.radius * (0.8 + 0.4 * pulse);
-        ctx.rotate(this.angle * 0.5);
-        ctx.fillStyle = `rgba(${this.color}, ${this.opacity * pulse + 0.2})`;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = `rgba(${this.color}, 0.9)`;
-        ctx.beginPath();
-        for (let k = 0; k < 8; k++) {
-          const rad = k % 2 === 0 ? r : r * 0.28;
-          const a = (Math.PI / 4) * k;
-          ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-        }
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+      ctx.fill();
     }
   }
 
   for (let i = 0; i < particleCount; i++) {
-    particles.push(new SnowParticle());
+    particles.push(new DustParticle());
   }
 
   function animate() {
@@ -2585,94 +3128,6 @@ function initDustParticles() {
 
   animate();
 }
-
-// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH (BẢN CŨ) ====================
-// function initDustParticles() {
-//   let canvas = document.getElementById("dustCanvas");
-//   if (!canvas) {
-//     canvas = document.createElement("canvas");
-//     canvas.id = "dustCanvas";
-//     document.body.appendChild(canvas);
-//   }
-//
-//   const ctx = canvas.getContext("2d");
-//   let width = (canvas.width = window.innerWidth);
-//   let height = (canvas.height = window.innerHeight);
-//
-//   window.addEventListener("resize", () => {
-//     width = canvas.width = window.innerWidth;
-//     height = canvas.height = window.innerHeight;
-//   });
-//
-//   const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
-//   const particles = [];
-//
-//   class DustParticle {
-//     constructor() {
-//       this.reset(true);
-//     }
-//
-//     reset(initial = false) {
-//       this.x = Math.random() * width;
-//       this.y = initial ? Math.random() * height : -10;
-//       this.radius = Math.random() * 2.2 + 0.8;
-//       this.vx = (Math.random() - 0.5) * 0.4;
-//       this.vy = Math.random() * 0.5 + 0.2;
-//       this.opacity = Math.random() * 0.6 + 0.3;
-//       this.fadeSpeed = Math.random() * 0.008 + 0.003;
-//       this.growing = Math.random() > 0.5;
-//
-//       const colors = [
-//         "255, 235, 170",
-//         "212, 175, 55",
-//         "245, 222, 179",
-//         "255, 255, 255"
-//       ];
-//       this.color = colors[Math.floor(Math.random() * colors.length)];
-//     }
-//
-//     update() {
-//       this.x += this.vx;
-//       this.y += this.vy;
-//
-//       if (this.growing) {
-//         this.opacity += this.fadeSpeed;
-//         if (this.opacity >= 0.85) this.growing = false;
-//       } else {
-//         this.opacity -= this.fadeSpeed;
-//         if (this.opacity <= 0.15) this.growing = true;
-//       }
-//
-//       if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
-//         this.reset();
-//       }
-//     }
-//
-//     draw() {
-//       ctx.beginPath();
-//       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-//       ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-//       ctx.shadowBlur = 6;
-//       ctx.shadowColor = `rgba(${this.color}, 0.8)`;
-//       ctx.fill();
-//     }
-//   }
-//
-//   for (let i = 0; i < particleCount; i++) {
-//     particles.push(new DustParticle());
-//   }
-//
-//   function animate() {
-//     ctx.clearRect(0, 0, width, height);
-//     for (let i = 0; i < particles.length; i++) {
-//       particles[i].update();
-//       particles[i].draw();
-//     }
-//     requestAnimationFrame(animate);
-//   }
-//
-//   animate();
-// }
 
 function closeMobileMenu() {
   const navMenu = document.getElementById("navMenu");
