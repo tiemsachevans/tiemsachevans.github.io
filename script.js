@@ -182,8 +182,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       ["fixedBottomStack", initFixedBottomStack],
       ["menuToggle", initMenuToggle],
       ["catMascot", initCatMascot],
-      // ["dustParticles", initDustParticles],
-      ["halloweenEffect", initHalloweenEffect],
+      ["dustParticles", initDustParticles],
       ["unlockedPuzzles", checkUnlockedPuzzles],
     ].forEach(([label, fn]) => runStartupTask(label, fn));
 
@@ -843,8 +842,7 @@ function reinitializePageScripts() {
   initSearchAndFilter();
   initModal();
   initCatMascot();
-  // initDustParticles();
-  initHalloweenEffect();
+  initDustParticles();
   checkUnlockedPuzzles();
   autofillUserNames();
 
@@ -2451,183 +2449,93 @@ const HW_SPRITES = {
   leafBrown: hwLeaf('#a0522d'),
 };
 
-function initHalloweenEffect() {
-  if (!HALLOWEEN_ENABLED || document.getElementById("halloweenLayer")) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-  const layer = document.createElement("div");
-  layer.id = "halloweenLayer";
-  layer.setAttribute("aria-hidden", "true");
-  document.body.appendChild(layer);
-
-  const mobile = window.matchMedia("(max-width: 767px)").matches;
-  const count = mobile ? { fall: 9, ghost: 2, bat: 2, spider: 2 } : { fall: 18, ghost: 4, bat: 4, spider: 3 };
-  const rand = (min, max) => min + Math.random() * (max - min);
-  const pick = (list) => list[Math.floor(Math.random() * list.length)];
-
-  const place = (parent, className, sprite, width, height, style) => {
-    const el = document.createElement("div");
-    el.className = className;
-    el.style.backgroundImage = sprite;
-    el.style.width = `${Math.round(width)}px`;
-    el.style.height = `${Math.round(height)}px`;
-    Object.entries(style).forEach(([key, value]) => {
-      if (key.startsWith("--")) el.style.setProperty(key, value);
-      else el.style[key] = value;
-    });
-    parent.appendChild(el);
-    return el;
-  };
-
-  const fallSprites = [
-    HW_SPRITES.pumpkin,
-    HW_SPRITES.candyPink,
-    HW_SPRITES.candyPurple,
-    HW_SPRITES.candyGreen,
-    HW_SPRITES.candyCorn,
-    HW_SPRITES.leafOrange,
-    HW_SPRITES.leafRed,
-    HW_SPRITES.leafBrown,
-    HW_SPRITES.skull,
-  ];
-
-  for (let i = 0; i < count.fall; i++) {
-    const size = mobile ? rand(22, 36) : rand(28, 48);
-    const duration = rand(10, 20);
-    place(layer, "hw-item hw-fall", pick(fallSprites), size, size, {
-      left: `${rand(0, 96)}%`,
-      "--hw-drift": `${rand(-90, 90)}px`,
-      "--hw-spin": `${rand(-420, 420)}deg`,
-      animationDuration: `${duration}s`,
-      animationDelay: `${-rand(0, duration)}s`,
-    });
-  }
-
-  for (let i = 0; i < count.ghost; i++) {
-    const size = mobile ? rand(38, 52) : rand(46, 68);
-    const duration = rand(16, 26);
-    place(layer, "hw-item hw-ghost", HW_SPRITES.ghost, size, size, {
-      left: `${rand(4, 88)}%`,
-      "--hw-drift": `${rand(-70, 70)}px`,
-      animationDuration: `${duration}s`,
-      animationDelay: `${-rand(0, duration)}s`,
-    });
-  }
-
-  for (let i = 0; i < count.bat; i++) {
-    const width = mobile ? rand(36, 48) : rand(44, 64);
-    const duration = rand(20, 32);
-    const flyLeft = Math.random() > 0.5;
-    const bat = place(layer, "hw-item hw-bat", "none", width, width * 0.625, {
-      top: `${rand(8, 55)}%`,
-      animationName: flyLeft ? "hwBatLeft" : "hwBatRight",
-      animationDuration: `${duration}s`,
-      animationDelay: `${-rand(0, duration)}s`,
-    });
-    place(bat, "hw-bat-wing", HW_SPRITES.bat, width, width * 0.625, {
-      "--hw-flip": flyLeft ? "-1" : "1",
-    });
-  }
-
-  for (let i = 0; i < count.spider; i++) {
-    const size = mobile ? rand(26, 34) : rand(32, 44);
-    const duration = rand(9, 15);
-    place(layer, "hw-item hw-spider", HW_SPRITES.spider, size, size, {
-      left: `${rand(6, 92)}%`,
-      "--hw-depth": `${Math.round(rand(110, mobile ? 220 : 300))}px`,
-      animationDuration: `${duration}s`,
-      animationDelay: `${-rand(0, duration)}s`,
-    });
-  }
-}
-
 // ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
-// function initDustParticles() {
-//   let canvas = document.getElementById("dustCanvas");
-//   if (!canvas) {
-//     canvas = document.createElement("canvas");
-//     canvas.id = "dustCanvas";
-//     document.body.appendChild(canvas);
-//   }
-//
-//   const ctx = canvas.getContext("2d");
-//   let width = (canvas.width = window.innerWidth);
-//   let height = (canvas.height = window.innerHeight);
-//
-//   window.addEventListener("resize", () => {
-//     width = canvas.width = window.innerWidth;
-//     height = canvas.height = window.innerHeight;
-//   });
-//
-//   const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
-//   const particles = [];
-//
-//   class DustParticle {
-//     constructor() {
-//       this.reset(true);
-//     }
-//
-//     reset(initial = false) {
-//       this.x = Math.random() * width;
-//       this.y = initial ? Math.random() * height : -10;
-//       this.radius = Math.random() * 2.2 + 0.8;
-//       this.vx = (Math.random() - 0.5) * 0.4;
-//       this.vy = Math.random() * 0.5 + 0.2;
-//       this.opacity = Math.random() * 0.6 + 0.3;
-//       this.fadeSpeed = Math.random() * 0.008 + 0.003;
-//       this.growing = Math.random() > 0.5;
-//
-//       const colors = [
-//         "255, 235, 170",
-//         "212, 175, 55",
-//         "245, 222, 179",
-//         "255, 255, 255"
-//       ];
-//       this.color = colors[Math.floor(Math.random() * colors.length)];
-//     }
-//
-//     update() {
-//       this.x += this.vx;
-//       this.y += this.vy;
-//
-//       if (this.growing) {
-//         this.opacity += this.fadeSpeed;
-//         if (this.opacity >= 0.85) this.growing = false;
-//       } else {
-//         this.opacity -= this.fadeSpeed;
-//         if (this.opacity <= 0.15) this.growing = true;
-//       }
-//
-//       if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
-//         this.reset();
-//       }
-//     }
-//
-//     draw() {
-//       ctx.beginPath();
-//       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-//       ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-//       ctx.shadowBlur = 6;
-//       ctx.shadowColor = `rgba(${this.color}, 0.8)`;
-//       ctx.fill();
-//     }
-//   }
-//
-//   for (let i = 0; i < particleCount; i++) {
-//     particles.push(new DustParticle());
-//   }
-//
-//   function animate() {
-//     ctx.clearRect(0, 0, width, height);
-//     for (let i = 0; i < particles.length; i++) {
-//       particles[i].update();
-//       particles[i].draw();
-//     }
-//     requestAnimationFrame(animate);
-//   }
-//
-//   animate();
-// }
+function initDustParticles() {
+  let canvas = document.getElementById("dustCanvas");
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.id = "dustCanvas";
+    document.body.appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext("2d");
+  let width = (canvas.width = window.innerWidth);
+  let height = (canvas.height = window.innerHeight);
+
+  window.addEventListener("resize", () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
+  const particles = [];
+
+  class DustParticle {
+    constructor() {
+      this.reset(true);
+    }
+
+    reset(initial = false) {
+      this.x = Math.random() * width;
+      this.y = initial ? Math.random() * height : -10;
+      this.radius = Math.random() * 2.2 + 0.8;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = Math.random() * 0.5 + 0.2;
+      this.opacity = Math.random() * 0.6 + 0.3;
+      this.fadeSpeed = Math.random() * 0.008 + 0.003;
+      this.growing = Math.random() > 0.5;
+
+      const colors = [
+        "255, 235, 170",
+        "212, 175, 55",
+        "245, 222, 179",
+        "255, 255, 255"
+      ];
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+
+      if (this.growing) {
+        this.opacity += this.fadeSpeed;
+        if (this.opacity >= 0.85) this.growing = false;
+      } else {
+        this.opacity -= this.fadeSpeed;
+        if (this.opacity <= 0.15) this.growing = true;
+      }
+
+      if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+        this.reset();
+      }
+    }
+
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new DustParticle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].update();
+      particles[i].draw();
+    }
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}
 
 function closeMobileMenu() {
   const navMenu = document.getElementById("navMenu");
@@ -3151,8 +3059,7 @@ async function loadCfsNotes() {
     `;
     cfsBoard.appendChild(noteEl);
   });
-  // initDustParticles();
-  initHalloweenEffect();
+  initDustParticles();
 }
 
 function initCatMascot() {
@@ -5170,11 +5077,8 @@ async function checkMaintenanceMode() {
           </div>
         </div>
         `;
-
-        // if (typeof initDustParticles === "function") {
-        //   initDustParticles();
-        // }
-        initHalloweenEffect();
+        
+        initDustParticles();
 
         throw new Error("Website is under maintenance.");
       }
