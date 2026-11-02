@@ -3680,9 +3680,9 @@ function initCatMascot() {
 
     petCount++;
 
-    if (petCount === 10) {
+    if (petCount === 20) {
       catBubble.innerHTML = catBubble.innerHTML =
-        "<i class='fa-solid fa-key' style='color: #f1c40f;'></i> <b>Meow! Đã nhận 10 lần xoa đầu của Lữ khách! (Đừng nói cho Evans biết nha!)</b><br>Mimi trao cho bạn mảnh mật mã cuối cùng: <span style='font-weight: 900; color: #d35400; font-family: monospace; font-size: 1.05em;'>RVVSRUtB</span>.<br><span style='font-size:0.8rem; opacity:0.9;'>Chúc bạn may mắn! Meow~</span>";
+        "<i class='fa-solid fa-key' style='color: #f1c40f;'></i> <b>Meow! Đã nhận 20 lần xoa đầu của Lữ khách! (Đừng nói cho Chủ tiệm biết nha!)</b><br>Mimi trao cho bạn mảnh mật mã 3/3: <span style='font-weight: 900; color: #d35400; font-family: monospace; font-size: 1.05em;'>RVVSRUtB</span>.<br><span style='font-size:0.8rem; opacity:0.9;'>Chúc bạn may mắn! Meow~</span>";
 
       catBtn.style.transform = "scale(1.2)";
       setTimeout(() => (catBtn.style.transform = "scale(1)"), 200);
