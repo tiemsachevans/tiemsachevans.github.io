@@ -2449,7 +2449,7 @@ const HW_SPRITES = {
   leafBrown: hwLeaf('#a0522d'),
 };
 
-// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH ====================
+// ==================== HIỆU ỨNG TUYẾT RƠI GIÁNG SINH ====================
 function initDustParticles() {
   let canvas = document.getElementById("dustCanvas");
   if (!canvas) {
@@ -2457,6 +2457,8 @@ function initDustParticles() {
     canvas.id = "dustCanvas";
     document.body.appendChild(canvas);
   }
+  if (canvas.dataset.xmasActive === "1") return;
+  canvas.dataset.xmasActive = "1";
 
   const ctx = canvas.getContext("2d");
   let width = (canvas.width = window.innerWidth);
@@ -2467,62 +2469,109 @@ function initDustParticles() {
     height = canvas.height = window.innerHeight;
   });
 
-  const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
+  const particleCount = Math.min(Math.floor((width * height) / 14000), 90);
   const particles = [];
 
-  class DustParticle {
+  class SnowParticle {
     constructor() {
       this.reset(true);
     }
 
     reset(initial = false) {
+      const roll = Math.random();
+      this.type = roll < 0.68 ? "dot" : roll < 0.9 ? "crystal" : "star";
       this.x = Math.random() * width;
-      this.y = initial ? Math.random() * height : -10;
-      this.radius = Math.random() * 2.2 + 0.8;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = Math.random() * 0.5 + 0.2;
-      this.opacity = Math.random() * 0.6 + 0.3;
-      this.fadeSpeed = Math.random() * 0.008 + 0.003;
-      this.growing = Math.random() > 0.5;
+      this.y = initial ? Math.random() * height : -20;
 
-      const colors = [
-        "255, 235, 170",
-        "212, 175, 55",
-        "245, 222, 179",
-        "255, 255, 255"
-      ];
-      this.color = colors[Math.floor(Math.random() * colors.length)];
+      if (this.type === "dot") {
+        this.radius = Math.random() * 2.4 + 1;
+        this.vy = Math.random() * 0.7 + 0.35;
+        this.color = "255, 255, 255";
+      } else if (this.type === "crystal") {
+        this.radius = Math.random() * 5 + 5;
+        this.vy = Math.random() * 0.45 + 0.25;
+        this.color = Math.random() > 0.5 ? "225, 240, 255" : "255, 255, 255";
+      } else {
+        this.radius = Math.random() * 3 + 3;
+        this.vy = Math.random() * 0.35 + 0.2;
+        this.color = Math.random() > 0.4 ? "255, 215, 90" : "255, 120, 120";
+      }
+
+      this.opacity = Math.random() * 0.5 + 0.4;
+      this.swayAmp = Math.random() * 0.6 + 0.2;
+      this.swaySpeed = Math.random() * 0.02 + 0.008;
+      this.phase = Math.random() * Math.PI * 2;
+      this.angle = Math.random() * Math.PI * 2;
+      this.spin = (Math.random() - 0.5) * 0.03;
+      this.twinkle = Math.random() * Math.PI * 2;
     }
 
     update() {
-      this.x += this.vx;
+      this.phase += this.swaySpeed;
+      this.x += Math.sin(this.phase) * this.swayAmp + 0.12;
       this.y += this.vy;
+      this.angle += this.spin;
+      this.twinkle += 0.05;
 
-      if (this.growing) {
-        this.opacity += this.fadeSpeed;
-        if (this.opacity >= 0.85) this.growing = false;
-      } else {
-        this.opacity -= this.fadeSpeed;
-        if (this.opacity <= 0.15) this.growing = true;
-      }
-
-      if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+      if (this.y > height + 20 || this.x < -20 || this.x > width + 20) {
         this.reset();
+        this.y = -20;
       }
     }
 
     draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-      ctx.shadowBlur = 6;
-      ctx.shadowColor = `rgba(${this.color}, 0.8)`;
-      ctx.fill();
+      ctx.save();
+      ctx.translate(this.x, this.y);
+
+      if (this.type === "dot") {
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
+        ctx.fill();
+      } else if (this.type === "crystal") {
+        ctx.rotate(this.angle);
+        ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
+        ctx.lineWidth = 1.3;
+        ctx.lineCap = "round";
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
+        const r = this.radius;
+        ctx.beginPath();
+        for (let k = 0; k < 6; k++) {
+          ctx.rotate(Math.PI / 3);
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, r);
+          ctx.moveTo(0, r * 0.55);
+          ctx.lineTo(r * 0.3, r * 0.8);
+          ctx.moveTo(0, r * 0.55);
+          ctx.lineTo(-r * 0.3, r * 0.8);
+        }
+        ctx.stroke();
+      } else {
+        const pulse = 0.55 + 0.45 * Math.sin(this.twinkle);
+        const r = this.radius * (0.8 + 0.4 * pulse);
+        ctx.rotate(this.angle * 0.5);
+        ctx.fillStyle = `rgba(${this.color}, ${this.opacity * pulse + 0.2})`;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = `rgba(${this.color}, 0.9)`;
+        ctx.beginPath();
+        for (let k = 0; k < 8; k++) {
+          const rad = k % 2 === 0 ? r : r * 0.28;
+          const a = (Math.PI / 4) * k;
+          ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.restore();
     }
   }
 
   for (let i = 0; i < particleCount; i++) {
-    particles.push(new DustParticle());
+    particles.push(new SnowParticle());
   }
 
   function animate() {
@@ -2536,6 +2585,94 @@ function initDustParticles() {
 
   animate();
 }
+
+// ==================== HIỆU ỨNG HẠT BỤI BAY TOÀN MÀN HÌNH (BẢN CŨ) ====================
+// function initDustParticles() {
+//   let canvas = document.getElementById("dustCanvas");
+//   if (!canvas) {
+//     canvas = document.createElement("canvas");
+//     canvas.id = "dustCanvas";
+//     document.body.appendChild(canvas);
+//   }
+//
+//   const ctx = canvas.getContext("2d");
+//   let width = (canvas.width = window.innerWidth);
+//   let height = (canvas.height = window.innerHeight);
+//
+//   window.addEventListener("resize", () => {
+//     width = canvas.width = window.innerWidth;
+//     height = canvas.height = window.innerHeight;
+//   });
+//
+//   const particleCount = Math.min(Math.floor((width * height) / 18000), 75);
+//   const particles = [];
+//
+//   class DustParticle {
+//     constructor() {
+//       this.reset(true);
+//     }
+//
+//     reset(initial = false) {
+//       this.x = Math.random() * width;
+//       this.y = initial ? Math.random() * height : -10;
+//       this.radius = Math.random() * 2.2 + 0.8;
+//       this.vx = (Math.random() - 0.5) * 0.4;
+//       this.vy = Math.random() * 0.5 + 0.2;
+//       this.opacity = Math.random() * 0.6 + 0.3;
+//       this.fadeSpeed = Math.random() * 0.008 + 0.003;
+//       this.growing = Math.random() > 0.5;
+//
+//       const colors = [
+//         "255, 235, 170",
+//         "212, 175, 55",
+//         "245, 222, 179",
+//         "255, 255, 255"
+//       ];
+//       this.color = colors[Math.floor(Math.random() * colors.length)];
+//     }
+//
+//     update() {
+//       this.x += this.vx;
+//       this.y += this.vy;
+//
+//       if (this.growing) {
+//         this.opacity += this.fadeSpeed;
+//         if (this.opacity >= 0.85) this.growing = false;
+//       } else {
+//         this.opacity -= this.fadeSpeed;
+//         if (this.opacity <= 0.15) this.growing = true;
+//       }
+//
+//       if (this.y > height + 10 || this.x < -10 || this.x > width + 10) {
+//         this.reset();
+//       }
+//     }
+//
+//     draw() {
+//       ctx.beginPath();
+//       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+//       ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+//       ctx.shadowBlur = 6;
+//       ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+//       ctx.fill();
+//     }
+//   }
+//
+//   for (let i = 0; i < particleCount; i++) {
+//     particles.push(new DustParticle());
+//   }
+//
+//   function animate() {
+//     ctx.clearRect(0, 0, width, height);
+//     for (let i = 0; i < particles.length; i++) {
+//       particles[i].update();
+//       particles[i].draw();
+//     }
+//     requestAnimationFrame(animate);
+//   }
+//
+//   animate();
+// }
 
 function closeMobileMenu() {
   const navMenu = document.getElementById("navMenu");
