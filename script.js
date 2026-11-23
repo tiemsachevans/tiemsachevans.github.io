@@ -2495,15 +2495,15 @@ function initDustParticles() {
     reset(initial = false) {
       const roll = Math.random();
       this.type =
-        roll < 0.5
+        roll < 0.42
           ? "dot"
-          : roll < 0.7
+          : roll < 0.58
             ? "crystal"
-            : roll < 0.78
+            : roll < 0.65
               ? "star"
-              : roll < 0.84
+              : roll < 0.71
                 ? "bauble"
-                : roll < 0.9
+                : roll < 0.78
                   ? "cane"
                   : "icon";
       this.x = Math.random() * width;
@@ -2530,7 +2530,7 @@ function initDustParticles() {
         this.vy = Math.random() * 0.3 + 0.25;
         this.color = "255, 255, 255";
       } else {
-        this.radius = width < 768 ? (Math.random() * 7 + 13) * 0.75 : Math.random() * 9 + 18;
+        this.radius = Math.random() * 9 + 18;
         this.vy = Math.random() * 0.35 + 0.35;
         this.color = "255, 255, 255";
       }
