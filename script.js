@@ -2462,13 +2462,9 @@ function initDustParticles() {
   canvas.style.opacity = "1";
 
   const ctx = canvas.getContext("2d");
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
-
-  window.addEventListener("resize", () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
+  let dpr = 1;
+  let width = window.innerWidth;
+  let height = window.innerHeight;
 
   const particleCount = Math.min(Math.floor((width * height) / 14000), 90);
   const particles = [];
@@ -2482,10 +2478,49 @@ function initDustParticles() {
   const iconSrc = "./images/icon_xmas.png";
   const iconImage = new Image();
   let iconReady = false;
+  let iconSprite = iconImage;
+
+  function buildIconSprite() {
+    const maxWidth = Math.ceil(54 * dpr);
+    let source = iconImage;
+    let w = iconImage.naturalWidth;
+    let h = iconImage.naturalHeight;
+    while (w / 2 > maxWidth) {
+      w = Math.floor(w / 2);
+      h = Math.floor(h / 2);
+      const step = document.createElement("canvas");
+      step.width = w;
+      step.height = h;
+      const stepCtx = step.getContext("2d");
+      stepCtx.imageSmoothingEnabled = true;
+      stepCtx.imageSmoothingQuality = "high";
+      stepCtx.drawImage(source, 0, 0, w, h);
+      source = step;
+    }
+    iconSprite = source;
+  }
+
+  function resizeCanvas() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    if (iconReady) buildIconSprite();
+  }
+
   iconImage.onload = () => {
     iconReady = true;
+    buildIconSprite();
   };
   iconImage.src = iconSrc;
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
 
   class SnowParticle {
     constructor() {
@@ -2495,15 +2530,15 @@ function initDustParticles() {
     reset(initial = false) {
       const roll = Math.random();
       this.type =
-        roll < 0.42
+        roll < 0.52
           ? "dot"
-          : roll < 0.58
+          : roll < 0.72
             ? "crystal"
-            : roll < 0.65
+            : roll < 0.78
               ? "star"
-              : roll < 0.71
+              : roll < 0.83
                 ? "bauble"
-                : roll < 0.78
+                : roll < 0.87
                   ? "cane"
                   : "icon";
       this.x = Math.random() * width;
@@ -2568,7 +2603,7 @@ function initDustParticles() {
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 8 * dpr;
         ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
         ctx.fill();
       } else if (this.type === "crystal") {
@@ -2576,7 +2611,7 @@ function initDustParticles() {
         ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
         ctx.lineWidth = 1.3;
         ctx.lineCap = "round";
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 6 * dpr;
         ctx.shadowColor = "rgba(200, 225, 255, 0.9)";
         const r = this.radius;
         ctx.beginPath();
@@ -2595,7 +2630,7 @@ function initDustParticles() {
         const r = this.radius * (0.8 + 0.4 * pulse);
         ctx.rotate(this.angle * 0.5);
         ctx.fillStyle = `rgba(${this.color}, ${0.6 + 0.4 * pulse})`;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 12 * dpr;
         ctx.shadowColor = `rgba(${this.color}, 0.9)`;
         ctx.beginPath();
         for (let k = 0; k < 8; k++) {
@@ -2608,7 +2643,7 @@ function initDustParticles() {
       } else if (this.type === "bauble") {
         const r = this.radius;
         ctx.rotate(Math.sin(this.phase) * 0.35);
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 10 * dpr;
         ctx.shadowColor = `rgba(${this.color}, 0.7)`;
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, Math.PI * 2);
@@ -2631,7 +2666,7 @@ function initDustParticles() {
         const hook = r * 0.35;
         ctx.rotate(Math.sin(this.phase * 1.3) * 0.5);
         ctx.lineCap = "round";
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 6 * dpr;
         ctx.shadowColor = "rgba(255, 255, 255, 0.6)";
         const tracePath = () => {
           ctx.beginPath();
@@ -2653,9 +2688,9 @@ function initDustParticles() {
         const ratio = iconImage.naturalWidth ? iconImage.naturalHeight / iconImage.naturalWidth : 1;
         const h = w * ratio;
         ctx.rotate(Math.sin(this.phase) * 0.4);
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 8 * dpr;
         ctx.shadowColor = "rgba(255, 255, 255, 0.55)";
-        ctx.drawImage(iconImage, -w / 2, -h / 2, w, h);
+        ctx.drawImage(iconSprite, -w / 2, -h / 2, w, h);
       }
 
       ctx.restore();
@@ -2698,7 +2733,7 @@ function initDustParticles() {
         const pulse = 0.5 + 0.5 * Math.sin((reduceMotion ? 0 : t) * 0.003 + n * 1.7);
         const color = bulbColors[n % bulbColors.length];
 
-        ctx.shadowBlur = 14 * pulse + 4;
+        ctx.shadowBlur = (14 * pulse + 4) * dpr;
         ctx.shadowColor = `rgba(${color}, 0.95)`;
         ctx.fillStyle = `rgba(${color}, ${0.65 + 0.35 * pulse})`;
         ctx.beginPath();
@@ -2745,7 +2780,7 @@ function initDustParticles() {
     ctx.strokeStyle = grad;
     ctx.lineWidth = 2.2;
     ctx.lineCap = "round";
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 10 * dpr;
     ctx.shadowColor = "rgba(255, 240, 180, 0.9)";
     ctx.beginPath();
     ctx.moveTo(s.x, s.y);
@@ -2774,7 +2809,7 @@ function initDustParticles() {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * p.life + 0.4, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${p.color}, ${p.life})`;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 8 * dpr;
       ctx.shadowColor = `rgba(${p.color}, 0.9)`;
       ctx.fill();
     }
